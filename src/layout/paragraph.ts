@@ -2,7 +2,7 @@ import { ATOM_CHAR, type Align, type Paragraph, type ParaProps, type Run, type R
 import { computeLabels, effectivePara, effectiveRun, styleChain } from '../core/styles';
 import type { Block } from '../core/model';
 import type { FontSpec, Frag, Line, LayoutEnv, ParaLayout } from './types';
-import { hyphenateSync } from 'hyphen/en';
+import { hyphenatorFor } from './hyphenate';
 import { equationBox } from './equation';
 import { symbolText } from '../core/fonts';
 
@@ -461,11 +461,13 @@ const dropLetter = (env: LayoutEnv, tokens: Token[], cap: NonNullable<ParaProps[
 const breakPoints = (text: string, auto: boolean, lang?: string): number[] => {
   const out: number[] = [];
   for (let i = 0; i < text.length; i++) if (text[i] === '\u00ad') out.push(i + 1);
-  if (!auto || (lang && !lang.toLowerCase().startsWith('en'))) return out;
-  const m = /^([^A-Za-z]*)([A-Za-z]{5,})/.exec(text);
+  if (!auto) return out;
+  const hyphenate = hyphenatorFor(lang);
+  if (!hyphenate) return out;
+  const m = /^([^\p{L}]*)(\p{L}{5,})/u.exec(text);
   if (!m) return out;
   let at = m[1]!.length;
-  for (const ch of hyphenateSync(m[2]!)) {
+  for (const ch of hyphenate(m[2]!)) {
     if (ch === '\u00ad') out.push(at);
     else at++;
   }

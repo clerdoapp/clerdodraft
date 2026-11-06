@@ -15,7 +15,7 @@ export const sampleChart = (): ChartAtom => ({
   wrap: 'inline',
 });
 
-export const CHART_KINDS: [ChartKind, string][] = [['column', 'Columns'], ['bar', 'Bars'], ['line', 'Line'], ['area', 'Area'], ['pie', 'Pie'], ['doughnut', 'Ring']];
+export const CHART_KINDS: [ChartKind, string][] = [['column', 'Columns'], ['bar', 'Bars'], ['line', 'Line'], ['area', 'Area'], ['pie', 'Pie'], ['doughnut', 'Ring'], ['scatter', 'Scatter (first column is X)'], ['bubble', 'Bubbles (second series is size)'], ['radar', 'Radar'], ['radarFilled', 'Filled radar'], ['stock', 'Stock (high, low, close)'], ['surface', 'Heat map'], ['treemap', 'Tree map'], ['sunburst', 'Sunburst'], ['histogram', 'Histogram'], ['boxWhisker', 'Box and whisker'], ['waterfall', 'Waterfall'], ['funnel', 'Funnel'], ['combo', 'Columns with a line']];
 
 // Editing replaces the saved drawing, so the writer builds a fresh chart part.
 export const applyChart = (s: EditorStore, next: ChartAtom): void => {

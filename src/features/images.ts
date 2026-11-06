@@ -14,7 +14,7 @@ const imageSize = (url: string): Promise<{ w: number; h: number }> =>
     img.src = url;
   });
 
-export const insertImageFile = async (store: EditorStore, file: File): Promise<void> => {
+export const insertImageFile = async (store: EditorStore, file: File, maxWidth?: number): Promise<void> => {
   try {
     if (!ALLOWED.test(file.type)) throw new Error('Use a PNG, JPEG, GIF, WebP, BMP or SVG image.');
     if (file.size > MAX_BYTES) throw new Error('This image is larger than 64 MB.');
@@ -24,7 +24,7 @@ export const insertImageFile = async (store: EditorStore, file: File): Promise<v
     const key = `media/${crypto.randomUUID()}.${file.name.split('.').pop() ?? 'png'}`;
     const sec = store.doc.section;
     const maxW = sec.pageWidth - sec.marginLeft - sec.marginRight;
-    const width = Math.min(w * 0.75, maxW);
+    const width = Math.min(maxWidth ?? w * 0.75, maxW);
     const atom: ImageAtom = { kind: 'image', media: key, width, height: (h / w) * width, wrap: 'inline', alt: '' };
     store.doc = { ...store.doc, media: { ...store.doc.media, [key]: { mime: file.type, data, name: file.name } } };
     store.insertAtom(atom, {});

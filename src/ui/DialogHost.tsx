@@ -17,7 +17,8 @@ import { SHAPES } from '../features/insert';
 import { ChartDialog } from './ChartDialog';
 import { FontPicker } from './FontPicker';
 import { openProtected, setFilePassword } from '../features/files';
-import { DiagramDialog, DrawDialog, EquationDialog, KeysDialog } from './ExtraViews';
+import { pictureFromWeb } from '../features/objects';
+import { DiagramDialog, DrawDialog, EquationDialog, IconsDialog, KeysDialog, TemplatesDialog } from './ExtraViews';
 import { insertFormula, insertTextArt, insertVideo, restartList, setBullet, TEXT_ART } from '../features/objects';
 import { markAuthority, setCitationStyle } from '../features/references';
 import { insertCitation, insertCrossRef, markIndexEntry, referenceTargets, saveSource } from '../features/references';
@@ -78,10 +79,13 @@ const fontForm = (s: EditorStore): FormDef => {
       { key: 'font', label: 'Font', type: 'font' }, { key: 'size', label: 'Size (pt)', type: 'number' }, { key: 'color', label: 'Color', type: 'color' },
       { key: 'underline', label: 'Underline', type: 'select', options: [['none', 'None'], ['single', 'Single'], ['double', 'Double'], ['thick', 'Thick'], ['dotted', 'Dotted'], ['dashed', 'Dashed'], ['wave', 'Wave'], ['words', 'Words only']] },
       { key: 'spacing', label: 'Letter spacing (pt)', type: 'number', step: 0.1 }, { key: 'position', label: 'Raise (pt)', type: 'number' }, { key: 'scale', label: 'Width (%)', type: 'number', step: 1 },
-      { key: 'emboss', label: 'Raised', type: 'check' }, { key: 'imprint', label: 'Pressed', type: 'check' }, { key: 'bold', label: 'Bold', type: 'check' }, { key: 'italic', label: 'Italic', type: 'check' }, { key: 'strike', label: 'Strikethrough', type: 'check' }, { key: 'doubleStrike', label: 'Double strikethrough', type: 'check' }, { key: 'smallCaps', label: 'Small capitals', type: 'check' }, { key: 'caps', label: 'All capitals', type: 'check' }, { key: 'hidden', label: 'Hidden', type: 'check' }, { key: 'shadow', label: 'Shadow', type: 'check' }, { key: 'outline', label: 'Outline', type: 'check' },
+      { key: 'emboss', label: 'Raised', type: 'check' }, { key: 'reflect', label: 'Reflection', type: 'check' }, { key: 'glowOn', label: 'Glow', type: 'check' }, { key: 'glowColor', label: 'Glow color', type: 'color' }, { key: 'gradOn', label: 'Gradient fill', type: 'check' }, { key: 'grad1', label: 'Gradient from', type: 'color' }, { key: 'grad2', label: 'Gradient to', type: 'color' }, { key: 'lineOn', label: 'Outline color', type: 'check' }, { key: 'lineColor', label: 'Outline', type: 'color' }, { key: 'imprint', label: 'Pressed', type: 'check' }, { key: 'bold', label: 'Bold', type: 'check' }, { key: 'italic', label: 'Italic', type: 'check' }, { key: 'strike', label: 'Strikethrough', type: 'check' }, { key: 'doubleStrike', label: 'Double strikethrough', type: 'check' }, { key: 'smallCaps', label: 'Small capitals', type: 'check' }, { key: 'caps', label: 'All capitals', type: 'check' }, { key: 'hidden', label: 'Hidden', type: 'check' }, { key: 'shadow', label: 'Shadow', type: 'check' }, { key: 'outline', label: 'Outline', type: 'check' },
     ],
-    initial: { emboss: !!r.emboss, imprint: !!r.imprint, font: r.font ?? '', size: r.size ?? 11, color: r.color ?? '#000000', underline: r.underline ?? 'none', spacing: r.spacing ?? 0, position: r.position ?? 0, scale: r.scale ?? 100, bold: !!r.bold, italic: !!r.italic, strike: !!r.strike, doubleStrike: !!r.doubleStrike, smallCaps: !!r.smallCaps, caps: !!r.caps, hidden: !!r.hidden, shadow: !!r.shadow, outline: !!r.outline },
-    apply: (v) => s.formatRun(v as unknown as RunProps),
+    initial: { reflect: !!r.reflect, glowOn: !!r.glow, glowColor: r.glow?.color ?? '#ffd43b', gradOn: !!r.gradient, grad1: r.gradient?.[0] ?? '#2347ff', grad2: r.gradient?.[1] ?? '#12a594', lineOn: !!r.lineColor, lineColor: r.lineColor ?? '#000000', emboss: !!r.emboss, imprint: !!r.imprint, font: r.font ?? '', size: r.size ?? 11, color: r.color ?? '#000000', underline: r.underline ?? 'none', spacing: r.spacing ?? 0, position: r.position ?? 0, scale: r.scale ?? 100, bold: !!r.bold, italic: !!r.italic, strike: !!r.strike, doubleStrike: !!r.doubleStrike, smallCaps: !!r.smallCaps, caps: !!r.caps, hidden: !!r.hidden, shadow: !!r.shadow, outline: !!r.outline },
+    apply: (v) => {
+      const { glowOn, glowColor, gradOn, grad1, grad2, lineOn, lineColor, reflect, ...rest } = v;
+      s.formatRun({ ...(rest as unknown as RunProps), reflect: reflect ? true : undefined, glow: glowOn ? { color: String(glowColor), size: 8 } : undefined, gradient: gradOn ? [String(grad1), String(grad2)] : undefined, lineColor: lineOn ? String(lineColor) : undefined });
+    },
   };
 };
 
@@ -295,6 +299,7 @@ const extraForm = (s: EditorStore, id: string, props?: Record<string, unknown>):
       const field: Field = a.control === 'dropdown' ? { key: 'value', label: a.title ?? 'Choice', type: 'select', options: (a.options ?? []).map((o) => [o, o]) } : { key: 'value', label: a.title ?? 'Value', type: a.control === 'date' ? 'date' : 'text' };
       return { title: a.title ?? 'Fill in', fields: [field], initial: { value: a.value }, apply: (v) => updateSelectedAtom(s, { value: String(v['value']) }) };
     }
+    case 'webPicture': return { title: 'Picture from a web address', ok: 'Add', fields: [{ key: 'url', label: 'Web address of the picture' }], initial: { url: '' }, apply: (v) => void pictureFromWeb(s, String(v['url']).trim()) };
     case 'video': return { title: 'Online video', ok: 'Add', fields: [{ key: 'url', label: 'Video link' }, { key: 'title', label: 'Title' }], initial: { url: '', title: '' }, apply: (v) => void insertVideo(s, String(v['url']).trim(), String(v['title'])) };
     case 'textArt': return { title: 'Text art', ok: 'Add', fields: [{ key: 'text', label: 'Text' }, { key: 'style', label: 'Look', type: 'select', options: TEXT_ART.map((a) => [a.id, a.name]) }, { key: 'size', label: 'Size (pt)', type: 'number', step: 1 }], initial: { text: '', style: 'bold', size: 48 }, apply: (v) => { if (String(v['text']).trim()) insertTextArt(s, String(v['text']), String(v['style']), Number(v['size']) || 48); } };
     case 'dropCap': {
@@ -305,7 +310,7 @@ const extraForm = (s: EditorStore, id: string, props?: Record<string, unknown>):
     case 'bullet': return { title: 'Choose a bullet', fields: [{ key: 'char', label: 'Bullet', type: 'select', options: BULLET_CHOICES }, { key: 'custom', label: 'Or type your own' }], initial: { char: '•', custom: '' }, apply: (v) => setBullet(s, [...String(v['custom']).trim()][0] ?? String(v['char'])) };
     case 'formula': return { title: 'Formula', ok: 'Add', fields: [{ key: 'text', label: 'Formula' }], initial: { text: 'SUM(ABOVE)' }, apply: (v) => insertFormula(s, String(v['text'])) };
     case 'pageAlign': return { title: 'Align text on the page', fields: [{ key: 'v', label: 'Position', type: 'select', options: [['top', 'Top'], ['center', 'Center'], ['bottom', 'Bottom']] }], initial: { v: s.doc.section.vAlign ?? 'top' }, apply: (v) => setSection(s, { vAlign: v['v'] === 'top' ? undefined : v['v'] as 'center' }) };
-    case 'language': return { title: 'Language of the text', fields: [{ key: 'lang', label: 'Language', type: 'select', options: [['en-US', 'English (US)'], ['en-GB', 'English (UK)'], ['ar-SA', 'Arabic'], ['fr-FR', 'French'], ['es-ES', 'Spanish'], ['de-DE', 'German']] }], initial: { lang: currentRun(s).lang ?? 'en-US' }, apply: (v) => s.formatRun({ lang: String(v['lang']) }) };
+    case 'language': return { title: 'Language of the text', fields: [{ key: 'lang', label: 'Language', type: 'select', options: [['en-US', 'English (US)'], ['en-GB', 'English (UK)'], ['ar-SA', 'Arabic'], ['fr-FR', 'French'], ['es-ES', 'Spanish'], ['pt-PT', 'Portuguese'], ['pt-BR', 'Portuguese (Brazil)'], ['nl-NL', 'Dutch'], ['ru-RU', 'Russian'], ['de-DE', 'German (no spelling)'], ['it-IT', 'Italian (no spelling)'], ['tr-TR', 'Turkish (no spelling)'], ['zxx', 'Do not check']] }], initial: { lang: currentRun(s).lang ?? 'en-US' }, apply: (v) => s.formatRun({ lang: String(v['lang']) }) };
     case 'citeStyle': return { title: 'Citation style', fields: [{ key: 'style', label: 'Style', type: 'select', options: [['APA', 'APA'], ['MLA', 'MLA'], ['Chicago', 'Chicago'], ['Harvard', 'Harvard'], ['IEEE', 'IEEE']] }], initial: { style: s.doc.settings.citationStyle ?? 'APA' }, apply: (v) => setCitationStyle(s, String(v['style'])) };
     case 'authority': return { title: 'Mark an authority', ok: 'Mark', fields: [{ key: 'text', label: 'Citation' }, { key: 'cat', label: 'Category', type: 'select', options: [['1', 'Cases'], ['2', 'Statutes'], ['3', 'Other authorities'], ['4', 'Rules'], ['5', 'Treatises'], ['6', 'Regulations'], ['7', 'Constitutional provisions']] }], initial: { text: isCollapsed(s.sel) ? '' : selectedText(s.doc, s.sel), cat: '1' }, apply: (v) => markAuthority(s, String(v['text']), String(v['cat'])) };
     default: return null;
@@ -495,6 +500,8 @@ export const DialogHost = ({ store }: { store: EditorStore }) => {
   if (d.id === 'equation') body = <EquationDialog store={store} />;
   if (d.id === 'diagram') body = <DiagramDialog store={store} />;
   if (d.id === 'keys') body = <KeysDialog store={store} />;
+  if (d.id === 'icons') body = <IconsDialog store={store} />;
+  if (d.id === 'templates') body = <TemplatesDialog store={store} />;
   if (d.id === 'palette') body = <Palette store={store} />;
   if (d.id === 'count') {
     const r = stats(store);

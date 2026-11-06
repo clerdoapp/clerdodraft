@@ -3,7 +3,7 @@ interface ImportMetaEnv {
   readonly VITE_RELEASE_REPO?: string;
 }
 
-declare module 'hyphen/en' {
+declare module 'hyphen/*' {
   export function hyphenateSync(text: string): string;
 }
 

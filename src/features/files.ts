@@ -80,13 +80,22 @@ const importDoc = async (bytes: Uint8Array, name: string): Promise<Doc | null> =
   return readText(text);
 };
 
+const hasSignatures = (bytes: Uint8Array): boolean => {
+  const tail = new TextDecoder('latin1').decode(bytes.subarray(Math.max(0, bytes.length - 65536)));
+  return tail.includes('_xmlsignatures/');
+};
+
 export const readAny = async (bytes: Uint8Array, name: string): Promise<Doc> => (await importDoc(bytes, name)) ?? readDocx(bytes);
 
 export const openBytes = async (store: EditorStore, bytes: Uint8Array, name: string, handle: unknown): Promise<void> => {
   try {
     const other = await importDoc(bytes, name);
     if (other) store.load(other, { name: name.replace(/\.[a-z0-9]+$/i, ''), handle: null });
-    else store.load(readDocx(bytes), { name: baseName(name), handle });
+    else {
+      const signed = hasSignatures(bytes) ? (await import('../formats/sign')).verifyPackage(bytes) : undefined;
+      store.load(readDocx(bytes), { name: baseName(name), handle, signatures: signed });
+      if (signed?.length) store.setView({ pane: 'signatures' });
+    }
   } catch (e) {
     if (e instanceof NeedsPassword) { store.openDialog('password', { bytes, name, handle }); return; }
     store.notify(e instanceof Error ? e.message : "This file couldn't be opened.");
@@ -154,6 +163,7 @@ const keepVersion = (store: EditorStore): void => { if (!store.file.password) vo
 
 export const saveFile = async (store: EditorStore, as = false): Promise<void> => {
   try {
+    if (store.file.signatures?.length) { store.file = { ...store.file, signatures: undefined }; store.notify('Saving changes removes the signatures from this document.'); }
     const data = await fileBytes(store);
     const name = `${store.file.name}.docx`;
     const d = desktop();

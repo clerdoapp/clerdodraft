@@ -1,3 +1,4 @@
+import { isOutlineOnly, SHAPE_GROUPS } from '../core/shapes';
 import { ATOM_CHAR, newId, para, type FieldKind, type Note, type Section, type ShapeAtom } from '../core/model';
 import { addComment, createTable, insertBlocksAfter, insertContent, mapRunsInSelection, propsAt, removeBlock, splitParagraph } from '../core/ops';
 import { flatten, headingOf, isCollapsed, orderedSel, storyBlocks, updatePara, walkAll } from '../core/extra';
@@ -39,7 +40,9 @@ export const addCommentHere = (s: EditorStore, text: string): void => {
 };
 
 export const insertShape = (s: EditorStore, shape: string): void => {
-  const atom: ShapeAtom = { kind: 'shape', shape, width: 144, height: 96, fill: '#dbe3ff', stroke: '#2347ff', strokeWidth: 1, wrap: 'inline' };
+  const outline = isOutlineOnly(shape);
+  const square = /^(ellipse|star|smiley|sun|heart|noSmoking|donut|gear|flowChartConnector|flowChartOr|flowChartSummingJunction|math|cube|can|irregularSeal)/.test(shape);
+  const atom: ShapeAtom = { kind: 'shape', shape, width: square ? 108 : 144, height: square ? 108 : 96, fill: outline ? undefined : '#dbe3ff', stroke: '#2347ff', strokeWidth: outline ? 1.5 : 1, wrap: 'inline' };
   s.insertAtom(atom, {});
 };
 
@@ -159,7 +162,7 @@ export const insertTextBox = (s: EditorStore): void => {
   s.setSel({ anchor: { story: `box:${id}`, para: blocks[0]!.id, offset: 0 }, focus: { story: `box:${id}`, para: blocks[0]!.id, offset: 0 } });
 };
 
-export const SHAPES: [string, string][] = [['rect', 'Rectangle'], ['roundRect', 'Rounded rectangle'], ['ellipse', 'Ellipse'], ['triangle', 'Triangle'], ['diamond', 'Diamond'], ['pentagon', 'Pentagon'], ['hexagon', 'Hexagon'], ['star5', 'Star'], ['rightArrow', 'Right arrow'], ['leftArrow', 'Left arrow'], ['upArrow', 'Up arrow'], ['downArrow', 'Down arrow'], ['line', 'Line']];
+export const SHAPES: [string, string][] = SHAPE_GROUPS.flatMap(([, l]) => l);
 
 export const addTextToShape = (s: EditorStore): void => {
   const atom = selectedDrawing(s);
@@ -177,7 +180,7 @@ export const addTextToShape = (s: EditorStore): void => {
 export const registerShapes = (): void => {
   register(
     { id: 'ins.textbox', label: 'Text box', group: 'Insert', run: insertTextBox },
-    ...SHAPES.slice(3).map(([id, label]) => ({ id: `ins.shape.${id}`, label, group: 'Insert', run: (s: EditorStore) => insertShape(s, id) })),
+    ...SHAPES.map(([id, label]) => ({ id: `ins.shape.${id}`, label: `Shape: ${label}`, group: 'Insert', run: (s: EditorStore) => insertShape(s, id) })),
     { id: 'obj.text', label: 'Add text to the shape', group: 'Insert', enabled: (s) => selectedDrawing(s)?.kind === 'shape', run: addTextToShape },
     { id: 'obj.shapeSettings', label: 'Shape color and outline', group: 'Insert', enabled: (s) => selectedDrawing(s)?.kind === 'shape', run: (s) => s.openDialog('shape') },
   );

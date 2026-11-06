@@ -9,10 +9,77 @@ import { readAny } from './files';
 import { insertImageFile, selectedAtom } from './images';
 import { formulaResult } from './tableFormula';
 
-export interface SavedBlock { name: string; text: string }
+export interface SavedBlock { name: string; text: string; blocks?: unknown[] }
 const BLOCK_KEY = 'clerdodraft.blocks';
 export const savedBlocks = (): SavedBlock[] => { try { return JSON.parse(localStorage.getItem(BLOCK_KEY) ?? '[]') as SavedBlock[]; } catch { return []; } };
 export const storeBlocks = (list: SavedBlock[]): void => { try { localStorage.setItem(BLOCK_KEY, JSON.stringify(list)); } catch { /* kept for this session only */ } };
+
+// The desktop app fetches through its own process, so pictures from any site work there.
+export const pictureFromWeb = async (s: EditorStore, url: string): Promise<void> => {
+  if (!/^https:\/\//i.test(url)) { s.notify('Use a web address that starts with https://'); return; }
+  try {
+    const bridge = (window as unknown as { clerdo?: { fetchImage?: (u: string) => Promise<{ data: Uint8Array; type: string } | null> } }).clerdo;
+    let blob: Blob;
+    if (bridge?.fetchImage) {
+      const r = await bridge.fetchImage(url);
+      if (!r) throw new Error('bad');
+      blob = new Blob([r.data as BlobPart], { type: r.type });
+    } else {
+      const r = await fetch(url, { mode: 'cors', credentials: 'omit' });
+      if (!r.ok) throw new Error('bad');
+      blob = await r.blob();
+    }
+    if (!/^image\/(png|jpeg|gif|webp|bmp|svg\+xml)$/.test(blob.type)) throw new Error('bad');
+    await insertBlob(s, blob, decodeURIComponent(url.split('/').pop()?.split('?')[0] || 'picture'));
+  } catch {
+    s.notify("That picture couldn't be loaded. Save it to your device and add it from there.");
+  }
+};
+
+const EMBED: Record<string, [string, string, string]> = {
+  xlsx: ['Excel.Sheet.12', 'Spreadsheet', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  xlsm: ['Excel.SheetMacroEnabled.12', 'Spreadsheet', 'application/vnd.ms-excel.sheet.macroEnabled.12'],
+  docx: ['Word.Document.12', 'Document', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  docm: ['Word.DocumentMacroEnabled.12', 'Document', 'application/vnd.ms-word.document.macroEnabled.12'],
+  pptx: ['PowerPoint.Show.12', 'Presentation', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+  pptm: ['PowerPoint.ShowMacroEnabled.12', 'Presentation', 'application/vnd.ms-powerpoint.presentation.macroEnabled.12'],
+};
+const EMBED_TYPES = Object.keys(EMBED).map((e) => `.${e}`).join(',');
+
+const fileCard = async (title: string, file: string): Promise<Uint8Array> => {
+  const c = document.createElement('canvas');
+  c.width = 384; c.height = 256;
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#f4f6fb'; g.fillRect(0, 0, 384, 256);
+  g.strokeStyle = '#c5cbe0'; g.lineWidth = 4; g.strokeRect(2, 2, 380, 252);
+  g.fillStyle = '#2347ff'; g.beginPath(); g.moveTo(152, 40); g.lineTo(212, 40); g.lineTo(236, 64); g.lineTo(236, 140); g.lineTo(152, 140); g.closePath(); g.fill();
+  g.fillStyle = '#fff'; g.font = '700 22px "Carlito", sans-serif'; g.textAlign = 'center'; g.fillText(file.split('.').pop()!.toUpperCase(), 194, 104);
+  g.fillStyle = '#1b1c20'; g.font = '600 24px "Carlito", sans-serif'; g.fillText(title, 192, 186);
+  g.fillStyle = '#5c6378'; g.font = '20px "Carlito", sans-serif'; g.fillText(file.length > 32 ? `${file.slice(0, 30)}…` : file, 192, 218);
+  return new Uint8Array(await (await canvasBlob(c)).arrayBuffer());
+};
+
+export const embedFile = async (s: EditorStore, f: File): Promise<void> => {
+  const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
+  const kind = EMBED[ext];
+  if (!kind) { s.notify('Choose a spreadsheet, document or presentation file to embed.'); return; }
+  if (f.size > 128 * 1024 * 1024) { s.notify('This file is larger than 128 MB.'); return; }
+  const id = newId();
+  const file = `embeddings/Embedded_${id}.${ext}`;
+  const preview = `media/embedded_${id}.png`;
+  const media = { ...s.doc.media, [file]: { mime: kind[2], data: new Uint8Array(await f.arrayBuffer()), name: f.name }, [preview]: { mime: 'image/png', data: await fileCard(kind[1], f.name), name: 'preview.png' } };
+  s.doc = { ...s.doc, media };
+  s.insertAtom({ kind: 'raw', xml: '', label: kind[1], width: 144, height: 96, object: { name: kind[1], progId: kind[0], file, preview } }, {});
+};
+
+const openEmbedded = (s: EditorStore): void => {
+  const a = selectedAtom(s);
+  if (a?.kind !== 'raw' || !a.object?.file) return;
+  const item = s.doc.media[a.object.file];
+  if (!item) return;
+  const name = item.name ?? a.object.file.split('/').pop() ?? 'embedded';
+  void import('./files').then((m) => m.download(item.data as BlobPart, name, item.mime));
+};
 
 export const insertBlob = async (s: EditorStore, blob: Blob, name: string): Promise<void> => insertImageFile(s, new File([blob], name, { type: blob.type }));
 
@@ -110,6 +177,14 @@ export const TEXT_ART: { id: string; name: string; props: RunProps }[] = [
   { id: 'outline', name: 'Outline', props: { bold: true, outline: true, color: '#c00000' } },
   { id: 'raised', name: 'Raised', props: { bold: true, emboss: true } },
   { id: 'pressed', name: 'Pressed', props: { bold: true, imprint: true } },
+  { id: 'glow', name: 'Glow', props: { bold: true, color: '#1f2a44', glow: { color: '#ffd43b', size: 8 } } },
+  { id: 'reflect', name: 'Reflection', props: { bold: true, color: '#2347ff', reflect: true } },
+  { id: 'sunset', name: 'Sunset gradient', props: { bold: true, gradient: ['#ff6b6b', '#f59f00'] } },
+  { id: 'ocean', name: 'Ocean gradient', props: { bold: true, gradient: ['#1c7ed6', '#12b886'] } },
+  { id: 'night', name: 'Night gradient', props: { bold: true, gradient: ['#5f3dc4', '#c2255c'] } },
+  { id: 'metal', name: 'Metal', props: { bold: true, gradient: ['#dee2e6', '#495057'], lineColor: '#343a40' } },
+  { id: 'neon', name: 'Neon', props: { bold: true, color: '#ffffff', glow: { color: '#20c997', size: 10 }, lineColor: '#0ca678' } },
+  { id: 'shadowed', name: 'Deep shadow', props: { bold: true, color: '#c92a2a', shadow: true, reflect: true } },
 ];
 
 export const insertTextArt = (s: EditorStore, text: string, style: string, size: number): void => {
@@ -188,6 +263,15 @@ const insertFromFile = async (s: EditorStore, f: File): Promise<void> => {
 
 export const registerObjects = (): void => {
   register(
+    { id: 'file.sign', label: 'Signatures', group: 'File', run: (s) => s.togglePane('signatures'), active: (s) => s.view.pane === 'signatures' },
+    { id: 'share.together', label: 'Work together', group: 'File', run: (s) => s.togglePane('together'), active: (s) => s.view.pane === 'together' },
+    { id: 'share.link', label: 'Share as a link', group: 'File', run: (s) => void import('./share').then((m) => m.shareLink(s)) },
+    { id: 'view.uiLang', label: 'العربية / English', group: 'View', run: () => { void import('../ui/i18n').then((m) => m.setUiLang(m.uiLang() === 'ar' ? 'en' : 'ar')); } },
+    { id: 'obj.draw', label: 'Draw on this picture', group: 'Insert', enabled: (s) => selectedAtom(s)?.kind === 'image', run: (s) => s.openDialog('draw', { edit: true }) },
+    { id: 'ins.object', label: 'Embed a file', group: 'Insert', run: (s) => pickFile(EMBED_TYPES, (f) => void embedFile(s, f)) },
+    { id: 'obj.openEmbedded', label: 'Open the embedded file', group: 'Insert', enabled: (s) => { const a = selectedAtom(s); return a?.kind === 'raw' && !!a.object?.file; }, run: openEmbedded },
+    { id: 'ins.icons', label: 'Icons', group: 'Insert', run: (s) => s.openDialog('icons') },
+    { id: 'ins.webPicture', label: 'Picture from a web address', group: 'Insert', run: (s) => s.openDialog('webPicture') },
     { id: 'ins.diagram', label: 'Diagram', group: 'Insert', run: (s) => s.openDialog('diagram') },
     { id: 'ins.control', label: 'Fill-in field', group: 'Insert', run: (s) => s.openDialog('control') },
     { id: 'ins.blocks', label: 'Saved text', group: 'Insert', run: (s) => s.togglePane('blocks'), active: (s) => s.view.pane === 'blocks' },

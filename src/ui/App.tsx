@@ -19,8 +19,11 @@ import { ContextMenu } from './ContextMenu';
 import { Ruler } from './Ruler';
 import { registerReferences } from '../features/references';
 import { restoreDraft, startAutosave } from '../features/files';
+import { openSharedLink } from '../features/share';
 import { registerWriting } from '../features/writing';
 import { loadComputerFonts } from '../features/systemFonts';
+import { onHyphenationLoaded } from '../layout/hyphenate';
+import { setUiLang, uiLang } from './i18n';
 import { registerObjects } from '../features/objects';
 import { SplitView } from './ExtraViews';
 import { ReaderOverlay } from './ReaderOverlay';
@@ -57,10 +60,12 @@ export const App = () => {
       const fit = (canvas.clientWidth - 32) / (page.width * (4 / 3));
       if (fit < 1) store.setView({ zoom: Math.max(0.25, +fit.toFixed(2)) });
     }
+    const stopHyphen = onHyphenationLoaded(() => store.remeasure());
+    if (uiLang() === 'ar') setUiLang('ar');
     void loadComputerFonts(store);
-    void restoreDraft(store);
+    if (!openSharedLink(store)) void restoreDraft(store);
     const stop = startAutosave(store);
-    return () => { document.fonts.removeEventListener?.('loadingdone', onFont); stop(); };
+    return () => { document.fonts.removeEventListener?.('loadingdone', onFont); stop(); stopHyphen(); };
   }, [store]);
 
   useEffect(() => {

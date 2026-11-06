@@ -16,14 +16,16 @@ Write, review and lay out real documents, with your files staying on your own de
 
 ## What it does
 
-- **Write:** more than 400 fonts plus every font on your computer, styles, lists, tabs, indents, large first letters, text art, right-to-left paragraphs, autocorrect and smart typing.
+- **Write:** more than 400 fonts plus every font on your computer, styles, lists, tabs, indents, large first letters, text art with glow, reflection and gradients, right-to-left paragraphs, autocorrect and smart typing. The interface is in English and Arabic.
 - **Lay out:** true page layout with sections, columns, headers, footers, footnotes, facing pages, watermarks, page borders, line numbers, automatic hyphens and document themes.
-- **Add:** tables with formulas, pictures with crop and adjustments, charts, diagrams, shapes, text boxes, drawn equations, pen drawings, online video and audio links, screenshots, fill-in fields, symbols and emoji.
+- **Add:** tables with formulas, pictures with crop and adjustments, 20 chart kinds, 52 diagram layouts, about 150 shapes, 2,300 icons, embedded spreadsheets and presentations, text boxes, drawn equations, pen drawings, online video and audio links, screenshots, fill-in fields, symbols and emoji.
 - **Cite:** contents, captions, cross-references, an index, a table of authorities, sources and bibliographies in APA, MLA, Chicago, Harvard and IEEE.
-- **Review:** tracked changes including formatting, comments with replies and filters, document compare, version history, spelling and grammar, a built-in word book with meanings and similar words, read aloud and dictation.
-- **Mail:** merge from a spreadsheet file with rules and a live preview, envelopes and label sheets.
+- **Review:** tracked changes including formatting, comments with replies, reactions and filters, document compare, version history, restricted editing, digital signatures, spelling in seven languages and grammar, a built-in word book with meanings and similar words, read aloud and dictation.
+- **Mail:** merge from spreadsheets, contacts or data files with rules and a live preview, envelopes and label sheets.
+- **Together:** work on one document live, device to device, with no server, or share a document as a link.
 - **Read:** page, web, draft and reading views, a focus reader, split view, dark mode and an outline.
 - **Files:** opens and saves `.docx`, including password-protected files, and keeps content it doesn't understand instead of dropping it. Also opens `.doc`, `.odt`, `.rtf`, `.pdf`, `.md`, `.html` and `.txt`, and exports `.odt`, `.rtf`, `.pdf`, `.html`, `.md` and `.txt`.
+- **Start fast:** 41 templates for letters, résumés, business, school and more.
 - **Private:** no account, no server, no tracking. Spelling and the word book work offline.
 
 The full list, with what is finished and what is basic, is in [docs/FEATURES.md](docs/FEATURES.md).
@@ -74,7 +76,7 @@ npm run e2e        # browser tests (needs Playwright)
 npm run dist       # desktop installers for this system
 ```
 
-Installers are built by GitHub Actions: push a tag such as `v0.4.0` that matches `package.json`, and [release.yml](.github/workflows/release.yml) builds every platform and publishes a release. Every push to `main` publishes the web app. **Check for updates** in the app follows the releases of the repository a build was made from.
+Installers are built by GitHub Actions: push a tag such as `v0.5.0` that matches `package.json`, and [release.yml](.github/workflows/release.yml) builds every platform and publishes a release. Every push to `main` publishes the web app. **Check for updates** in the app follows the releases of the repository a build was made from.
 
 More: [docs/development.md](docs/development.md) · [docs/architecture.md](docs/architecture.md) · [docs/file-formats.md](docs/file-formats.md)
 

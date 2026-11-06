@@ -14,9 +14,9 @@ export const ChartDialog = ({ store, create }: { store: EditorStore; create: boo
   const patchCell = (si: number, ci: number, v: string) => set({ ...a, series: a.series.map((s, i) => (i === si ? { ...s, values: a.categories.map((_, k) => (k === ci ? num(v) : s.values[k] ?? 0)) } : s)) });
   const addRow = () => set({ ...a, categories: [...a.categories, `Item ${a.categories.length + 1}`], series: a.series.map((s) => ({ ...s, values: [...s.values, 0] })) });
   const delRow = () => { if (a.categories.length > 1) set({ ...a, categories: a.categories.slice(0, -1), series: a.series.map((s) => ({ ...s, values: s.values.slice(0, a.categories.length - 1) })) }); };
-  const addCol = () => { if (a.series.length < 8) set({ ...a, series: [...a.series, { name: `Series ${a.series.length + 1}`, values: a.categories.map(() => 0) }] }); };
+  const addCol = () => { if (a.series.length < 20) set({ ...a, series: [...a.series, { name: `Series ${a.series.length + 1}`, values: a.categories.map(() => 0) }] }); };
   const delCol = () => { if (a.series.length > 1) set({ ...a, series: a.series.slice(0, -1) }); };
-  const round = a.chart === 'pie' || a.chart === 'doughnut';
+  const round = ['pie', 'doughnut', 'treemap', 'funnel', 'waterfall', 'histogram'].includes(a.chart);
   const done = () => {
     store.closeDialog();
     if (create) store.insertAtom(a, {});
@@ -28,7 +28,16 @@ export const ChartDialog = ({ store, create }: { store: EditorStore; create: boo
       <div className="fields">
         <label className="field"><span>Type</span><select value={a.chart} onChange={(e) => set({ ...a, chart: e.target.value as ChartKind })}>{CHART_KINDS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
         <label className="field"><span>Title</span><input value={a.title ?? ''} onChange={(e) => set({ ...a, title: e.target.value })} /></label>
-        {(a.chart === 'column' || a.chart === 'bar') && <label className="check"><input type="checkbox" checked={!!a.stacked} onChange={(e) => set({ ...a, stacked: e.target.checked })} /> Stacked</label>}
+        {['column', 'bar', 'line', 'area'].includes(a.chart) && <label className="field"><span>Grouping</span><select value={a.percent ? 'percent' : a.stacked ? 'stacked' : 'side'} onChange={(e) => set({ ...a, stacked: e.target.value === 'stacked' || undefined, percent: e.target.value === 'percent' || undefined })}><option value="side">Side by side</option><option value="stacked">Stacked</option><option value="percent">Stacked to 100%</option></select></label>}
+        <label className="field"><span>Legend</span><select value={a.legend ?? 'b'} onChange={(e) => set({ ...a, legend: e.target.value as ChartAtom['legend'] })}><option value="b">Below</option><option value="t">Above</option><option value="r">Right</option><option value="l">Left</option><option value="none">None</option></select></label>
+        <label className="field"><span>Across title</span><input value={a.xTitle ?? ''} onChange={(e) => set({ ...a, xTitle: e.target.value || undefined })} /></label>
+        <label className="field"><span>Up title</span><input value={a.yTitle ?? ''} onChange={(e) => set({ ...a, yTitle: e.target.value || undefined })} /></label>
+        <div className="row">
+          <label className="check"><input type="checkbox" checked={!!a.labels} onChange={(e) => set({ ...a, labels: e.target.checked || undefined })} /> Show values</label>
+          <label className="check"><input type="checkbox" checked={!a.noGrid} onChange={(e) => set({ ...a, noGrid: !e.target.checked || undefined })} /> Gridlines</label>
+          {['line', 'scatter', 'radar'].includes(a.chart) && <label className="check"><input type="checkbox" checked={a.markers !== false} onChange={(e) => set({ ...a, markers: e.target.checked ? undefined : false })} /> Markers</label>}
+          {['line', 'scatter'].includes(a.chart) && <label className="check"><input type="checkbox" checked={!!a.smooth} onChange={(e) => set({ ...a, smooth: e.target.checked || undefined })} /> Smooth</label>}
+        </div>
       </div>
       <div className="chartprev"><ChartView a={{ ...a, width: 396, height: 200 }} /></div>
       <div className="grid">

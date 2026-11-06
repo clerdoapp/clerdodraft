@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import {
-  AlignCenter, ChartColumn, SquarePen, AlignJustify, AlignLeft, AlignRight, Bold, BookOpen, Bookmark, CaseSensitive, CheckSquare, Columns2, Eraser, Eye, FilePlus2, FileText, FolderOpen, Highlighter, Image, IndentDecrease, IndentIncrease, Italic, Link2, List, ListOrdered, ListTree, Mail, MessageSquare, Minus, PanelLeftClose, PenLine, Pilcrow, Plus, Printer, Quote, Save, ScanText, Shapes, Sigma, Strikethrough, Subscript, Superscript, Table2, Type, Underline, type LucideIcon,
+  AlignCenter, ChartColumn, SquarePen, AlignJustify, AlignLeft, AlignRight, Bold, BookOpen, Bookmark, CaseSensitive, CheckSquare, Columns2, Eraser, Eye, FilePlus2, FileText, FolderOpen, Highlighter, Image, IndentDecrease, IndentIncrease, Italic, Link2, List, ListOrdered, ListTree, Mail, MessageSquare, Minus, PanelLeftClose, PenLine, Pilcrow, Plus, Printer, Quote, Save, ScanText, Sigma, Strikethrough, Subscript, Superscript, Table2, Type, Underline, type LucideIcon,
 } from 'lucide-react';
 import { command, run } from '../editor/commands';
 import type { EditorStore } from '../editor/store';
@@ -9,6 +9,26 @@ import { currentPara, currentRun, setSection, inTable } from '../features/coreCo
 import { A4, LETTER } from '../core/model';
 import { cssFamily } from '../layout/measure';
 import { FontPicker } from './FontPicker';
+import { TEMPLATES } from '../features/templateLibrary';
+import { isOutlineOnly, SHAPE_COUNT, SHAPE_GROUPS, shapePath } from '../core/shapes';
+import { insertShape } from '../features/insert';
+
+const ShapeGallery = ({ store }: { store: EditorStore }) => (
+  <div className="shapegal">
+    {SHAPE_GROUPS.map(([title, list]) => (
+      <div key={title}>
+        <h4>{title}</h4>
+        <div className="shapegrid">
+          {list.map(([id, label]) => (
+            <button key={id} title={label} aria-label={label} onMouseDown={(e) => e.preventDefault()} onClick={() => insertShape(store, id)}>
+              <svg viewBox="-2 -2 28 24" width="26" height="22"><path d={shapePath(id, 24, 20)} fill={isOutlineOnly(id) ? 'none' : 'currentColor'} fillOpacity={0.18} stroke="currentColor" strokeWidth={1.2} fillRule="evenodd" /></svg>
+            </button>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
 import { applySpacing, applyTheme, SPACINGS, THEMES } from '../features/themes';
 
 const S = 1.9;
@@ -118,8 +138,9 @@ const SECTIONS: Section_[] = [
     id: 'doc', label: 'Doc', icon: FileText,
     body: (s) => (
       <>
-        <Group title="Document"><List_ store={s} tools={[{ id: 'file.new', icon: FilePlus2 }, { id: 'file.open', icon: FolderOpen }, { id: 'file.save', icon: Save }, { id: 'file.saveAs' }, { id: 'file.versions' }, { id: 'file.protect' }, { id: 'file.properties' }, { id: 'help.keys' }, { id: 'file.updates' }]} /></Group>
-        <Group title="Start from"><List_ store={s} tools={[{ id: 'tpl.letter' }, { id: 'tpl.cover' }, { id: 'tpl.resume' }, { id: 'tpl.report' }, { id: 'tpl.essay' }, { id: 'tpl.invoice' }, { id: 'tpl.agenda' }, { id: 'tpl.notes' }, { id: 'tpl.plan' }, { id: 'tpl.newsletter' }]} /></Group>
+        <Group title="Document"><List_ store={s} tools={[{ id: 'file.new', icon: FilePlus2 }, { id: 'file.open', icon: FolderOpen }, { id: 'file.save', icon: Save }, { id: 'file.saveAs' }, { id: 'file.versions' }, { id: 'file.protect' }, { id: 'file.sign' }, { id: 'file.properties' }, { id: 'help.keys' }, { id: 'file.updates' }]} /></Group>
+        <Group title="Start from"><List_ store={s} tools={[{ id: 'file.templates', label: `All templates (${TEMPLATES.length})` }, { id: 'tpl.letter' }, { id: 'tpl.resume' }, { id: 'tpl.report' }, { id: 'tpl.invoice' }]} /></Group>
+        <Group title="Together"><List_ store={s} tools={ids('share.together', 'share.link')} /></Group>
         <Group title="Share out"><List_ store={s} tools={[{ id: 'file.print', icon: Printer }, { id: 'file.html' }, { id: 'file.md' }, { id: 'file.txt' }, { id: 'file.odt' }, { id: 'file.rtf' }]} /></Group>
       </>
     ),
@@ -153,9 +174,9 @@ const SECTIONS: Section_[] = [
     id: 'add', label: 'Add', icon: Plus,
     body: (s) => (
       <>
-        <Group title="Objects"><List_ store={s} tools={[{ id: 'ins.table', icon: Table2 }, { id: 'ins.picture', icon: Image }, { id: 'ins.chart', icon: ChartColumn }, { id: 'ins.textbox', icon: SquarePen }, { id: 'ins.equation', icon: Sigma }, { id: 'ins.symbol' }, { id: 'ins.emoji' }, { id: 'ins.checkbox', icon: CheckSquare }, { id: 'ins.diagram' }, { id: 'ins.draw' }, { id: 'ins.video' }, { id: 'ins.screenshot' }, { id: 'ins.textArt' }, { id: 'ins.control' }, { id: 'ins.blocks' }, { id: 'ins.file' }]} /></Group>
+        <Group title="Objects"><List_ store={s} tools={[{ id: 'ins.table', icon: Table2 }, { id: 'ins.picture', icon: Image }, { id: 'ins.chart', icon: ChartColumn }, { id: 'ins.textbox', icon: SquarePen }, { id: 'ins.equation', icon: Sigma }, { id: 'ins.symbol' }, { id: 'ins.emoji' }, { id: 'ins.checkbox', icon: CheckSquare }, { id: 'ins.icons' }, { id: 'ins.object' }, { id: 'ins.webPicture' }, { id: 'ins.diagram' }, { id: 'ins.draw' }, { id: 'ins.video' }, { id: 'ins.screenshot' }, { id: 'ins.textArt' }, { id: 'ins.control' }, { id: 'ins.blocks' }, { id: 'ins.file' }]} /></Group>
         {inTable(s) && <Group title="This table"><List_ store={s} tools={ids('tbl.formula', 'tbl.fit', 'tbl.even', 'tbl.dir', 'tbl.splitTable', 'tbl.cell', 'tbl.rowAbove', 'tbl.rowBelow', 'tbl.colLeft', 'tbl.colRight', 'tbl.merge', 'tbl.split', 'tbl.delRow', 'tbl.delCol', 'tbl.header', 'tbl.sortAsc', 'tbl.toText', 'tbl.delete')} /></Group>}
-        <Group title="Shapes"><List_ store={s} tools={[{ id: 'ins.rect', icon: Shapes }, ...ids('ins.round', 'ins.ellipse', 'ins.shape.triangle', 'ins.shape.diamond', 'ins.shape.hexagon', 'ins.shape.star5', 'ins.shape.rightArrow', 'ins.shape.leftArrow', 'ins.shape.upArrow', 'ins.shape.downArrow', 'ins.shape.line')]} /></Group>
+        <Group title={`Shapes (${SHAPE_COUNT})`}><ShapeGallery store={s} /></Group>
         <Group title="Text"><List_ store={s} tools={[{ id: 'ins.link', icon: Link2 }, { id: 'ins.bookmark', icon: Bookmark }, { id: 'ins.date' }, { id: 'ins.time' }, { id: 'ins.textToTable' }]} /></Group>
         <Group title="Page parts"><List_ store={s} tools={ids('ins.cover', 'ins.header', 'ins.footer', 'ins.pageNum', 'ins.pageNumTop')} /></Group>
       </>
@@ -181,7 +202,7 @@ const SECTIONS: Section_[] = [
       <>
         <Group title="Changes"><List_ store={s} tools={ids('rev.track', 'rev.changes', 'rev.accept', 'rev.reject', 'rev.acceptAll', 'rev.rejectAll', 'rev.compare')} /></Group>
         <Group title="Comments"><List_ store={s} tools={ids('ins.comment', 'rev.comments')} /></Group>
-        <Group title="Check"><List_ store={s} tools={ids('rev.spell', 'rev.thesaurus', 'rev.translate', 'rev.language', 'rev.proofToggle', 'rev.autocorrect', 'rev.words', 'rev.count', 'rev.a11y', 'rev.read', 'rev.dictate', 'rev.protect')} /></Group>
+        <Group title="Check"><List_ store={s} tools={ids('rev.spell', 'rev.thesaurus', 'rev.translate', 'rev.language', 'rev.proofToggle', 'rev.autocorrect', 'rev.words', 'rev.count', 'rev.a11y', 'rev.read', 'rev.dictate', 'rev.protect', 'rev.allowEdit')} /></Group>
       </>
     ),
   },
@@ -192,7 +213,7 @@ const SECTIONS: Section_[] = [
       <>
         <Group title="Show"><List_ store={s} tools={[{ id: 'view.print', icon: ScanText }, { id: 'view.read', icon: BookOpen }, { id: 'view.reader' }, { id: 'view.web' }, { id: 'view.draft' }, { id: 'pane.nav', icon: ListTree }, { id: 'par.marks' }, { id: 'view.ruler' }, { id: 'view.grid' }, { id: 'view.twoUp' }, { id: 'view.split' }, { id: 'view.newWindow' }]} /></Group>
         <Group title="Markup"><div className="seg wrap">{([['All', 'all'], ['Simple', 'simple'], ['None', 'none'], ['Original', 'original']] as const).map(([l, m]) => <button key={m} className={s.view.markup === m ? 'on' : ''} onClick={() => s.setView({ markup: m })}>{l}</button>)}</div></Group>
-        <Group title="Screen"><List_ store={s} tools={ids('view.zoomIn', 'view.zoomOut', 'view.zoom100', 'view.dark')} /></Group>
+        <Group title="Screen"><List_ store={s} tools={ids('view.zoomIn', 'view.zoomOut', 'view.zoom100', 'view.dark', 'view.uiLang')} /></Group>
       </>
     ),
   },

@@ -43,6 +43,7 @@ export interface FileState {
   name: string;
   handle: unknown; // FileSystemFileHandle or a desktop path
   password?: string; // set while the file is protected; never stored
+  signatures?: { signer: string; issuer: string; time: string; purpose?: string; valid: boolean; intact: boolean; selfSigned: boolean }[];
   dirty: boolean;
   lastSaved?: number;
 }
@@ -150,7 +151,12 @@ export class EditorStore {
   }
 
   get readOnly(): boolean {
-    return this.view.mode === 'read' || this.doc.settings.protection?.kind === 'readOnly';
+    if (this.view.mode === 'read') return true;
+    if (this.doc.settings.protection?.kind !== 'readOnly') return false;
+    // Inside marked regions, editing stays open.
+    const a = findPara(this.doc, this.sel.anchor);
+    const b = findPara(this.doc, this.sel.focus);
+    return !(a?.editable && b?.editable);
   }
 
   setAuthor(name: string): void {

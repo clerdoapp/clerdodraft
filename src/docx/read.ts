@@ -157,6 +157,10 @@ export const parseRPr = (n: XNode | undefined, theme: Theme): RunProps => {
       case 'w:vertAlign': if (a['w:val'] === 'superscript') p.vertAlign = 'super'; else if (a['w:val'] === 'subscript') p.vertAlign = 'sub'; break;
       case 'w:rtl': p.rtl = on(c); break;
       case 'w:lang': if (a['w:val']) p.lang = a['w:val']; break;
+      case 'w14:glow': { const col = find(c, 'w14:srgbClr')?.attrs['w14:val']; p.glow = { color: col ? `#${col.toLowerCase()}` : '#ffd43b', size: Number(a['w14:rad'] ?? 0) / 12700 || 6 }; break; }
+      case 'w14:reflection': p.reflect = true; break;
+      case 'w14:textOutline': { const col = find(c, 'w14:srgbClr')?.attrs['w14:val']; if (col) p.lineColor = `#${col.toLowerCase()}`; break; }
+      case 'w14:textFill': { const stops = kids(find(c, 'w14:gsLst'), 'w14:gs').map((g) => find(g, 'w14:srgbClr')?.attrs['w14:val']).filter(Boolean) as string[]; if (stops.length >= 2) p.gradient = [`#${stops[0]!.toLowerCase()}`, `#${stops[stops.length - 1]!.toLowerCase()}`]; break; }
     }
   }
   return p;
@@ -374,8 +378,34 @@ const parseDrawing = (n: XNode, ctx: Ctx): Atom => {
   }
   const grouped = find(box, 'wpg:wgp');
   if (grouped) shapes = parseGroup(grouped, ctx.theme);
+  // A floating group becomes a shape so it can be placed on the page like other drawings.
+  if (grouped && floating && shapes?.length) return { kind: 'shape', shape: 'rect', group: shapes, ...placed, xml: serialize(n) };
   const label = chartRef ? 'Chart' : find(box, 'dgm:relIds') || grouped ? 'Diagram' : 'Graphic';
   return shapes?.length || !floating ? { kind: 'raw', xml: serialize(n), label, width, height, shapes } : { kind: 'raw', xml: serialize(n), label };
+};
+
+const PROG_NAMES: [RegExp, string][] = [[/^Excel/i, 'Spreadsheet'], [/^Word/i, 'Document'], [/^PowerPoint/i, 'Presentation'], [/^AcroExch|PDF/i, 'PDF'], [/^Package/i, 'File'], [/^Equation/i, 'Equation'], [/^Visio/i, 'Drawing']];
+
+// Embedded files keep their original markup; the picture and the file itself are also read so they can be shown and opened.
+const parseObject = (n: XNode, ctx: Ctx): Atom => {
+  const ole = find(n, 'o:OLEObject');
+  const shape = find(n, 'v:shape');
+  const style = shape?.attrs['style'] ?? '';
+  const size = (k: string) => { const m = new RegExp(`${k}:\\s*([\\d.]+)(pt|in|px)?`).exec(style); return m ? Number(m[1]) * (m[2] === 'in' ? 72 : m[2] === 'px' ? 0.75 : 1) : undefined; };
+  const progId = ole?.attrs['ProgID'];
+  const grab = (rid?: string): string | undefined => {
+    const rel = rid ? ctx.rels.get(rid) : undefined;
+    if (!rel || rel.external) return undefined;
+    const path = resolvePath(ctx.partDir, rel.target);
+    const data = ctx.files[path];
+    if (!data) return undefined;
+    if (!ctx.media[path]) ctx.media[path] = { mime: MIME[path.split('.').pop()!.toLowerCase()] ?? 'application/octet-stream', data, name: path.split('/').pop() };
+    return path;
+  };
+  const file = grab(ole?.attrs['r:id']);
+  const preview = grab(find(n, 'v:imagedata')?.attrs['r:id']);
+  const kind = PROG_NAMES.find(([r]) => r.test(progId ?? ''))?.[1] ?? 'Object';
+  return { kind: 'raw', xml: serialize(n), label: kind, width: size('width') ?? 96, height: size('height') ?? 64, object: { name: kind, progId, file, preview } };
 };
 
 const ommlText = (n: XNode): string => {
@@ -435,6 +465,7 @@ interface ParaState {
 interface DocState {
   ctx: Ctx;
   toc: number; // depth of table-of-contents field spanning paragraphs
+  perm?: boolean; // inside a range that stays editable when the document is protected
 }
 
 const push = (st: ParaState, run: Run): void => {
@@ -510,6 +541,7 @@ const parseRun = (r: XNode, st: ParaState, inl: Inline): void => {
         addAtom(st, { kind: 'raw', xml: serialize(c), label: 'Symbol', glyph: glyph && glyph.charCodeAt(0) < 0xe000 || glyph.charCodeAt(0) > 0xf8ff ? glyph : '•' }, props, inl);
         break;
       }
+      case 'w:object': addAtom(st, parseObject(c, ctx), props, inl); break;
       default: addAtom(st, { kind: 'raw', xml: serialize(c), label: 'Object' }, props, inl);
     }
   }
@@ -712,8 +744,15 @@ const parseBlocks = (nodes: XNode[], ds: DocState): Block[] => {
   const out: Block[] = [];
   for (const n of nodes) {
     switch (n.name) {
+      case 'w:permStart': ds.perm = true; break;
+      case 'w:permEnd': ds.perm = false; break;
       case 'w:p': {
-        const p = parseParagraph(n, ds);
+        const starts = !!find(n, 'w:permStart');
+        const ends = !!find(n, 'w:permEnd');
+        const parsed = parseParagraph(n, ds);
+        const p = ds.perm || starts ? { ...parsed, editable: true } : parsed;
+        if (starts) ds.perm = true;
+        if (ends) ds.perm = false;
         const prev = out[out.length - 1];
         // A large letter is stored as its own framed paragraph; here it joins the text it belongs to.
         if (prev?.type === 'p' && prev.props.dropCap && prev.runs.length === 1 && !p.props.dropCap) {
@@ -931,6 +970,13 @@ export const readDocx = (bytes: Uint8Array): Doc => {
   const prop = (k: string) => { const n = kids(core).find((c) => c.name.endsWith(`:${k}`) || c.name === k); return n ? textOf(n) || undefined : undefined; };
   const properties: Doc['properties'] = { title: prop('title'), subject: prop('subject'), creator: prop('creator'), keywords: prop('keywords'), description: prop('description'), lastModifiedBy: prop('lastModifiedBy'), created: prop('created'), modified: prop('modified'), category: prop('category') };
 
+  const customPart = partXml(rootRels.find((r) => r.type.endsWith('/custom-properties'))?.target.replace(/^\//, ''));
+  const custom: Record<string, string> = {};
+  for (const n of kids(customPart, 'property')) if (n.attrs['name']) custom[n.attrs['name']] = textOf(n);
+  const reactions = custom['ClerdoReactions'];
+  delete custom['ClerdoReactions'];
+  if (Object.keys(custom).length) properties.custom = custom;
+
   let sources: Source[] | undefined;
   for (const [k, v] of Object.entries(files)) {
     if (!/^customXml\/item\d*[^/]*\.xml$/.test(k)) continue;
@@ -960,7 +1006,17 @@ export const readDocx = (bytes: Uint8Array): Doc => {
     headers, footers,
     footnotes: parseNotes('footnotes', 'w:footnote'),
     endnotes: parseNotes('endnotes', 'w:endnote'),
-    comments, media, theme, settings, properties, sources, boxes: Object.keys(boxes).length ? boxes : undefined,
+    comments: withReactions(comments, reactions), media, theme, settings, properties, sources, boxes: Object.keys(boxes).length ? boxes : undefined,
     preserved: { parts, documentRels: docRels, rootAttrs: docAttrs },
   };
+};
+
+const withReactions = (comments: Record<string, Comment>, json?: string): Record<string, Comment> => {
+  if (!json) return comments;
+  try {
+    const map = JSON.parse(json) as Record<string, { author: string; kind: string }[]>;
+    const out = { ...comments };
+    for (const [id, list] of Object.entries(map)) if (out[id] && Array.isArray(list)) out[id] = { ...out[id]!, reactions: list.filter((r) => typeof r?.author === 'string' && typeof r?.kind === 'string').slice(0, 200) };
+    return out;
+  } catch { return comments; }
 };

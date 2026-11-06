@@ -1,21 +1,16 @@
 # Known gaps
 
-## Not built
-- Live co-editing and share links, which need a server
-- Digital signatures
-- Embedded objects, and audio or video files inside a document (they are added as links)
-- Restricted editing by section
-- Comment reactions
-- Arabic spelling dictionary
+## Limits that come from outside the app
+- Font files from other companies can't be included. Their names are drawn with open fonts of the same shape, and any font installed on the computer can be used directly
+- Translation runs on the device, and only on systems that offer language models
+- Working together connects devices directly. A public address server is used only to find each device's address; the document itself goes straight between devices. Some office networks block direct connections
+- Share links carry the document inside the link, so they work up to about 1.5 MB. Larger documents are sent as files
+- Embedding works for spreadsheet, document and presentation files
 
 ## Basic
-- Translation runs on the device, and only on systems that offer language models
-- Language of the text is saved, but spelling is English only
-- `.doc` opens without formatting, and `.pdf` opens without pictures
-- Tracked formatting is listed and can be accepted or rejected, with no mark on the page
-- Pen drawings are saved as pictures
-- Floating grouped drawings show in line with the text
-- Saved text keeps plain text only
+- Older drawing formats inside documents (EMF and WMF) show as a labeled card instead of a picture
+- Arabic spelling knows the common prefixes and suffixes, and may still flag a rare correct word
+- `.doc` opens text, tables and formatting; pictures inside `.doc` files aren't read yet
 
 ## Not yet tested
 - Real Windows, macOS and iPad hardware

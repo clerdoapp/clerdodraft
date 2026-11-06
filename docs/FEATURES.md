@@ -7,10 +7,11 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 ## Files
 - done: open and save .docx, keep unknown content on save, drag a file in to open, recovery copy on this device
 - done: print and save as PDF, export web page, Markdown, plain text, .odt, .rtf, document details
-- done: open .odt, .rtf, .md, .html, .txt; open .doc (text and tables) and .pdf (text)
+- done: open .odt, .rtf, .md, .html, .txt; open .doc with formatting and .pdf with pictures
 - done: password-protected files, version history on this device
-- done: 10 templates
-- next: digital signatures
+- done: 41 templates in seven groups, including an Arabic letter
+- done: digital signatures: sign with a personal certificate or a .pfx file, check signatures on open
+- done: share as a link, open shared links
 
 ## Text and paragraphs
 - done: more than 400 fonts: 212 open families built in, and the names of common office and system fonts drawn with open fonts of similar shape (the main ones with the same letter widths); every font installed on the computer in the desktop app, or in desktop browsers that allow it; symbol and dingbat fonts shown as the right characters
@@ -26,14 +27,14 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 ## Objects
 - done: column width from the ruler; picture settings, wrap, rotate, drag floating pictures
 - done: tables: rows, columns, merge, split, header rows, sort, text conversion, table styles, nested tables; pictures: insert, paste, resize, alt text on import; links; bookmarks; date and time; checkbox; symbols
-- done: charts (columns, bars, line, area, pie, ring) with a data editor, saved with their numbers; text boxes; 13 shapes with fill and outline; diagrams (process, cycle, hierarchy, list, pyramid, overlap); imported diagrams and grouped drawings are drawn and kept
+- done: 20 chart kinds (columns, bars, line, area, each plain, stacked or 100%; pie, ring, sunburst, scatter, bubble, radar, stock, heat map, tree map, histogram, box and whisker, waterfall, funnel, combo) with legend, axis titles, value labels and a data editor; text boxes; about 150 shapes in eight groups; 52 diagram layouts; 2,300 icons; imported diagrams and grouped drawings, floating or in line, are drawn and kept
 - done: equations drawn on the page with an editor, read and saved as structured math
-- done: picture crop, brightness, contrast, black and white; fill-in fields (text, list, date); saved text; text from a file
+- done: picture crop, brightness, contrast, black and white; pictures from a web address; fill-in fields (text, list, date); saved text with its formatting, tables and pictures; text from a file
 - done: fit columns to text, even out columns, split table, text turned in cells
-- basic: floating pictures with wrap (import, layout); cover page; watermark (app only)
-- done: table formulas, emoji, screenshots, text art
-- basic: drawing with a pen (saved as a picture), online video (saved as a linked picture)
-- next: embedded objects
+- done: floating pictures with wrap; cover page; watermark
+- done: table formulas, emoji, screenshots, 12 text art styles, glow, reflection, gradient fill and outline color
+- done: drawing with a pen, and drawing again on any picture; online video links
+- done: embedded spreadsheets, documents and presentations, opened from the page; embedded objects in opened files are kept and shown
 
 ## Page
 - done: size, direction, margins, columns, section breaks, page color, page border, line numbers, headers, footers, first and odd/even pages, page numbers
@@ -46,23 +47,25 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 
 ## Review
 - done: track changes, accept and reject, changes list, comments with replies and resolve, compare two documents, word count, markup views, read-only mode, accessibility check, read aloud, dictation (where the browser supports it)
-- done: spelling (US and UK English, offline), grammar rules for English, Arabic punctuation spacing, readability, personal dictionary, right-click fixes
-- done: word book with meanings and similar words, formatting changes tracked, comment filters, language of the text
+- done: spelling offline in US and UK English, Arabic, French, Spanish, Portuguese, Dutch and Russian; grammar rules for English, Arabic punctuation spacing, readability, personal dictionary, right-click fixes
+- done: word book with meanings and similar words, formatting changes tracked and marked on the page, comment filters, language of the text, hyphenation in 21 languages
+- done: restricted editing: allow changes in chosen paragraphs of a read-only document; comment reactions
 - basic: translation (where the system offers language models)
-- next: Arabic spelling dictionary, restricted editing by section, comment reactions
 
 ## Mail
-- done: merge from .csv, fields, merge to a new file, envelopes, labels
+- done: merge from .xlsx, .ods, .csv, .json and contacts (.vcf), fields, merge to a new file, envelopes, labels
 - done: recipient preview inside the document, merge rules, standard label sheets
 
 ## View
 - done: page view, reading view, outline panel with level changes, zoom, formatting marks, dark mode, command search
 - done: web view and draft view
-- done: split view, new window, pages side by side, gridlines, focus reader, keyboard shortcut list
+- done: split view, new window, pages side by side, gridlines, focus reader, keyboard shortcut list (F1)
+- done: interface in English and Arabic, right to left
 
 ## Together
 - done: version history on this device
-- next: live co-editing, share links
+- done: work together live, device to device, with invitation codes and no server
+- done: share links that carry the document
 
 ## Left out on purpose
 - Macro and scripting languages tied to one vendor, and their form controls

@@ -23,7 +23,9 @@ const allText = (n: XNode | undefined, tag: string): string => {
   return kids(n).map((c) => (c.name === tag ? textOf(c) : allText(c, tag))).join('');
 };
 
-export type ChartData = Pick<ChartAtom, 'chart' | 'stacked' | 'title' | 'categories' | 'series'>;
+export type ChartData = Pick<ChartAtom, 'chart' | 'stacked' | 'percent' | 'markers' | 'smooth' | 'labels' | 'legend' | 'xTitle' | 'yTitle' | 'noGrid' | 'title' | 'categories' | 'series'>;
+
+const OWN = 'urn:clerdo:chart';
 
 export const parseChart = (x: XNode, theme: Theme): ChartData | null => {
   const chart = kid(x, 'c:chart');
@@ -33,60 +35,129 @@ export const parseChart = (x: XNode, theme: Theme): ChartData | null => {
   const bar = pick('c:barChart', 'c:bar3DChart');
   const line = pick('c:lineChart', 'c:line3DChart');
   const area = pick('c:areaChart', 'c:area3DChart');
-  const pie = pick('c:pieChart', 'c:pie3DChart');
+  const pie = pick('c:pieChart', 'c:pie3DChart', 'c:ofPieChart');
   const ring = pick('c:doughnutChart');
-  const node = bar ?? line ?? area ?? pie ?? ring;
-  if (!node) return null;
-  const kind: ChartKind = bar ? (kid(bar, 'c:barDir')?.attrs['val'] === 'bar' ? 'bar' : 'column') : line ? 'line' : area ? 'area' : pie ? 'pie' : 'doughnut';
-  const sers = kids(node, 'c:ser');
+  const scatter = pick('c:scatterChart');
+  const bubble = pick('c:bubbleChart');
+  const radar = pick('c:radarChart');
+  const stock = pick('c:stockChart');
+  const surface = pick('c:surfaceChart', 'c:surface3DChart');
+  const nodes = [bar, line, area, pie, ring, scatter, bubble, radar, stock, surface].filter(Boolean) as XNode[];
+  if (!nodes.length) return null;
+  let kind: ChartKind = bar ? (kid(bar, 'c:barDir')?.attrs['val'] === 'bar' ? 'bar' : 'column') : line ? 'line' : area ? 'area' : pie ? 'pie' : ring ? 'doughnut' : scatter ? 'scatter' : bubble ? 'bubble' : radar ? (kid(radar, 'c:radarStyle')?.attrs['val'] === 'filled' ? 'radarFilled' : 'radar') : stock ? 'stock' : 'surface';
+  if (bar && line) kind = 'combo';
+  const sers = nodes.flatMap((n) => kids(n, 'c:ser'));
   if (!sers.length) return null;
   let categories: string[] = [];
-  const series: ChartSeries[] = sers.map((s, i) => {
-    const vals = points(find(kid(s, 'c:val'), 'c:numCache'));
-    const cats = points(find(kid(s, 'c:cat'), 'c:strCache') ?? find(kid(s, 'c:cat'), 'c:numCache'));
+  const series: ChartSeries[] = [];
+  sers.forEach((s, i) => {
+    const vals = points(find(kid(s, 'c:val') ?? kid(s, 'c:yVal'), 'c:numCache'));
+    const catNode = kid(s, 'c:cat') ?? kid(s, 'c:xVal');
+    const cats = points(find(catNode, 'c:strCache') ?? find(catNode, 'c:numCache'));
     const n = Math.max(0, ...vals.keys(), ...cats.keys()) + 1;
     if (!categories.length) categories = Array.from({ length: n }, (_, k) => cats.get(k) ?? String(k + 1));
-    return {
-      name: textOf(find(kid(s, 'c:tx'), 'c:v')) || `Series ${i + 1}`,
-      values: Array.from({ length: categories.length }, (_, k) => Number(vals.get(k) ?? 0) || 0),
-      color: drawingColor(kid(kid(s, 'c:spPr'), 'a:solidFill'), theme),
-    };
+    series.push({ name: textOf(find(kid(s, 'c:tx'), 'c:v')) || `Series ${i + 1}`, values: Array.from({ length: categories.length }, (_, k) => Number(vals.get(k) ?? 0) || 0), color: drawingColor(kid(kid(s, 'c:spPr'), 'a:solidFill'), theme) });
+    if (bubble) {
+      const sizes = points(find(kid(s, 'c:bubbleSize'), 'c:numCache'));
+      series.push({ name: 'Size', values: Array.from({ length: categories.length }, (_, k) => Number(sizes.get(k) ?? 1) || 1) });
+    }
   });
+  const node = nodes[0]!;
   const grouping = kid(node, 'c:grouping')?.attrs['val'];
   const title = allText(kid(chart, 'c:title'), 'a:t');
-  return { chart: kind, stacked: grouping === 'stacked' || grouping === 'percentStacked' || undefined, title: title || undefined, categories, series };
+  const legend = kid(chart, 'c:legend');
+  const pos = kid(legend, 'c:legendPos')?.attrs['val'];
+  const axTitle = (name: string) => kids(plot, name).map((ax) => allText(kid(ax, 'c:title'), 'a:t')).find(Boolean);
+  const out: ChartData = {
+    chart: kind, stacked: grouping === 'stacked' || undefined, percent: grouping === 'percentStacked' || undefined, title: title || undefined, categories, series,
+    smooth: kids(sers[0], 'c:smooth')[0]?.attrs['val'] === '1' || undefined, labels: kid(find(node, 'c:dLbls'), 'c:showVal')?.attrs['val'] === '1' || undefined,
+    legend: !legend ? 'none' : pos === 't' || pos === 'r' || pos === 'l' ? pos : undefined,
+    xTitle: axTitle('c:catAx') ?? undefined, yTitle: axTitle('c:valAx') ?? undefined,
+  };
+  // Kinds drawn here but saved with a simpler fallback carry their own note.
+  const own = kids(kid(x, 'c:extLst'), 'c:ext').find((e) => e.attrs['uri'] === OWN);
+  const opts = own ? kids(own)[0]?.attrs : undefined;
+  if (opts?.['kind']) {
+    out.chart = opts['kind'] as ChartKind;
+    if (opts['data']) try { const d = JSON.parse(opts['data']) as { categories: string[]; series: ChartSeries[] }; out.categories = d.categories; out.series = d.series; } catch { /* keep what the chart part shows */ }
+  }
+  if (opts?.['markers'] === '0') out.markers = false;
+  if (opts?.['noGrid'] === '1') out.noGrid = true;
+  return out;
 };
 
 const col = (i: number): string => String.fromCharCode(66 + i);
 
 const fill = (c?: string): string => (c ? `<c:spPr><a:solidFill><a:srgbClr val="${c.slice(1).toUpperCase()}"/></a:solidFill></c:spPr>` : '');
+const attr = (s: string): string => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
-const serXml = (a: ChartAtom, s: ChartSeries, i: number): string => {
+const strCache = (ref: string, vals: string[]): string => `<c:strRef><c:f>${ref}</c:f><c:strCache><c:ptCount val="${vals.length}"/>${vals.map((v, k) => `<c:pt idx="${k}"><c:v>${escapeText(v)}</c:v></c:pt>`).join('')}</c:strCache></c:strRef>`;
+const numCache = (ref: string, vals: number[]): string => `<c:numRef><c:f>${ref}</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val="${vals.length}"/>${vals.map((v, k) => `<c:pt idx="${k}"><c:v>${v}</c:v></c:pt>`).join('')}</c:numCache></c:numRef>`;
+
+// Kinds without a classic equivalent are saved as the closest classic chart.
+const FALLBACK: Partial<Record<ChartKind, ChartKind>> = { treemap: 'doughnut', sunburst: 'doughnut', histogram: 'column', boxWhisker: 'column', waterfall: 'column', funnel: 'bar' };
+
+const serXml = (a: ChartAtom, s: ChartSeries, i: number, kind: ChartKind, size?: ChartSeries): string => {
   const n = a.categories.length;
-  const cats = a.categories.map((c, k) => `<c:pt idx="${k}"><c:v>${escapeText(c)}</c:v></c:pt>`).join('');
-  const vals = a.categories.map((_, k) => `<c:pt idx="${k}"><c:v>${s.values[k] ?? 0}</c:v></c:pt>`).join('');
-  const round = a.chart === 'pie' || a.chart === 'doughnut';
-  const marker = a.chart === 'line' ? '<c:marker><c:symbol val="circle"/></c:marker>' : '';
-  const invert = a.chart === 'column' || a.chart === 'bar' ? '<c:invertIfNegative val="0"/>' : '';
-  return `<c:ser><c:idx val="${i}"/><c:order val="${i}"/><c:tx><c:strRef><c:f>Sheet1!$${col(i)}$1</c:f><c:strCache><c:ptCount val="1"/><c:pt idx="0"><c:v>${escapeText(s.name)}</c:v></c:pt></c:strCache></c:strRef></c:tx>${round ? '' : fill(s.color)}${invert}${marker}<c:cat><c:strRef><c:f>Sheet1!$A$2:$A$${n + 1}</c:f><c:strCache><c:ptCount val="${n}"/>${cats}</c:strCache></c:strRef></c:cat><c:val><c:numRef><c:f>Sheet1!$${col(i)}$2:$${col(i)}$${n + 1}</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val="${n}"/>${vals}</c:numCache></c:numRef></c:val></c:ser>`;
+  const tx = `<c:tx>${strCache(`Sheet1!$${col(i)}$1`, [s.name])}</c:tx>`;
+  const head = `<c:idx val="${i}"/><c:order val="${i}"/>${tx}`;
+  const vals = numCache(`Sheet1!$${col(i)}$2:$${col(i)}$${n + 1}`, a.categories.map((_, k) => s.values[k] ?? 0));
+  const cats = strCache(`Sheet1!$A$2:$A$${n + 1}`, a.categories);
+  const xs = numCache(`Sheet1!$A$2:$A$${n + 1}`, a.categories.map((c, k) => (Number.isFinite(Number(c)) && c.trim() ? Number(c) : k + 1)));
+  const labels = a.labels ? '<c:dLbls><c:showLegendKey val="0"/><c:showVal val="1"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbls>' : '';
+  const marker = a.markers === false ? '<c:marker><c:symbol val="none"/></c:marker>' : '<c:marker><c:symbol val="circle"/></c:marker>';
+  const smooth = `<c:smooth val="${a.smooth ? 1 : 0}"/>`;
+  switch (kind) {
+    case 'pie': case 'doughnut': return `<c:ser>${head}${labels}<c:cat>${cats}</c:cat><c:val>${vals}</c:val></c:ser>`;
+    case 'line': case 'stock': return `<c:ser>${head}${fill(s.color)}${kind === 'stock' ? '<c:spPr><a:ln w="19050"><a:noFill/></a:ln></c:spPr><c:marker><c:symbol val="none"/></c:marker>' : marker}${labels}<c:cat>${cats}</c:cat><c:val>${vals}</c:val>${smooth}</c:ser>`;
+    case 'scatter': return `<c:ser>${head}${fill(s.color)}${marker}${labels}<c:xVal>${xs}</c:xVal><c:yVal>${vals}</c:yVal>${smooth}</c:ser>`;
+    case 'bubble': return `<c:ser>${head}${fill(s.color)}<c:invertIfNegative val="0"/>${labels}<c:xVal>${xs}</c:xVal><c:yVal>${vals}</c:yVal><c:bubbleSize>${numCache(`Sheet1!$${col(i + 1)}$2:$${col(i + 1)}$${n + 1}`, a.categories.map((_, k) => size?.values[k] ?? 1))}</c:bubbleSize><c:bubble3D val="0"/></c:ser>`;
+    case 'radar': case 'radarFilled': return `<c:ser>${head}${fill(s.color)}${kind === 'radar' ? marker : ''}${labels}<c:cat>${cats}</c:cat><c:val>${vals}</c:val></c:ser>`;
+    case 'surface': return `<c:ser>${head}<c:cat>${cats}</c:cat><c:val>${vals}</c:val></c:ser>`;
+    default: return `<c:ser>${head}${fill(s.color)}<c:invertIfNegative val="0"/>${labels}<c:cat>${cats}</c:cat><c:val>${vals}</c:val></c:ser>`;
+  }
 };
 
+const titleXml = (t: string): string => `<c:title><c:tx><c:rich><a:bodyPr/><a:p><a:r><a:rPr lang="en-US"/><a:t>${escapeText(t)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>`;
+
+const axis = (tag: 'c:catAx' | 'c:valAx' | 'c:serAx', id: string, cross: string, pos: string, grid: boolean, title?: string): string =>
+  `<${tag}><c:axId val="${id}"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${pos}"/>${grid ? '<c:majorGridlines/>' : ''}${title ? titleXml(title) : ''}<c:numFmt formatCode="General" sourceLinked="0"/><c:majorTickMark val="out"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/><c:crossAx val="${cross}"/><c:crosses val="autoZero"/>${tag === 'c:valAx' ? '<c:crossBetween val="between"/>' : tag === 'c:catAx' ? '<c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/><c:noMultiLvlLbl val="0"/>' : ''}</${tag}>`;
+
 export const chartPart = (a: ChartAtom, dataRel: string): string => {
-  const sers = a.series.map((s, i) => serXml(a, s, i)).join('');
-  const axes = '<c:axId val="111111111"/><c:axId val="222222222"/>';
-  const grouping = a.stacked ? 'stacked' : 'clustered';
-  const horizontal = a.chart === 'bar';
-  const axisXml = `<c:catAx><c:axId val="111111111"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${horizontal ? 'l' : 'b'}"/><c:numFmt formatCode="General" sourceLinked="0"/><c:majorTickMark val="out"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/><c:crossAx val="222222222"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/><c:noMultiLvlLbl val="0"/></c:catAx><c:valAx><c:axId val="222222222"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${horizontal ? 'b' : 'l'}"/><c:majorGridlines/><c:numFmt formatCode="General" sourceLinked="0"/><c:majorTickMark val="out"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/><c:crossAx val="111111111"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx>`;
+  const kind: ChartKind = FALLBACK[a.chart] ?? a.chart;
+  const A = '111111111'; const B = '222222222'; const C = '333333333';
+  const ids = `<c:axId val="${A}"/><c:axId val="${B}"/>`;
+  const grid = !a.noGrid;
+  const horizontal = kind === 'bar';
+  const catVal = axis('c:catAx', A, B, horizontal ? 'l' : 'b', false, a.xTitle) + axis('c:valAx', B, A, horizontal ? 'b' : 'l', grid, a.yTitle);
+  const valVal = axis('c:valAx', A, B, 'b', false, a.xTitle) + axis('c:valAx', B, A, 'l', grid, a.yTitle);
+  const grouping = a.percent ? 'percentStacked' : a.stacked ? 'stacked' : kind === 'line' || kind === 'area' ? 'standard' : 'clustered';
+  const bubble = kind === 'bubble';
+  const list = bubble ? [a.series[0]!].filter(Boolean) : a.series;
+  const sers = (k: ChartKind, from = 0, to = list.length) => list.slice(from, to).map((s, i) => serXml(a, s, i + from, k, bubble ? a.series[1] : undefined)).join('');
   let plot: string;
-  switch (a.chart) {
-    case 'pie': plot = `<c:pieChart><c:varyColors val="1"/>${sers}<c:firstSliceAng val="0"/></c:pieChart>`; break;
-    case 'doughnut': plot = `<c:doughnutChart><c:varyColors val="1"/>${sers}<c:firstSliceAng val="0"/><c:holeSize val="58"/></c:doughnutChart>`; break;
-    case 'line': plot = `<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>${sers}<c:marker val="1"/>${axes}</c:lineChart>${axisXml}`; break;
-    case 'area': plot = `<c:areaChart><c:grouping val="standard"/><c:varyColors val="0"/>${sers}${axes}</c:areaChart>${axisXml}`; break;
-    default: plot = `<c:barChart><c:barDir val="${horizontal ? 'bar' : 'col'}"/><c:grouping val="${grouping}"/><c:varyColors val="0"/>${sers}<c:gapWidth val="60"/>${a.stacked ? '<c:overlap val="100"/>' : ''}${axes}</c:barChart>${axisXml}`;
+  switch (kind) {
+    case 'pie': plot = `<c:pieChart><c:varyColors val="1"/>${sers('pie')}<c:firstSliceAng val="0"/></c:pieChart>`; break;
+    case 'doughnut': plot = `<c:doughnutChart><c:varyColors val="1"/>${sers('doughnut')}<c:firstSliceAng val="0"/><c:holeSize val="${a.chart === 'sunburst' ? 25 : 58}"/></c:doughnutChart>`; break;
+    case 'line': plot = `<c:lineChart><c:grouping val="${grouping}"/><c:varyColors val="0"/>${sers('line')}<c:marker val="1"/>${ids}</c:lineChart>${catVal}`; break;
+    case 'area': plot = `<c:areaChart><c:grouping val="${grouping}"/><c:varyColors val="0"/>${sers('area')}${ids}</c:areaChart>${catVal}`; break;
+    case 'scatter': plot = `<c:scatterChart><c:scatterStyle val="${a.smooth ? 'smoothMarker' : 'lineMarker'}"/><c:varyColors val="0"/>${sers('scatter')}${ids}</c:scatterChart>${valVal}`; break;
+    case 'bubble': plot = `<c:bubbleChart><c:varyColors val="0"/>${sers('bubble')}<c:bubbleScale val="100"/><c:showNegBubbles val="0"/>${ids}</c:bubbleChart>${valVal}`; break;
+    case 'radar': case 'radarFilled': plot = `<c:radarChart><c:radarStyle val="${kind === 'radarFilled' ? 'filled' : 'marker'}"/><c:varyColors val="0"/>${sers(kind)}${ids}</c:radarChart>${catVal}`; break;
+    case 'stock': plot = `<c:stockChart>${sers('stock', 0, 3)}<c:hiLowLines/>${ids}</c:stockChart>${catVal}`; break;
+    case 'surface': plot = `<c:surfaceChart><c:wireframe val="0"/>${sers('surface')}<c:axId val="${A}"/><c:axId val="${B}"/><c:axId val="${C}"/></c:surfaceChart>${axis('c:catAx', A, B, 'b', false)}${axis('c:valAx', B, A, 'l', grid)}${axis('c:serAx', C, B, 'b', false)}`; break;
+    case 'combo': {
+      const last = Math.max(1, list.length - 1);
+      plot = `<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>${sers('column', 0, last)}<c:gapWidth val="60"/>${ids}</c:barChart>${list.length > 1 ? `<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>${sers('line', last)}<c:marker val="1"/>${ids}</c:lineChart>` : ''}${catVal}`;
+      break;
+    }
+    default: plot = `<c:barChart><c:barDir val="${horizontal ? 'bar' : 'col'}"/><c:grouping val="${grouping}"/><c:varyColors val="0"/>${sers(kind)}<c:gapWidth val="60"/>${a.stacked || a.percent ? '<c:overlap val="100"/>' : ''}${ids}</c:barChart>${catVal}`;
   }
-  const title = a.title ? `<c:title><c:tx><c:rich><a:bodyPr/><a:p><a:r><a:rPr lang="en-US"/><a:t>${escapeText(a.title)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:autoTitleDeleted val="0"/>` : '<c:autoTitleDeleted val="1"/>';
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<c:chartSpace xmlns:c="${NS['c']}" xmlns:a="${NS['a']}" xmlns:r="${NS['r']}"><c:roundedCorners val="0"/><c:chart>${title}<c:plotArea><c:layout/>${plot}</c:plotArea><c:legend><c:legendPos val="b"/><c:overlay val="0"/></c:legend><c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart><c:externalData r:id="${dataRel}"><c:autoUpdate val="0"/></c:externalData></c:chartSpace>`;
+  const title = a.title ? `${titleXml(a.title)}<c:autoTitleDeleted val="0"/>` : '<c:autoTitleDeleted val="1"/>';
+  const legend = a.legend === 'none' ? '' : `<c:legend><c:legendPos val="${a.legend ?? 'b'}"/><c:overlay val="0"/></c:legend>`;
+  const own = FALLBACK[a.chart] || a.markers === false || a.noGrid
+    ? `<c:extLst><c:ext uri="${OWN}" xmlns:cd="${OWN}"><cd:chart${FALLBACK[a.chart] ? ` kind="${a.chart}" data="${attr(JSON.stringify({ categories: a.categories, series: a.series }))}"` : ''}${a.markers === false ? ' markers="0"' : ''}${a.noGrid ? ' noGrid="1"' : ''}/></c:ext></c:extLst>` : '';
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<c:chartSpace xmlns:c="${NS['c']}" xmlns:a="${NS['a']}" xmlns:r="${NS['r']}"><c:roundedCorners val="0"/><c:chart>${title}<c:plotArea><c:layout/>${plot}</c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart><c:externalData r:id="${dataRel}"><c:autoUpdate val="0"/></c:externalData>${own}</c:chartSpace>`;
 };
 
 // A small workbook holding the chart's numbers, so the data stays editable elsewhere.

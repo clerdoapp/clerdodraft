@@ -190,7 +190,7 @@ try {
   ok((await doc()).text.includes('[tbl]'), 'opens a web page with a table');
   if (process.env.SAMPLE_PDF) {
     await drop('paper.pdf', readFileSync(process.env.SAMPLE_PDF).toString('base64'));
-    await page.waitForTimeout(2500);
+    await page.waitForFunction(() => window.__store.doc.blocks.some((b) => b.type === 'p' && b.runs.map((r) => r.text).join('').includes('after the table')), null, { timeout: 15000 }).catch(() => undefined);
     ok((await doc()).text.join(' ').includes('after the table'), 'reads the text of a PDF');
   }
   if (process.env.SAMPLE_LOCKED) {
@@ -280,6 +280,33 @@ try {
   await page.keyboard.type('Garamond text');
   await page.waitForTimeout(300);
   ok(await page.evaluate(() => document.fonts.check('16px "EB Garamond"')), 'chosen font loads');
+  const palette = async (q) => { await page.keyboard.press('Control+/'); await page.locator('.palette input').fill(q); await page.keyboard.press('Enter'); };
+  await palette('Icons');
+  await page.waitForSelector('.icongrid button');
+  await page.locator('.iconbox input').first().fill('heart');
+  await page.waitForTimeout(300);
+  await page.locator('.icongrid button').first().click();
+  await page.waitForTimeout(300);
+  ok(await page.evaluate(() => Object.keys(window.__store.doc.media).some((k) => k.includes('icon') || k.endsWith('.png') || k.endsWith('.svg'))), 'icon is added as a picture');
+  await page.keyboard.press('Escape');
+  await palette('All templates');
+  await page.waitForSelector('.tplgrid button');
+  let tplCount = 0;
+  for (const g of await page.locator('.tplbox .seg button').all()) { await g.click(); tplCount += await page.locator('.tplgrid button').count(); }
+  ok(tplCount >= 40, `template library lists every template (${tplCount})`);
+  await page.keyboard.press('Escape');
+  await palette('Work together');
+  await page.waitForTimeout(300);
+  ok((await page.locator('.inspector', { hasText: 'invitation' }).count()) > 0, 'working together pane');
+  await palette('Signatures');
+  await page.waitForTimeout(300);
+  ok((await page.locator('.inspector', { hasText: 'certificate' }).count()) > 0, 'signatures pane');
+  await palette('العربية');
+  await page.waitForTimeout(500);
+  ok(await page.evaluate(() => document.documentElement.dir === 'rtl' && document.body.innerText.includes('إدراج') || document.body.innerText.includes('الصفحة')), 'Arabic interface');
+  await palette('English');
+  await page.waitForTimeout(300);
+  ok(await page.evaluate(() => document.documentElement.dir !== 'rtl'), 'back to English');
   ok(errors.length === 0, `no console errors ${errors.slice(0, 3).join(' | ')}`);
   await page.screenshot({ path: join(out, 'final.png') });
   console.log(out);

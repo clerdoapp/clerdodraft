@@ -11,7 +11,7 @@ import { mail, recipients, type MailRule } from '../features/mailReview';
 import { run } from '../editor/commands';
 import { ProofPane } from './ProofPane';
 import { TranslatePane, WordPane } from './WordPane';
-import { BlocksPane, VersionsPane } from './ExtraViews';
+import { BlocksPane, SignaturesPane, TogetherPane, VersionsPane } from './ExtraViews';
 
 const S = 1.9;
 
@@ -63,6 +63,8 @@ const OutlinePane = ({ store }: { store: EditorStore }) => {
   );
 };
 
+const REACTIONS = ['👍', '❤️', '😄', '🎉', '👀', '✅'];
+
 const CommentCard = ({ store, c, replies }: { store: EditorStore; c: Comment; replies: Comment[] }) => {
   const [text, setText] = useState('');
   const body = (x: Comment) => x.blocks.map((b) => (b.type === 'p' ? paraText(b) : '')).join('\n');
@@ -84,6 +86,12 @@ const CommentCard = ({ store, c, replies }: { store: EditorStore; c: Comment; re
       <header><b>{c.author}</b><time>{c.date ? new Date(c.date).toLocaleDateString() : ''}</time></header>
       <p>{body(c)}</p>
       {replies.map((r) => <div key={r.id} className="reply"><b>{r.author}</b><p>{body(r)}</p></div>)}
+      <div className="reacts">{REACTIONS.map((k) => {
+        const list = (c.reactions ?? []).filter((x) => x.kind === k);
+        const mine = list.some((x) => x.author === store.author);
+        const toggle = () => store.commit({ ...store.doc, comments: { ...store.doc.comments, [c.id]: { ...c, reactions: mine ? (c.reactions ?? []).filter((x) => !(x.kind === k && x.author === store.author)) : [...(c.reactions ?? []), { author: store.author, kind: k }] } } });
+        return <button key={k} className={mine ? 'on' : ''} title={list.map((x) => x.author).join(', ')} aria-pressed={mine} onClick={toggle}>{k}{list.length ? ` ${list.length}` : ''}</button>;
+      })}</div>
       <input aria-label="Reply" placeholder="Reply" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') reply(); }} />
       <div className="row">
         <button className="tool" onClick={() => store.commit({ ...store.doc, comments: { ...store.doc.comments, [c.id]: { ...c, resolved: !c.resolved } } })}><Check size={14} strokeWidth={S} /> {c.resolved ? 'Reopen' : 'Resolve'}</button>
@@ -189,7 +197,7 @@ const MailPane = ({ store }: { store: EditorStore }) => {
   const add = (c: string) => store.insertAtom({ kind: 'field', field: 'merge', instr: `MERGEFIELD ${c}`, result: `«${c}»` });
   return (
     <Pane store={store} title="Mail merge">
-      {!d && <><p className="muted">Choose a .csv list. Its first row names the fields.</p><button className="tool" onClick={() => run(store, 'mail.source')}>Choose a list</button></>}
+      {!d && <><p className="muted">Choose a list: a spreadsheet (.xlsx, .ods, .csv), contacts (.vcf) or data (.json). Its first row names the fields.</p><button className="tool" onClick={() => run(store, 'mail.source')}>Choose a list</button></>}
       {d && (
         <>
           <p className="muted">{d.rows.length} recipients. Click a field to place it in the document.</p>
@@ -212,6 +220,8 @@ export const Inspector = ({ store }: { store: EditorStore }) => {
     case 'mail': return <MailPane store={store} />;
     case 'versions': return <VersionsPane store={store} />;
     case 'blocks': return <BlocksPane store={store} />;
+    case 'together': return <TogetherPane store={store} />;
+    case 'signatures': return <SignaturesPane store={store} />;
     case 'words': return <WordPane store={store} />;
     case 'translate': return <TranslatePane store={store} />;
     case 'proof': return <ProofPane store={store} onClose={() => store.setView({ pane: null })} />;

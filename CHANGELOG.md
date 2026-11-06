@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.0
+- About 150 shapes, 52 diagram layouts, 20 chart kinds and 2,300 icons
+- Glow, reflection, gradient fill and outline color for text; 12 text art styles
+- 41 templates, including an Arabic letter
+- Spelling in Arabic, French, Spanish, Portuguese, Dutch and Russian; hyphenation in 21 languages
+- Interface in Arabic
+- Digital signatures: sign and check
+- Work together live, device to device; share links
+- Embedded spreadsheets, documents and presentations
+- Restricted editing by paragraph, comment reactions
+- Mail merge from spreadsheets, contacts and data files
+- `.doc` opens with formatting, `.pdf` opens with pictures
+- Pictures from a web address, drawing on pictures, saved text keeps formatting
+- Floating grouped drawings drawn in place, tracked formatting marked on the page
+- Fixed: names with non-Latin letters in certificates
+
 ## 0.4.0
 - More than 400 fonts: 212 open families, and common document font names drawn with matching open fonts
 - The desktop app lists every font installed on the computer

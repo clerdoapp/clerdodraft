@@ -59,6 +59,10 @@ export const fragStyle = (store: EditorStore, f: Frag): CSSProperties => {
   if (e.shadow) s.textShadow = '1px 1px 1px rgba(0,0,0,.35)';
   if (e.emboss) { s.textShadow = '-1px -1px 0 rgba(255,255,255,.9), 1px 1px 1px rgba(0,0,0,.45)'; s.color = s.color ?? '#c8c8c8'; }
   if (e.imprint) { s.textShadow = '1px 1px 0 rgba(255,255,255,.9), -1px -1px 1px rgba(0,0,0,.45)'; s.color = s.color ?? '#c8c8c8'; }
+  if (e.glow) s.textShadow = `0 0 ${Math.max(2, e.glow.size)}px ${e.glow.color}, 0 0 ${Math.max(1, e.glow.size / 2)}px ${e.glow.color}`;
+  if (e.reflect) { s.display = 'inline-block'; (s as Record<string, unknown>)['WebkitBoxReflect'] = 'below -0.15em linear-gradient(transparent 45%, rgba(255,255,255,.45))'; }
+  if (e.gradient) { s.backgroundImage = `linear-gradient(180deg, ${e.gradient[0]}, ${e.gradient[1]})`; (s as Record<string, unknown>)['WebkitBackgroundClip'] = 'text'; s.backgroundClip = 'text'; s.color = 'transparent'; }
+  if (e.lineColor && !e.outline) s.WebkitTextStroke = `0.5px ${e.lineColor}`;
   if (e.outline) { s.color = 'transparent'; s.WebkitTextStroke = `0.6px ${e.color ?? '#000'}`; }
   const r = f.run;
   if (r) {
@@ -66,6 +70,7 @@ export const fragStyle = (store: EditorStore, f: Frag): CSSProperties => {
     if (markup === 'all') {
       if (r.ins) { s.color = authorColor(r.ins.author); decor.push('underline'); }
       if (r.del) { s.color = authorColor(r.del.author); decor.push('line-through'); }
+      if (r.fmtRev) { s.boxShadow = `inset 0 -2px 0 ${authorColor(r.fmtRev.rev.author)}`; s.backgroundColor = s.backgroundColor ?? 'rgba(35,71,255,.07)'; }
     }
     if (markup === 'original' && r.ins) s.display = 'none';
     if (r.comments?.length && markup !== 'none' && markup !== 'original') s.backgroundColor = s.backgroundColor ?? '#fdf0c2';

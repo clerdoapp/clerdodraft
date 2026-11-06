@@ -5,6 +5,7 @@ import { walkParagraphs } from '../../core/tree';
 import type { EditorStore } from '../../editor/store';
 import { checkGrammar, spellWords } from './grammar';
 import SpellWorker from './worker?worker&inline';
+import { loadDictionary, spellLang } from './dictionaries';
 
 export interface Issue {
   kind: 'spell' | 'grammar';
@@ -16,7 +17,7 @@ export interface Issue {
   fix?: string;
 }
 
-type Lang = 'en-US' | 'en-GB';
+type Lang = string;
 
 const WORDS_KEY = 'clerdodraft.words';
 const OFF_KEY = 'clerdodraft.proofOff';
@@ -26,6 +27,9 @@ const load = (k: string): string[] => {
 };
 
 const CHUNK = 1500;
+
+// Arabic and Cyrillic words are checked in their own language whatever the paragraph says.
+const wordLang = (word: string, base: string): string => (/[\u0600-\u06FF]/.test(word) ? 'ar' : /[\u0400-\u04FF]/.test(word) ? 'ru' : base);
 
 export class Proofer {
   enabled = true;
@@ -55,7 +59,23 @@ export class Proofer {
     this.schedule();
   }
 
-  private call(op: 'check' | 'suggest', lang: Lang, words: string[]): Promise<{ wrong?: string[]; suggestions?: string[] }> {
+  private loaded = new Map<string, Promise<boolean>>();
+
+  private ensure(lang: Lang): Promise<boolean> {
+    let p = this.loaded.get(lang);
+    if (!p) {
+      p = loadDictionary(lang).then(async (d) => { if (!d) return false; await this.post('load', lang, [], d); return true; }).catch(() => false);
+      this.loaded.set(lang, p);
+    }
+    return p;
+  }
+
+  private async call(op: 'check' | 'suggest', lang: Lang, words: string[]): Promise<{ wrong?: string[]; suggestions?: string[] }> {
+    if (!(await this.ensure(lang))) return { wrong: [], suggestions: [] };
+    return this.post(op, lang, words);
+  }
+
+  private post(op: 'load' | 'check' | 'suggest', lang: Lang, words: string[], extra: { aff?: string; dic?: string } = {}): Promise<{ wrong?: string[]; suggestions?: string[] }> {
     if (!this.worker) {
       this.worker = new SpellWorker();
       this.worker.onmessage = (e: MessageEvent<{ id: number; wrong?: string[]; suggestions?: string[] }>) => {
@@ -66,7 +86,7 @@ export class Proofer {
     const id = ++this.seq;
     return new Promise((resolve) => {
       this.pending.set(id, resolve);
-      this.worker!.postMessage({ id, op, lang, words });
+      this.worker!.postMessage({ id, op, lang, words, ...extra });
     });
   }
 
@@ -77,8 +97,7 @@ export class Proofer {
 
   private langOf(p: Paragraph): Lang {
     const eff = effectivePara(this.store.doc, p.props);
-    const l = effectiveRun(this.store.doc, eff, {}).lang ?? 'en-US';
-    return l.toLowerCase() === 'en-gb' ? 'en-GB' : 'en-US';
+    return spellLang(effectiveRun(this.store.doc, eff, {}).lang) ?? 'none';
   }
 
   private masked(p: Paragraph): string {
@@ -86,7 +105,7 @@ export class Proofer {
     const eff = effectivePara(doc, p.props);
     return p.runs.map((r) => {
       const lang = r.props.lang;
-      const skip = r.del || r.atom || r.props.hidden || r.link || (lang && !/^en/i.test(lang)) || effectiveRun(doc, eff, r.props).font?.toLowerCase().includes('courier');
+      const skip = r.del || r.atom || r.props.hidden || r.link || (lang && !spellLang(lang)) || effectiveRun(doc, eff, r.props).font?.toLowerCase().includes('courier');
       return skip ? ' '.repeat(r.text.length) : r.text;
     }).join('');
   }
@@ -104,7 +123,7 @@ export class Proofer {
     const spot = (from: number, word: string) => `${word}@${from}`;
     for (const w of spellWords(text)) {
       if (this.personal.has(w.word.toLowerCase()) || this.ignored.has(w.word.toLowerCase())) continue;
-      if (this.known.get(`${lang}|${w.word}`) === false) out.push({ kind: 'spell', para: p.id, from: w.from, to: w.to, text: text.slice(w.from, w.to), message: 'Not in the dictionary.' });
+      if (this.known.get(`${wordLang(w.word, lang)}|${w.word}`) === false) out.push({ kind: 'spell', para: p.id, from: w.from, to: w.to, text: text.slice(w.from, w.to), message: 'Not in the dictionary.' });
     }
     for (const f of checkGrammar(text)) {
       if (this.ignored.has(`g:${text.slice(f.from, f.to).toLowerCase()}`) || this.ignoredSpots.has(spot(f.from, p.id))) continue;
@@ -123,8 +142,10 @@ export class Proofer {
       const todo = [...walkParagraphs(doc.blocks)].filter((p) => !bucket.has(p));
       const need = new Map<Lang, Set<string>>();
       for (const p of todo) {
-        const lang = this.langOf(p);
+        const base = this.langOf(p);
         for (const w of spellWords(this.masked(p))) {
+          const lang = wordLang(w.word, base);
+          if (lang === 'none') continue;
           if (!this.known.has(`${lang}|${w.word}`)) {
             let s = need.get(lang);
             if (!s) need.set(lang, (s = new Set()));
@@ -165,9 +186,11 @@ export class Proofer {
     return p ? this.issuesIn(pos.para, p).find((i) => pos.offset >= i.from && pos.offset <= i.to) : undefined;
   }
 
-  async suggestions(i: Issue, lang: Lang = 'en-US'): Promise<string[]> {
+  async suggestions(i: Issue, lang?: Lang): Promise<string[]> {
     if (i.kind === 'grammar') return i.fix !== undefined ? [i.fix] : [];
-    return (await this.call('suggest', lang, [i.text.replace(/’/g, "'")])).suggestions ?? [];
+    const p = [...walkParagraphs(this.store.doc.blocks)].find((x) => x.id === i.para);
+    const l = wordLang(i.text, lang ?? (p ? this.langOf(p) : 'en-US'));
+    return (await this.call('suggest', l, [i.text.replace(/’/g, "'")])).suggestions ?? [];
   }
 
   private rebuild(): void {

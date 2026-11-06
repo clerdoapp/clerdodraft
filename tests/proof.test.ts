@@ -37,7 +37,8 @@ describe('grammar', () => {
 describe('spell word extraction', () => {
   const words = (t: string) => spellWords(t).map((w) => w.word);
   it('skips what should not be checked', () => {
-    expect(words('NASA iPhone x2 https://teh.example/abc me@teh.org مرحبا')).toEqual([]);
+    expect(words('NASA iPhone x2 https://teh.example/abc me@teh.org')).toEqual([]);
+    expect(words('مرحبا')).toEqual(['مرحبا']);
   });
   it('handles possessives and curly apostrophes', () => {
     expect(words('John’s dog don’t')).toEqual(['John', 'dog', "don't"]);

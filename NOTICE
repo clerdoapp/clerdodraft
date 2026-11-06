@@ -2,10 +2,19 @@ ClerdoDraft
 Copyright (c) 2026 Clerdo.
 
 Bundled third-party material:
-- Lucide icons: ISC License.
+- Lucide icons (lucide, lucide-react): ISC License.
 - 213 open font families: SIL Open Font License 1.1, Apache License 2.0 or Ubuntu Font Licence 1.0. Each family and its licence is listed in src/core/font-catalog.json.
 - React, fflate, nspell: MIT License.
+- node-forge: used under the BSD 3-Clause License option of its dual licence.
 - English dictionaries (SCOWL, dictionary-en, dictionary-en-gb): MIT and BSD-style licenses.
+- French dictionary (dictionary-fr): Mozilla Public License 2.0.
+- Spanish dictionary (dictionary-es): used under the Mozilla Public License 1.1 option.
+- Portuguese dictionary (dictionary-pt): used under the Mozilla Public License 2.0 option.
+- Dutch dictionary (dictionary-nl): used under the BSD 3-Clause License option.
+- Russian dictionary (dictionary-ru): BSD 3-Clause License.
+- Arabic dictionary (src/features/proof/dict/ar, Ayaspell project): used under the
+  Mozilla Public License option of its tri-licence. The files are unchanged; their
+  source is available from the Ayaspell project.
 
 Word book data (src/features/proof/wordbook.txt) is built from the Moby Thesaurus
 by Grady Ward, placed in the public domain, and from WordNet 3.0:
@@ -15,4 +24,4 @@ documentation for any purpose and without fee or royalty is hereby granted, prov
 that this notice appears on all copies. THIS SOFTWARE AND DATABASE IS PROVIDED "AS IS"
 AND PRINCETON UNIVERSITY MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED.
 
-Automatic hyphenation uses the hyphen package (ISC) with US English patterns.
+Automatic hyphenation uses the hyphen package (ISC) and its patterns for each language.

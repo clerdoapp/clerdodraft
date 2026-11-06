@@ -1,6 +1,54 @@
 import type { Doc, ParaProps } from '../core/model';
 import { DocBuilder } from './build';
 
+interface Pic { y: number; w: number; h: number; png: Uint8Array }
+type Raw = { width: number; height: number; data?: Uint8ClampedArray | Uint8Array; kind?: number; bitmap?: ImageBitmap };
+
+const toPng = async (img: Raw): Promise<Uint8Array | null> => {
+  const c = document.createElement('canvas');
+  c.width = img.width; c.height = img.height;
+  const g = c.getContext('2d');
+  if (!g || !img.width || !img.height) return null;
+  if (img.bitmap) g.drawImage(img.bitmap, 0, 0);
+  else if (img.data) {
+    const out = g.createImageData(img.width, img.height);
+    const px = img.width * img.height;
+    if (img.data.length === px * 4) out.data.set(img.data);
+    else if (img.data.length === px * 3) for (let i = 0; i < px; i++) { out.data[i * 4] = img.data[i * 3]!; out.data[i * 4 + 1] = img.data[i * 3 + 1]!; out.data[i * 4 + 2] = img.data[i * 3 + 2]!; out.data[i * 4 + 3] = 255; }
+    else if (img.data.length === px) for (let i = 0; i < px; i++) { out.data[i * 4] = out.data[i * 4 + 1] = out.data[i * 4 + 2] = img.data[i]!; out.data[i * 4 + 3] = 255; }
+    else return null;
+    g.putImageData(out, 0, 0);
+  } else return null;
+  const blob = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/png'));
+  return blob ? new Uint8Array(await blob.arrayBuffer()) : null;
+};
+
+const mul = (a: number[], b: number[]): number[] => [a[0]! * b[0]! + a[2]! * b[1]!, a[1]! * b[0]! + a[3]! * b[1]!, a[0]! * b[2]! + a[2]! * b[3]!, a[1]! * b[2]! + a[3]! * b[3]!, a[0]! * b[4]! + a[2]! * b[5]! + a[4]!, a[1]! * b[4]! + a[3]! * b[5]! + a[5]!];
+
+// Pictures are found by following the page's drawing steps, so each lands near its place in the text.
+const pagePictures = async (page: { getOperatorList(): Promise<{ fnArray: number[]; argsArray: unknown[][] }>; objs: { get(id: string, cb: (v: unknown) => void): void } }, OPS: Record<string, number>): Promise<Pic[]> => {
+  const list = await page.getOperatorList();
+  const out: Pic[] = [];
+  let ctm = [1, 0, 0, 1, 0, 0];
+  const stack: number[][] = [];
+  for (let i = 0; i < list.fnArray.length && out.length < 60; i++) {
+    const fn = list.fnArray[i];
+    const args = list.argsArray[i] ?? [];
+    if (fn === OPS['save']) stack.push(ctm);
+    else if (fn === OPS['restore']) ctm = stack.pop() ?? ctm;
+    else if (fn === OPS['transform']) ctm = mul(ctm, args as number[]);
+    else if (fn === OPS['paintImageXObject'] || fn === OPS['paintInlineImageXObject']) {
+      const w = Math.hypot(ctm[0]!, ctm[1]!); const h = Math.hypot(ctm[2]!, ctm[3]!);
+      if (w < 24 || h < 24) continue;
+      const img = fn === OPS['paintInlineImageXObject'] ? (args[0] as Raw) : await new Promise<Raw | null>((resolve) => { try { page.objs.get(String(args[0]), (v) => resolve(v as Raw)); } catch { resolve(null); } window.setTimeout(() => resolve(null), 3000); });
+      if (!img) continue;
+      const png = await toPng(img).catch(() => null);
+      if (png) out.push({ y: ctm[5]! + h, w, h, png });
+    }
+  }
+  return out;
+};
+
 interface Item { str: string; x: number; y: number; w: number; h: number; rtl: boolean }
 interface Line { text: string; x: number; y: number; h: number; right: number; rtl: boolean }
 
@@ -37,12 +85,15 @@ export const readPdf = async (bytes: Uint8Array): Promise<Doc> => {
   try {
     const sizes = new Map<number, number>();
     const pages: Line[][] = [];
+    const picsByPage: Pic[][] = [];
     for (let n = 1; n <= pdf.numPages; n++) {
       const page = await pdf.getPage(n);
       if (n === 1) {
         const v = page.getViewport({ scale: 1 });
         b.doc = { ...b.doc, section: { ...b.doc.section, pageWidth: v.width, pageHeight: v.height } };
       }
+      const pics = typeof document !== 'undefined' ? await pagePictures(page as never, pdfjs.OPS as unknown as Record<string, number>).catch(() => []) : [];
+      picsByPage.push(pics);
       const tc = await page.getTextContent();
       const items: Item[] = [];
       for (const it of tc.items) {
@@ -63,7 +114,16 @@ export const readPdf = async (bytes: Uint8Array): Promise<Doc> => {
         text = '';
         props = {};
       };
+      const pics = [...(picsByPage[pageIndex] ?? [])].sort((a, b) => b.y - a.y);
+      const placePics = (above: number) => {
+        while (pics.length && pics[0]!.y >= above) {
+          const pic = pics.shift()!;
+          flush();
+          b.add([b.image({ mime: 'image/png', data: pic.png, width: pic.w, height: pic.h })]);
+        }
+      };
       lines.forEach((l, i) => {
+        placePics(l.y + l.h);
         const prev = lines[i - 1];
         const gap = prev ? prev.y - l.y : 0;
         const big = Math.round(l.h) > body * 1.2;
@@ -76,6 +136,7 @@ export const readPdf = async (bytes: Uint8Array): Promise<Doc> => {
         text = text ? `${text.endsWith('-') ? text.slice(0, -1) : `${text} `}${l.text}` : l.text;
       });
       flush();
+      placePics(-Infinity);
     });
   } finally {
     await task.destroy();

@@ -85,6 +85,10 @@ const FragView = ({ f, marks, store }: { f: Frag; marks: boolean; store: EditorS
       if (a.wrap !== 'inline') return <span data-f={f.from} data-atom className="anchor" />;
       return <span data-f={f.from} data-atom data-drawing className="shape" style={{ width: a.width, height: a.height }}><ChartView a={a} /></span>;
     }
+    if (a.kind === 'raw' && a.object) {
+      const pic = a.object.preview ? store.doc.media[a.object.preview] : undefined;
+      return <span data-f={f.from} data-atom data-drawing className="embedded" style={{ width: a.width, height: a.height ?? 64 }} title={`${a.object.name}. Right-click to open it.`}>{pic && /^image\/(png|jpeg|gif|bmp|webp)$/.test(pic.mime) ? <img alt={a.object.name} src={mediaUrl(store, a.object.preview!)} draggable={false} /> : <span className="embedcard"><b>{a.object.name}</b><i>{a.object.file?.split('/').pop() ?? ''}</i></span>}</span>;
+    }
     if (a.kind === 'raw' && a.width && a.shapes?.length) return <span data-f={f.from} data-atom className="shape" style={{ width: a.width, height: a.height ?? 40 }}><DiagramView shapes={a.shapes} w={a.width} h={a.height ?? 40} /></span>;
     if (a.kind === 'raw' && a.width) return <span data-f={f.from} data-atom className="rawbox" style={{ width: a.width, height: a.height ?? 40 }}>{a.label}</span>;
     if (a.kind === 'control') return <span data-f={f.from} data-atom className="control" style={st}>{f.text}</span>;
@@ -99,7 +103,7 @@ const ShapeBody = ({ atom, store, marks }: { atom: ShapeAtom; store: EditorStore
   const laid = atom.textId ? store.layout.boxes.get(atom.textId) : undefined;
   return (
     <>
-      <ShapeOutline prst={atom.shape} w={atom.width} h={atom.height} fill={atom.fill} stroke={atom.stroke} width={atom.strokeWidth} />
+      {atom.group ? <DiagramView shapes={atom.group} w={atom.width} h={atom.height} /> : <ShapeOutline prst={atom.shape} w={atom.width} h={atom.height} fill={atom.fill} stroke={atom.stroke} width={atom.strokeWidth} />}
       {atom.textId && (
         <div className="boxbody" data-box={atom.textId} style={{ left: BOX_INSET_X, top: BOX_INSET_Y, right: BOX_INSET_X, bottom: BOX_INSET_Y }}>
           {laid?.boxes.map((b, i) => <BoxView key={i} b={b} />)}

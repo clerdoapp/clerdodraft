@@ -38,6 +38,17 @@ const createWindow = (blank = false): void => {
 
 ipcMain.on('window:new', () => createWindow(true));
 
+ipcMain.handle('net:image', async (_e, url: unknown) => {
+  if (typeof url !== 'string' || !/^https:\/\//i.test(url)) return null;
+  try {
+    const r = await fetch(url, { redirect: 'follow' });
+    const type = r.headers.get('content-type')?.split(';')[0] ?? '';
+    if (!r.ok || !/^image\/(png|jpeg|gif|webp|bmp|svg\+xml)$/.test(type)) return null;
+    const data = new Uint8Array(await r.arrayBuffer());
+    return data.length > 64 * 1024 * 1024 ? null : { data, type };
+  } catch { return null; }
+});
+
 let fontList: Promise<string[]> | null = null;
 ipcMain.handle('fonts:list', () => (fontList ??= installedFonts().catch(() => [])));
 

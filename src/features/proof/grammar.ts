@@ -97,7 +97,7 @@ export interface Word {
   word: string;
 }
 
-const LATIN_WORD = /[\p{Script=Latin}][\p{Script=Latin}\p{M}'’]*/gu;
+const LATIN_WORD = /[\p{Script=Latin}][\p{Script=Latin}\p{M}'’]*|[\p{Script=Arabic}][\p{Script=Arabic}\p{M}]*|[\p{Script=Cyrillic}][\p{Script=Cyrillic}\p{M}]*/gu;
 
 export const spellWords = (text: string): Word[] => {
   const out: Word[] = [];
@@ -110,7 +110,7 @@ export const spellWords = (text: string): Word[] => {
     if (w.endsWith("'s")) w = w.slice(0, -2);
     if (w.length < 2) continue;
     if (/\d/.test(text[from - 1] ?? '') || /\d/.test(text[to] ?? '')) continue;
-    if (w === w.toUpperCase()) continue;
+    if (/\p{Lu}/u.test(w) && w === w.toUpperCase()) continue;
     if (/\p{Ll}\p{Lu}/u.test(w)) continue;
     if (skipZones.some(([a, b]) => from >= a && to <= b)) continue;
     out.push({ from, to, word: w });

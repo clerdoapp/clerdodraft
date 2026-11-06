@@ -1,3 +1,5 @@
+import { selectedParas, updatePara } from '../core/tree';
+import { MAIL_TYPES, readMailSource } from './mailSources';
 import { ATOM_CHAR, newId, para, type Block, type Doc, type Paragraph, type Revision } from '../core/model';
 import { paraText } from '../core/tree';
 import { readDocx, writeDocx } from '../docx';
@@ -142,7 +144,7 @@ export const makeLabels = (s: EditorStore, text: string, across: number, down: n
 
 export const registerMailReview = (): void => {
   register(
-    { id: 'mail.source', label: 'Choose a recipient list (.csv)', group: 'Mail', run: (s) => pickFile('.csv,text/csv', (f) => void f.text().then((t) => { mail.data = parseCsv(t); s.notify(`${mail.data.rows.length} recipients, ${mail.data.columns.length} fields.`); s.setView({ pane: 'mail' }); })) },
+    { id: 'mail.source', label: 'Choose a recipient list', group: 'Mail', run: (s) => pickFile(MAIL_TYPES, (f) => void f.arrayBuffer().then((b) => { try { mail.data = readMailSource(new Uint8Array(b), f.name); } catch { s.notify("This list couldn't be read."); return; } s.notify(`${mail.data.rows.length} recipients, ${mail.data.columns.length} fields.`); s.setView({ pane: 'mail' }); })) },
     { id: 'mail.pane', label: 'Mail merge', group: 'Mail', run: (s) => s.togglePane('mail'), active: (s) => s.view.pane === 'mail' },
     { id: 'mail.envelope', label: 'Envelope', group: 'Mail', run: (s) => s.openDialog('envelope') },
     { id: 'mail.labels', label: 'Labels', group: 'Mail', run: (s) => s.openDialog('labels') },
@@ -157,6 +159,7 @@ export const registerMailReview = (): void => {
         try { s.commit(compareWith(s.doc, readDocx(new Uint8Array(b)), s.author)); s.setView({ pane: 'changes' }); } catch (e) { s.notify(e instanceof Error ? e.message : "That file couldn't be read."); }
       })),
     },
+    { id: 'rev.allowEdit', label: 'Allow changes here when read-only', group: 'Review', run: (s) => { const ids = new Set(selectedParas(s.doc, s.sel).map((p) => p.id)); const on = !selectedParas(s.doc, s.sel).every((p) => p.editable); let d = s.doc; for (const id of ids) d = updatePara(d, s.sel.focus.story, id, (q) => ({ ...q, editable: on || undefined })); s.commit(d); }, active: (s) => selectedParas(s.doc, s.sel).every((p) => p.editable) },
     { id: 'rev.protect', label: 'Read-only mode', group: 'Review', run: (s) => s.commit({ ...s.doc, settings: { ...s.doc.settings, protection: s.doc.settings.protection ? undefined : { kind: 'readOnly' } } }), active: (s) => !!s.doc.settings.protection },
     {
       id: 'rev.a11y', label: 'Accessibility check', group: 'Review',
