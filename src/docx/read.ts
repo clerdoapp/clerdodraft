@@ -190,6 +190,7 @@ export const parsePPr = (n: XNode | undefined, theme: Theme): ParaProps => {
       case 'w:shd': { const v = shadeOf(c, theme); if (v) p.shading = v; break; }
       case 'w:tabs': p.tabs = kids(c, 'w:tab').map((t) => ({ pos: tw(t.attrs['w:pos']) ?? 0, kind: TAB[t.attrs['w:val'] ?? 'left'] ?? 'left', leader: (t.attrs['w:leader'] as TabStop['leader']) ?? 'none' })); break;
       case 'w:suppressAutoHyphens': p.suppressHyphenation = on(c); break;
+      case 'w:framePr': if (c.attrs['w:dropCap'] === 'drop' || c.attrs['w:dropCap'] === 'margin') p.dropCap = { kind: c.attrs['w:dropCap'], lines: Number(c.attrs['w:lines'] ?? 3) }; break;
       case 'w:bidi': p.bidi = on(c); break;
       case 'w:spacing': {
         const before = tw(a['w:before']);
@@ -441,7 +442,9 @@ const meta = (i: Inline): Partial<Run> => ({ ...(i.link ? { link: i.link } : {})
 const parseRun = (r: XNode, st: ParaState, inl: Inline): void => {
   const ctx = st.doc.ctx;
   const props = parseRPr(kid(r, 'w:rPr'), ctx.theme);
-  const text = (t: string) => { if (t) push(st, { text: t, props, ...meta(inl) }); };
+  const change = kid(kid(r, 'w:rPr'), 'w:rPrChange');
+  const fmtRev = change ? { rev: revision(change), old: parseRPr(kid(change, 'w:rPr'), ctx.theme) } : undefined;
+  const text = (t: string) => { if (t) push(st, { text: t, props, ...meta(inl), ...(fmtRev ? { fmtRev } : {}) }); };
   for (const c of kids(r)) {
     switch (c.name) {
       case 'w:rPr': break;
@@ -682,7 +685,16 @@ const parseBlocks = (nodes: XNode[], ds: DocState): Block[] => {
   const out: Block[] = [];
   for (const n of nodes) {
     switch (n.name) {
-      case 'w:p': out.push(parseParagraph(n, ds)); break;
+      case 'w:p': {
+        const p = parseParagraph(n, ds);
+        const prev = out[out.length - 1];
+        // A large letter is stored as its own framed paragraph; here it joins the text it belongs to.
+        if (prev?.type === 'p' && prev.props.dropCap && prev.runs.length === 1 && !p.props.dropCap) {
+          const { size: _size, ...letter } = prev.runs[0]!.props;
+          out[out.length - 1] = { ...p, props: { ...p.props, dropCap: prev.props.dropCap }, runs: [{ ...prev.runs[0]!, props: { ...letter, size: p.runs[0]?.props.size } }, ...p.runs] };
+        } else out.push(p);
+        break;
+      }
       case 'w:tbl': out.push(parseTable(n, ds)); break;
       case 'w:sdt': out.push(...parseBlocks(kids(kid(n, 'w:sdtContent')), ds)); break;
       case 'w:ins': case 'w:del': case 'w:customXml': case 'w:smartTag': out.push(...parseBlocks(kids(n), ds)); break;
@@ -877,6 +889,7 @@ export const readDocx = (bytes: Uint8Array): Doc => {
   if (on(kid(sx, 'w:trackRevisions'))) settings.trackChanges = true;
   if (on(kid(sx, 'w:evenAndOddHeaders'))) settings.evenAndOddHeaders = true;
   if (on(kid(sx, 'w:autoHyphenation'))) settings.autoHyphenation = true;
+  if (on(kid(sx, 'w:mirrorMargins'))) settings.mirrorMargins = true;
   const compat = kids(kid(sx, 'w:compat'), 'w:compatSetting').find((c) => c.attrs['w:name'] === 'compatibilityMode');
   if (compat) settings.compatibilityMode = num(compat.attrs['w:val']);
   const prot = kid(sx, 'w:documentProtection');

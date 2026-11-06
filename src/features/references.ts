@@ -5,17 +5,39 @@ import { flatten, paraText, updatePara, walkParagraphs } from '../core/tree';
 import { register } from '../editor/commands';
 import type { EditorStore } from '../editor/store';
 import { headingOf } from '../core/extra';
+import { refreshFormulas } from './tableFormula';
 
 const surname = (a: string): string => a.split(',')[0]!.trim();
 
-export const citeText = (s: Source): string => {
-  const names = s.authors.length > 2 ? `${surname(s.authors[0]!)} et al.` : s.authors.map(surname).join(' & ');
-  return `(${[names || s.title, s.year || 'n.d.'].filter(Boolean).join(', ')})`;
+export const citeText = (s: Source, style = 'APA', all: Source[] = []): string => {
+  const names = s.authors.length > 2 ? `${surname(s.authors[0]!)} et al.` : s.authors.map(surname).join(style === 'MLA' ? ' and ' : ' & ');
+  const who = names || s.title;
+  switch (style) {
+    case 'MLA': return `(${who})`;
+    case 'Chicago': return `(${[who, s.year || 'n.d.'].join(' ')})`;
+    case 'Harvard': return `(${[who, s.year || 'n.d.'].join(' ')})`;
+    case 'IEEE': return `[${Math.max(1, all.findIndex((x) => x.tag === s.tag) + 1)}]`;
+    default: return `(${[who, s.year || 'n.d.'].join(', ')})`;
+  }
 };
 
-export const bibliographyEntry = (s: Source): string => {
+export const bibliographyEntry = (s: Source, style = 'APA', index = 0): string => {
   const who = s.authors.join('; ');
-  return [who, s.year ? `(${s.year}).` : '(n.d.).', `${s.title}.`, s.journal ? `${s.journal}.` : '', s.city && s.publisher ? `${s.city}: ${s.publisher}.` : s.publisher ? `${s.publisher}.` : '', s.url ?? ''].filter(Boolean).join(' ');
+  const place = s.city && s.publisher ? `${s.city}: ${s.publisher}.` : s.publisher ? `${s.publisher}.` : '';
+  const year = s.year ?? 'n.d.';
+  const parts = (x: (string | undefined)[]) => x.filter(Boolean).join(' ');
+  switch (style) {
+    case 'MLA': return parts([who && `${who}.`, `${s.title}.`, s.journal && `${s.journal},`, s.publisher && `${s.publisher},`, `${year}.`, s.url]);
+    case 'Chicago': return parts([who && `${who}.`, `${year}.`, `${s.title}.`, s.journal && `${s.journal}.`, place, s.url]);
+    case 'Harvard': return parts([who, `(${year})`, `${s.title}.`, s.journal && `${s.journal}.`, place, s.url]);
+    case 'IEEE': return parts([`[${index + 1}]`, who && `${who},`, `"${s.title},"`, s.journal && `${s.journal},`, s.publisher && `${s.publisher},`, `${year}.`, s.url]);
+    default: return parts([who, `(${year}).`, `${s.title}.`, s.journal && `${s.journal}.`, place, s.url]);
+  }
+};
+
+export const setCitationStyle = (s: EditorStore, style: string): void => {
+  s.commit({ ...s.doc, settings: { ...s.doc.settings, citationStyle: style } });
+  refreshGenerated(s);
 };
 
 export const saveSource = (s: EditorStore, v: Record<string, unknown>, tag?: string): void => {
@@ -33,7 +55,7 @@ export const saveSource = (s: EditorStore, v: Record<string, unknown>, tag?: str
 
 export const insertCitation = (s: EditorStore, tag: string): void => {
   const src = s.doc.sources?.find((x) => x.tag === tag);
-  if (src) s.insertAtom({ kind: 'field', field: 'other', instr: `CITATION ${tag} \\l 1033`, result: citeText(src) });
+  if (src) s.insertAtom({ kind: 'field', field: 'other', instr: `CITATION ${tag} \\l 1033`, result: citeText(src, s.doc.settings.citationStyle, s.doc.sources) });
 };
 
 const mapFields = (doc: Doc, fn: (instr: string, result: string) => string): Doc => {
@@ -57,7 +79,7 @@ const refreshCitations = (s: EditorStore): void => {
   s.commit(mapFields(s.doc, (i, res) => {
     const tag = /^CITATION\s+(\S+)/.exec(i)?.[1];
     const src = tag ? list.find((x) => x.tag === tag) : undefined;
-    return src ? citeText(src) : res;
+    return src ? citeText(src, s.doc.settings.citationStyle, list) : res;
   }));
 };
 
@@ -76,7 +98,7 @@ export const buildBibliography = (s: EditorStore): void => {
   const { doc, anchor } = after(s, 'bibliography');
   const list = [...(doc.sources ?? [])].sort((a, b) => (a.authors[0] ?? a.title).localeCompare(b.authors[0] ?? b.title));
   if (!list.length) { s.notify('Add a source first.'); return; }
-  const blocks = [mark(para([{ text: 'References', props: {} }], { style: 'Heading1' }), 'bibliography'), ...list.map((c) => mark(para([{ text: bibliographyEntry(c), props: {} }], { indentLeft: 36, firstLine: -36 }), 'bibliography'))];
+  const blocks = [mark(para([{ text: 'References', props: {} }], { style: 'Heading1' }), 'bibliography'), ...list.map((c, i) => mark(para([{ text: bibliographyEntry(c, doc.settings.citationStyle, i) , props: {} }], { indentLeft: 36, firstLine: -36 }), 'bibliography'))];
   s.commit(insertBlocksAfter(doc, 'body', anchor, blocks));
 };
 
@@ -112,6 +134,35 @@ export const buildIndex = (s: EditorStore): void => {
   if (!terms.size) { s.notify('Mark an index entry first.'); return; }
   const list = [...terms].sort(([a], [b]) => a.localeCompare(b)).map(([t, pages]) => mark(para([{ text: `${t}, ${[...pages].join(', ')}`, props: {} }], { spaceAfter: 2 }), 'index'));
   s.commit(insertBlocksAfter(doc, 'body', anchor, list));
+};
+
+const AUTHORITY: Record<string, string> = { 1: 'Cases', 2: 'Statutes', 3: 'Other authorities', 4: 'Rules', 5: 'Treatises', 6: 'Regulations', 7: 'Constitutional provisions' };
+
+export const markAuthority = (s: EditorStore, text: string, category: string): void => {
+  const t = text.trim().replace(/"/g, '');
+  if (t) s.insertAtom({ kind: 'field', field: 'other', instr: `TA \\l "${t}" \\c ${category}`, result: '' });
+};
+
+export const buildAuthorities = (s: EditorStore): void => {
+  const { doc, anchor } = after(s, 'authorities');
+  const groups = new Map<string, Map<string, Set<string>>>();
+  for (const p of walkParagraphs(doc.blocks)) {
+    for (const r of p.runs) {
+      const m = r.atom?.kind === 'field' ? /^TA\s+\\l\s+"([^"]+)"(?:.*\\c\s+(\d))?/.exec(r.atom.instr) : null;
+      if (!m) continue;
+      const cat = AUTHORITY[m[2] ?? '3'] ?? 'Other authorities';
+      if (!groups.has(cat)) groups.set(cat, new Map());
+      const items = groups.get(cat)!;
+      if (!items.has(m[1]!)) items.set(m[1]!, new Set());
+      items.get(m[1]!)!.add(pageOf(s, p.id));
+    }
+  }
+  if (!groups.size) { s.notify('Mark an authority first.'); return; }
+  const blocks = [...groups].sort(([a], [b]) => a.localeCompare(b)).flatMap(([cat, items]) => [
+    mark(para([{ text: cat, props: { bold: true } }], { spaceBefore: 8, keepNext: true }), 'authorities'),
+    ...[...items].sort(([a], [b]) => a.localeCompare(b)).map(([t, pages]) => mark(para([{ text: `${t}\t${[...pages].join(', ')}`, props: {} }], { spaceAfter: 2, tabs: [{ pos: width(doc), kind: 'right', leader: 'dot' }] }), 'authorities')),
+  ]);
+  s.commit(insertBlocksAfter(doc, 'body', anchor, blocks));
 };
 
 export interface RefTarget {
@@ -156,6 +207,8 @@ export const refreshGenerated = (s: EditorStore): void => {
   if (has('bibliography')) buildBibliography(s);
   if (has('figures')) buildFigures(s);
   if (has('index')) buildIndex(s);
+  if (has('authorities')) buildAuthorities(s);
+  s.commit(refreshFormulas(s.doc));
   s.commit(mapFields(s.doc, (i, res) => {
     const m = /^(PAGEREF|REF)\s+(\S+)/.exec(i);
     if (!m) return res;
@@ -174,6 +227,9 @@ export const registerReferences = (): void => {
     { id: 'ref.cross', label: 'Cross-reference', group: 'References', run: (s) => s.openDialog('cross') },
     { id: 'ref.mark', label: 'Mark index entry', group: 'References', keys: 'alt+shift+x', run: (s) => s.openDialog('indexMark') },
     { id: 'ref.index', label: 'Build index', group: 'References', run: buildIndex },
+    { id: 'ref.markAuth', label: 'Mark an authority', group: 'References', run: (s) => s.openDialog('authority') },
+    { id: 'ref.authorities', label: 'Table of authorities', group: 'References', run: buildAuthorities },
+    { id: 'ref.style', label: 'Citation style', group: 'References', run: (s) => s.openDialog('citeStyle') },
   );
   void ATOM_CHAR;
 };

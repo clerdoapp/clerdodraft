@@ -7,6 +7,8 @@ import type { EditorStore } from '../editor/store';
 import { applyStyle } from '../core/ops';
 import { currentPara, currentRun, setSection, inTable } from '../features/coreCommands';
 import { A4, LETTER } from '../core/model';
+import { cssFamily } from '../layout/measure';
+import { applySpacing, applyTheme, SPACINGS, THEMES } from '../features/themes';
 
 const S = 1.9;
 
@@ -95,9 +97,13 @@ const PageControls = ({ store }: { store: EditorStore }) => {
       <Group title="Margins">{seg([['Narrow', sec.marginLeft === 36, () => margin(36)], ['Medium', sec.marginLeft === 54, () => margin(54)], ['Wide', sec.marginLeft === 72, () => margin(72)]])}<List_ store={store} tools={[{ id: 'page.setup', label: 'Custom page setup' }]} /></Group>
       <Group title="Columns">{seg([1, 2, 3].map((n) => [String(n), sec.columns.count === n, () => col(n)] as [string, boolean, () => void]))}</Group>
       <Group title="Breaks"><List_ store={store} tools={ids('ins.pageBreak', 'ins.columnBreak', 'ins.nextPage', 'ins.continuous')} /></Group>
+      <Group title="Theme">
+        <div className="themes">{THEMES.map((t) => <button key={t.id} title={`${t.heading} and ${t.body}`} onClick={() => applyTheme(store, t)}><i style={{ background: t.color }} /><span style={{ fontFamily: cssFamily(t.heading) }}>{t.name}</span></button>)}</div>
+        <div className="seg">{SPACINGS.map((p) => <button key={p.id} onClick={() => applySpacing(store, p.id)}>{p.name}</button>)}</div>
+      </Group>
       <Group title="Page look">
         <Swatches label="Page color" clear="White page" colors={['#fff8e1', '#e8f5e9', '#e3f2fd', '#f3e5f5', '#eeeeee']} onPick={(c) => store.commit({ ...store.doc, settings: { ...store.doc.settings, pageColor: c } })} />
-        <List_ store={store} tools={ids('page.watermark', 'page.border', 'page.lineNumbers')} />
+        <List_ store={store} tools={ids('page.watermark', 'page.border', 'page.lineNumbers', 'page.hyphen', 'page.facing', 'page.vAlign')} />
       </Group>
     </>
   );
@@ -115,9 +121,9 @@ const SECTIONS: Section_[] = [
     id: 'doc', label: 'Doc', icon: FileText,
     body: (s) => (
       <>
-        <Group title="Document"><List_ store={s} tools={[{ id: 'file.new', icon: FilePlus2 }, { id: 'file.open', icon: FolderOpen }, { id: 'file.save', icon: Save }, { id: 'file.saveAs' }, { id: 'file.properties' }, { id: 'file.updates' }]} /></Group>
+        <Group title="Document"><List_ store={s} tools={[{ id: 'file.new', icon: FilePlus2 }, { id: 'file.open', icon: FolderOpen }, { id: 'file.save', icon: Save }, { id: 'file.saveAs' }, { id: 'file.versions' }, { id: 'file.protect' }, { id: 'file.properties' }, { id: 'file.updates' }]} /></Group>
         <Group title="Start from"><List_ store={s} tools={[{ id: 'tpl.letter' }, { id: 'tpl.report' }, { id: 'tpl.resume' }, { id: 'tpl.notes' }]} /></Group>
-        <Group title="Share out"><List_ store={s} tools={[{ id: 'file.print', icon: Printer }, { id: 'file.html' }, { id: 'file.md' }, { id: 'file.txt' }]} /></Group>
+        <Group title="Share out"><List_ store={s} tools={[{ id: 'file.print', icon: Printer }, { id: 'file.html' }, { id: 'file.md' }, { id: 'file.txt' }, { id: 'file.odt' }, { id: 'file.rtf' }]} /></Group>
       </>
     ),
   },
@@ -140,7 +146,7 @@ const SECTIONS: Section_[] = [
           <Icons store={s} tools={[{ id: 'par.left', icon: AlignLeft }, { id: 'par.center', icon: AlignCenter }, { id: 'par.right', icon: AlignRight }, { id: 'par.justify', icon: AlignJustify }, { id: 'par.outdent', icon: IndentDecrease }, { id: 'par.indent', icon: IndentIncrease }, { id: 'par.marks', icon: Pilcrow }]} />
           <Icons store={s} tools={[{ id: 'par.bullets', icon: List }, { id: 'par.numbers', icon: ListOrdered }, { id: 'par.outline', icon: ListTree }, { id: 'par.rtl', icon: CaseSensitive, label: 'Right-to-left paragraph' }]} />
           <div className="seg">{[['1', 'par.single'], ['1.5', 'par.onehalf'], ['2', 'par.double']].map(([l, id]) => <button key={id} title={command(id!)?.label} onMouseDown={(e) => e.preventDefault()} onClick={() => run(s, id!)}>{l}</button>)}</div>
-          <List_ store={s} tools={[{ id: 'par.settings', label: 'More paragraph settings' }, { id: 'par.border' }, { id: 'par.sortAsc' }]} />
+          <List_ store={s} tools={[{ id: 'par.settings', label: 'More paragraph settings' }, { id: 'par.border' }, { id: 'par.dropCap' }, { id: 'par.restart' }, { id: 'par.bullet' }, { id: 'par.sortAsc' }]} />
         </Group>
         <Group title="Edit"><List_ store={s} tools={ids('edit.find', 'edit.goto', 'edit.selectAll')} /></Group>
       </>
@@ -150,8 +156,8 @@ const SECTIONS: Section_[] = [
     id: 'add', label: 'Add', icon: Plus,
     body: (s) => (
       <>
-        <Group title="Objects"><List_ store={s} tools={[{ id: 'ins.table', icon: Table2 }, { id: 'ins.picture', icon: Image }, { id: 'ins.chart', icon: ChartColumn }, { id: 'ins.textbox', icon: SquarePen }, { id: 'ins.equation', icon: Sigma }, { id: 'ins.symbol' }, { id: 'ins.checkbox', icon: CheckSquare }]} /></Group>
-        {inTable(s) && <Group title="This table"><List_ store={s} tools={ids('tbl.cell', 'tbl.rowAbove', 'tbl.rowBelow', 'tbl.colLeft', 'tbl.colRight', 'tbl.merge', 'tbl.split', 'tbl.delRow', 'tbl.delCol', 'tbl.header', 'tbl.sortAsc', 'tbl.toText', 'tbl.delete')} /></Group>}
+        <Group title="Objects"><List_ store={s} tools={[{ id: 'ins.table', icon: Table2 }, { id: 'ins.picture', icon: Image }, { id: 'ins.chart', icon: ChartColumn }, { id: 'ins.textbox', icon: SquarePen }, { id: 'ins.equation', icon: Sigma }, { id: 'ins.symbol' }, { id: 'ins.emoji' }, { id: 'ins.checkbox', icon: CheckSquare }, { id: 'ins.draw' }, { id: 'ins.video' }, { id: 'ins.screenshot' }, { id: 'ins.textArt' }]} /></Group>
+        {inTable(s) && <Group title="This table"><List_ store={s} tools={ids('tbl.formula', 'tbl.cell', 'tbl.rowAbove', 'tbl.rowBelow', 'tbl.colLeft', 'tbl.colRight', 'tbl.merge', 'tbl.split', 'tbl.delRow', 'tbl.delCol', 'tbl.header', 'tbl.sortAsc', 'tbl.toText', 'tbl.delete')} /></Group>}
         <Group title="Shapes"><List_ store={s} tools={[{ id: 'ins.rect', icon: Shapes }, ...ids('ins.round', 'ins.ellipse', 'ins.shape.triangle', 'ins.shape.diamond', 'ins.shape.hexagon', 'ins.shape.star5', 'ins.shape.rightArrow', 'ins.shape.leftArrow', 'ins.shape.upArrow', 'ins.shape.downArrow', 'ins.shape.line')]} /></Group>
         <Group title="Text"><List_ store={s} tools={[{ id: 'ins.link', icon: Link2 }, { id: 'ins.bookmark', icon: Bookmark }, { id: 'ins.date' }, { id: 'ins.time' }, { id: 'ins.textToTable' }]} /></Group>
         <Group title="Page parts"><List_ store={s} tools={ids('ins.cover', 'ins.header', 'ins.footer', 'ins.pageNum', 'ins.pageNumTop')} /></Group>
@@ -165,9 +171,10 @@ const SECTIONS: Section_[] = [
       <>
         <Group title="Contents"><List_ store={s} tools={ids('ins.toc', 'ref.figures', 'ins.refresh')} /></Group>
         <Group title="Notes"><List_ store={s} tools={ids('ins.footnote', 'ins.endnote')} /></Group>
-        <Group title="Citations"><List_ store={s} tools={ids('ref.sources', 'ref.cite', 'ref.bibliography')} /></Group>
+        <Group title="Citations"><List_ store={s} tools={ids('ref.sources', 'ref.cite', 'ref.bibliography', 'ref.style')} /></Group>
         <Group title="Links inside the document"><List_ store={s} tools={ids('ins.caption', 'ref.cross')} /></Group>
         <Group title="Index"><List_ store={s} tools={ids('ref.mark', 'ref.index')} /></Group>
+        <Group title="Legal"><List_ store={s} tools={ids('ref.markAuth', 'ref.authorities')} /></Group>
       </>
     ),
   },
@@ -177,7 +184,7 @@ const SECTIONS: Section_[] = [
       <>
         <Group title="Changes"><List_ store={s} tools={ids('rev.track', 'rev.changes', 'rev.accept', 'rev.reject', 'rev.acceptAll', 'rev.rejectAll', 'rev.compare')} /></Group>
         <Group title="Comments"><List_ store={s} tools={ids('ins.comment', 'rev.comments')} /></Group>
-        <Group title="Check"><List_ store={s} tools={ids('rev.spell', 'rev.proofToggle', 'rev.autocorrect', 'rev.words', 'rev.count', 'rev.a11y', 'rev.read', 'rev.dictate', 'rev.protect')} /></Group>
+        <Group title="Check"><List_ store={s} tools={ids('rev.spell', 'rev.thesaurus', 'rev.translate', 'rev.language', 'rev.proofToggle', 'rev.autocorrect', 'rev.words', 'rev.count', 'rev.a11y', 'rev.read', 'rev.dictate', 'rev.protect')} /></Group>
       </>
     ),
   },
@@ -186,7 +193,7 @@ const SECTIONS: Section_[] = [
     id: 'view', label: 'View', icon: Eye,
     body: (s) => (
       <>
-        <Group title="Show"><List_ store={s} tools={[{ id: 'view.print', icon: ScanText }, { id: 'view.read', icon: BookOpen }, { id: 'view.web' }, { id: 'view.draft' }, { id: 'pane.nav', icon: ListTree }, { id: 'par.marks' }, { id: 'view.ruler' }]} /></Group>
+        <Group title="Show"><List_ store={s} tools={[{ id: 'view.print', icon: ScanText }, { id: 'view.read', icon: BookOpen }, { id: 'view.reader' }, { id: 'view.web' }, { id: 'view.draft' }, { id: 'pane.nav', icon: ListTree }, { id: 'par.marks' }, { id: 'view.ruler' }, { id: 'view.grid' }, { id: 'view.split' }, { id: 'view.newWindow' }]} /></Group>
         <Group title="Markup"><div className="seg wrap">{([['All', 'all'], ['Simple', 'simple'], ['None', 'none'], ['Original', 'original']] as const).map(([l, m]) => <button key={m} className={s.view.markup === m ? 'on' : ''} onClick={() => s.setView({ markup: m })}>{l}</button>)}</div></Group>
         <Group title="Screen"><List_ store={s} tools={ids('view.zoomIn', 'view.zoomOut', 'view.zoom100', 'view.dark')} /></Group>
       </>

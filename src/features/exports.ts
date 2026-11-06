@@ -83,3 +83,13 @@ export const stats = (store: EditorStore): { words: number; chars: number; chars
   const paras = text.split('\n').filter((l) => l.trim()).length;
   return { words, chars: text.replace(/\n/g, '').length, charsNoSpaces: text.replace(/\s/g, '').length, paras, lines, pages: store.layout.pages.length };
 };
+
+export const exportOdt = async (store: EditorStore): Promise<void> => {
+  const { writeOdt } = await import('../formats/odt');
+  download(writeOdt(store.doc) as BlobPart, `${store.file.name}.odt`, 'application/vnd.oasis.opendocument.text');
+};
+
+export const exportRtf = async (store: EditorStore): Promise<void> => {
+  const { writeRtf } = await import('../formats/rtf');
+  download(writeRtf(store.doc), `${store.file.name}.rtf`, 'application/rtf');
+};

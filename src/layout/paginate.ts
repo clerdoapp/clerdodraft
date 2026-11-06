@@ -102,8 +102,10 @@ class Engine {
   }
 
   setColumns(sec: Section, regionTop: number): void {
-    const left = sec.marginLeft + (sec.gutter ?? 0);
-    const usable = sec.pageWidth - left - sec.marginRight;
+    const even = !!this.doc.settings.mirrorMargins && this.pageCounter % 2 === 0;
+    const left = (even ? sec.marginRight : sec.marginLeft) + (sec.gutter ?? 0);
+    const usable = sec.pageWidth - sec.marginLeft - sec.marginRight - (sec.gutter ?? 0);
+    if (even) this.page.leftMargin = sec.marginRight;
     const c = sec.columns;
     const cols: { x: number; w: number }[] = [];
     if (c.widths?.length) {
@@ -184,7 +186,7 @@ class Engine {
     const h = notes.reduce((m, l) => Math.max(m, l.y + l.height), 0);
     const top = this.bottom - h;
     for (const l of notes) l.y += top;
-    this.page.noteSeparator = { x: this.section.marginLeft, y: top - 6, w: 144 };
+    this.page.noteSeparator = { x: this.page.leftMargin ?? this.section.marginLeft, y: top - 6, w: 144 };
   }
 
   noteLayout(kind: 'footnote' | 'endnote', id: string): Laid | null {
@@ -208,7 +210,7 @@ class Engine {
       if (!laid) continue;
       this.noteIds.add(ref.id);
       const base = this.notesHeight;
-      for (const nl of laid.lines) this.page.notes.push({ ...nl, x: nl.x + this.section.marginLeft, y: nl.y + base });
+      for (const nl of laid.lines) this.page.notes.push({ ...nl, x: nl.x + (this.page.leftMargin ?? this.section.marginLeft), y: nl.y + base });
       this.notesHeight += laid.height;
     }
   }
@@ -635,6 +637,13 @@ class Engine {
       const field: FieldContext = { page: page.number, numPages: total, section: page.sectionIndex + 1 };
       if (page.header) page.header = { ...this.laidStory(page.header.story, page.section, field), story: page.header.story };
       if (page.footer) page.footer = { ...this.laidStory(page.footer.story, page.section, field), story: page.footer.story };
+      const va = page.section.vAlign;
+      if ((va === 'center' || va === 'bottom') && !page.notes.length && page.body.lines.length) {
+        const end = Math.max(...page.body.lines.map((l) => l.y + l.height));
+        const free = page.section.pageHeight - page.section.marginBottom - end;
+        const dy = va === 'center' ? free / 2 : free;
+        if (dy > 0) page.body = { ...page.body, lines: page.body.lines.map((l) => ({ ...l, y: l.y + dy })), boxes: page.body.boxes.map((b) => ({ ...b, y: b.y + dy })) };
+      }
       const ln = page.section.lineNumbers;
       if (ln) {
         let n = ln.start ?? 1;
@@ -642,7 +651,7 @@ class Engine {
         for (const l of [...page.body.lines].sort((a, b) => a.y - b.y)) {
           if (seen.has(Math.round(l.y))) continue;
           seen.add(Math.round(l.y));
-          if ((n - (ln.start ?? 1) + 1) % ln.countBy === 0 || ln.countBy === 1) page.lineNumbers.push({ x: page.section.marginLeft - (ln.distance ?? 18), y: l.y, n, size: 9 });
+          if ((n - (ln.start ?? 1) + 1) % ln.countBy === 0 || ln.countBy === 1) page.lineNumbers.push({ x: (page.leftMargin ?? page.section.marginLeft) - (ln.distance ?? 18), y: l.y, n, size: 9 });
           n++;
         }
       }

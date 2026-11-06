@@ -53,6 +53,8 @@ const FragView = ({ f, marks, store }: { f: Frag; marks: boolean; store: EditorS
   }
   if (f.kind === 'mark') return marks ? <span className="brk" data-f={f.from} data-atom>{'↵'}</span> : <span data-f={f.from} data-atom className="brk0" />;
   const st = fragStyle(store, f);
+  if (f.drop) return <span data-f={f.from} className="dropcap" style={{ ...st, fontSize: f.drop.size, left: -f.drop.width }}>{f.text}</span>;
+  if (f.kind === 'hyphen') return <span aria-hidden style={st}>-</span>;
   if (f.atom) {
     const a = f.atom;
     if (a.kind === 'image') {
@@ -123,7 +125,7 @@ const FloatView = ({ f, store }: { f: PlacedFloat; store: EditorStore }) => {
   return <div className="float shape" data-float={`${f.para}:${f.offset}`} onMouseDown={onDown} style={st}><ShapeBody atom={a} store={store} marks={store.view.showMarks} /></div>;
 };
 
-const PageView = memo(function PageView({ page, live, marks, store, activeStory }: { page: Page; live: boolean; marks: boolean; store: EditorStore; activeStory: string }) {
+export const PageView = memo(function PageView({ page, live, marks, store, activeStory, grid }: { page: Page; live: boolean; marks: boolean; store: EditorStore; activeStory: string; grid?: boolean }) {
   const s = page.section;
   const doc = store.doc;
   const w = doc.settings.watermark;
@@ -131,7 +133,7 @@ const PageView = memo(function PageView({ page, live, marks, store, activeStory 
   const pb = s.pageBorders;
   const pbLine = (l?: Box['top']) => (l ? `${Math.max(l.width, 0.5)}px solid ${l.color ?? '#000'}` : undefined);
   return (
-    <div className="page" data-page={page.index} style={{ width: page.width, height: page.height, background: doc.settings.pageColor ?? '#fff' }}>
+    <div className={`page${grid ? ' gridded' : ''}`} data-page={page.index} style={{ width: page.width, height: page.height, background: doc.settings.pageColor ?? '#fff' }}>
       {!live ? null : (
         <>
           {pb && <div className="pgborder" style={{ inset: 24, borderTop: pbLine(pb.top), borderBottom: pbLine(pb.bottom), borderLeft: pbLine(pb.left), borderRight: pbLine(pb.right) }} />}
@@ -146,13 +148,13 @@ const PageView = memo(function PageView({ page, live, marks, store, activeStory 
             {page.lineNumbers.map((n, i) => <div key={i} className="lnum" style={{ left: n.x, top: n.y, fontSize: n.size }}>{n.n}</div>)}
           </div>
           {(page.header || inHF) && (
-            <div className={`region hf${inHF ? '' : ' dim'}`} data-hf="header" style={{ left: s.marginLeft, top: s.headerDistance, width: 0, height: 0 }}>
+            <div className={`region hf${inHF ? '' : ' dim'}`} data-hf="header" style={{ left: page.leftMargin ?? s.marginLeft, top: s.headerDistance, width: 0, height: 0 }}>
               {page.header?.boxes.map((b, i) => <BoxView key={i} b={b} />)}
               {page.header?.lines.map((l, i) => <LineView key={i} line={l} marks={marks} store={store} />)}
             </div>
           )}
           {(page.footer || inHF) && (
-            <div className={`region hf${inHF ? '' : ' dim'}`} data-hf="footer" style={{ left: s.marginLeft, top: s.pageHeight - s.footerDistance - (page.footer?.height ?? 0), width: 0, height: 0 }}>
+            <div className={`region hf${inHF ? '' : ' dim'}`} data-hf="footer" style={{ left: page.leftMargin ?? s.marginLeft, top: s.pageHeight - s.footerDistance - (page.footer?.height ?? 0), width: 0, height: 0 }}>
               {page.footer?.boxes.map((b, i) => <BoxView key={i} b={b} />)}
               {page.footer?.lines.map((l, i) => <LineView key={i} line={l} marks={marks} store={store} />)}
             </div>
@@ -448,7 +450,7 @@ export const Canvas = ({ store }: { store: EditorStore }) => {
     dragging.current = 'text';
   };
 
-  const pageNodes = useMemo(() => pages.map((p, i) => <PageView key={i} page={p} live={store.view.printing || (i >= range.from - 1 && i <= range.to)} marks={store.view.showMarks} store={store} activeStory={activeStory} />), [pages, range, store, activeStory, store.view.showMarks, store.doc.settings, store.view.printing, store.view.markup]);
+  const pageNodes = useMemo(() => pages.map((p, i) => <PageView key={i} page={p} live={store.view.printing || (i >= range.from - 1 && i <= range.to)} marks={store.view.showMarks} store={store} activeStory={activeStory} grid={store.view.showGrid} />), [pages, range, store, activeStory, store.view.showMarks, store.doc.settings, store.view.printing, store.view.markup, store.view.showGrid]);
 
   const caret = overlay.caret;
   const inputStyle: CSSProperties = caret
@@ -474,7 +476,7 @@ export const Canvas = ({ store }: { store: EditorStore }) => {
         e.preventDefault();
         const f = e.dataTransfer.files[0];
         if (!f) return;
-        if (/\.docx$/i.test(f.name)) void f.arrayBuffer().then((b) => openBytes(store, new Uint8Array(b), f.name, null));
+        if (/\.(docx?|docm|dotx|odt|rtf|pdf|txt|md|markdown|html?)$/i.test(f.name)) void f.arrayBuffer().then((b) => openBytes(store, new Uint8Array(b), f.name, null));
         else void import('../features/images').then((m) => m.insertImageFile(store, f));
       }}>
       <div className="pages-wrap" style={{ position: 'relative' }}>

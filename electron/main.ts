@@ -1,13 +1,14 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, desktopCapturer, dialog, ipcMain, session, shell } from 'electron';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 const MAX_FILE = 512 * 1024 * 1024;
 const FILTERS = [{ name: 'Documents', extensions: ['docx'] }];
+const OPEN_FILTERS = [{ name: 'Documents', extensions: ['docx', 'docm', 'dotx', 'doc', 'odt', 'rtf', 'pdf', 'txt', 'md', 'html', 'htm'] }];
 // Only paths the person picked in a dialog this session can be written.
 const allowed = new Set<string>();
 
-const createWindow = (): void => {
+const createWindow = (blank = false): void => {
   const win = new BrowserWindow({
     width: 1360,
     height: 900,
@@ -31,11 +32,13 @@ const createWindow = (): void => {
     });
     if (choice === 1) e.preventDefault();
   });
-  void win.loadFile(join(__dirname, '..', 'dist', 'index.html'));
+  void win.loadFile(join(__dirname, '..', 'dist', 'index.html'), blank ? { search: 'new=1' } : undefined);
 };
 
+ipcMain.on('window:new', () => createWindow(true));
+
 ipcMain.handle('file:open', async () => {
-  const r = await dialog.showOpenDialog({ properties: ['openFile'], filters: FILTERS });
+  const r = await dialog.showOpenDialog({ properties: ['openFile'], filters: OPEN_FILTERS });
   const path = r.filePaths[0];
   if (r.canceled || !path) return null;
   if ((await stat(path)).size > MAX_FILE) throw new Error('This document is too large to open.');
@@ -57,6 +60,9 @@ ipcMain.handle('file:save', async (_e, path: unknown, name: unknown, data: unkno
 });
 
 void app.whenReady().then(() => {
+  session.defaultSession.setDisplayMediaRequestHandler((_req, reply) => {
+    void desktopCapturer.getSources({ types: ['screen'] }).then((list) => reply(list[0] ? { video: list[0] } : {})).catch(() => reply({}));
+  });
   createWindow();
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 });

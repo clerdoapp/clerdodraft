@@ -6,3 +6,13 @@ Bundled third-party material:
 - Carlito, Caladea, Hanken Grotesk, Noto Naskh Arabic, Arimo, Tinos and Cousine fonts: SIL Open Font License 1.1.
 - React, fflate, nspell: MIT License.
 - English dictionaries (SCOWL, dictionary-en, dictionary-en-gb): MIT and BSD-style licenses.
+
+Word book data (src/features/proof/wordbook.txt) is built from the Moby Thesaurus
+by Grady Ward, placed in the public domain, and from WordNet 3.0:
+WordNet 3.0 Copyright 2006 by Princeton University. All rights reserved.
+Permission to use, copy, modify and distribute this software and database and its
+documentation for any purpose and without fee or royalty is hereby granted, provided
+that this notice appears on all copies. THIS SOFTWARE AND DATABASE IS PROVIDED "AS IS"
+AND PRINCETON UNIVERSITY MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED.
+
+Automatic hyphenation uses the hyphen package (ISC) with US English patterns.

@@ -1,11 +1,12 @@
 # Publishes the web version to GitHub Pages: https://<owner>.github.io/<repo>/
 # In Safari on iPad, Share > Add to Home Screen gives it an app icon, and it then works offline.
-# Runs on every version tag, and by hand from Actions > Web app > Run workflow.
+# Runs on every push to main, and by hand from Actions > Web app > Run workflow.
+# Tags cannot trigger it: the github-pages environment only accepts the default branch.
 name: Web app
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

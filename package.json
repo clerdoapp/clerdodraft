@@ -1,7 +1,7 @@
 {
   "name": "clerdodraft",
   "productName": "ClerdoDraft",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Free, open-source word processor by Clerdo",
   "private": true,
   "type": "module",
@@ -31,8 +31,10 @@
     "dictionary-en": "^4.0.0",
     "dictionary-en-gb": "^3.0.0",
     "fflate": "^0.8.2",
+    "hyphen": "^1.14.1",
     "lucide-react": "^0.460.0",
     "nspell": "^2.1.5",
+    "pdfjs-dist": "^6.5.438",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

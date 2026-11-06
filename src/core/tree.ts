@@ -70,7 +70,7 @@ export const sameProps = (a: RunProps, b: RunProps): boolean => {
 };
 
 const sameMeta = (a: Run, b: Run): boolean =>
-  JSON.stringify([a.link, a.ins, a.del, a.comments]) === JSON.stringify([b.link, b.ins, b.del, b.comments]);
+  JSON.stringify([a.link, a.ins, a.del, a.fmtRev, a.comments]) === JSON.stringify([b.link, b.ins, b.del, b.fmtRev, b.comments]);
 
 export const normalizeRuns = (runs: Run[]): Run[] => {
   const out: Run[] = [];

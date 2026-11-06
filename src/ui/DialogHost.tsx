@@ -15,6 +15,10 @@ import { styleLabel } from './labels';
 import { selectedAtom, updateSelectedAtom } from '../features/images';
 import { SHAPES } from '../features/insert';
 import { ChartDialog } from './ChartDialog';
+import { openProtected, setFilePassword } from '../features/files';
+import { DrawDialog } from './ExtraViews';
+import { insertFormula, insertTextArt, insertVideo, restartList, setBullet, TEXT_ART } from '../features/objects';
+import { markAuthority, setCitationStyle } from '../features/references';
 import { insertCitation, insertCrossRef, markIndexEntry, referenceTargets, saveSource } from '../features/references';
 import { saveTyping, typing, type TypingOptions } from '../features/autoType';
 
@@ -23,7 +27,7 @@ type Val = string | number | boolean;
 interface Field {
   key: string;
   label: string;
-  type?: 'text' | 'number' | 'select' | 'check' | 'color' | 'area';
+  type?: 'text' | 'number' | 'select' | 'check' | 'color' | 'area' | 'password';
   options?: [string, string][];
   step?: number;
 }
@@ -71,9 +75,9 @@ const fontForm = (s: EditorStore): FormDef => {
       { key: 'font', label: 'Font' }, { key: 'size', label: 'Size (pt)', type: 'number' }, { key: 'color', label: 'Color', type: 'color' },
       { key: 'underline', label: 'Underline', type: 'select', options: [['none', 'None'], ['single', 'Single'], ['double', 'Double'], ['thick', 'Thick'], ['dotted', 'Dotted'], ['dashed', 'Dashed'], ['wave', 'Wave'], ['words', 'Words only']] },
       { key: 'spacing', label: 'Letter spacing (pt)', type: 'number', step: 0.1 }, { key: 'position', label: 'Raise (pt)', type: 'number' }, { key: 'scale', label: 'Width (%)', type: 'number', step: 1 },
-      { key: 'bold', label: 'Bold', type: 'check' }, { key: 'italic', label: 'Italic', type: 'check' }, { key: 'strike', label: 'Strikethrough', type: 'check' }, { key: 'doubleStrike', label: 'Double strikethrough', type: 'check' }, { key: 'smallCaps', label: 'Small capitals', type: 'check' }, { key: 'caps', label: 'All capitals', type: 'check' }, { key: 'hidden', label: 'Hidden', type: 'check' }, { key: 'shadow', label: 'Shadow', type: 'check' }, { key: 'outline', label: 'Outline', type: 'check' },
+      { key: 'emboss', label: 'Raised', type: 'check' }, { key: 'imprint', label: 'Pressed', type: 'check' }, { key: 'bold', label: 'Bold', type: 'check' }, { key: 'italic', label: 'Italic', type: 'check' }, { key: 'strike', label: 'Strikethrough', type: 'check' }, { key: 'doubleStrike', label: 'Double strikethrough', type: 'check' }, { key: 'smallCaps', label: 'Small capitals', type: 'check' }, { key: 'caps', label: 'All capitals', type: 'check' }, { key: 'hidden', label: 'Hidden', type: 'check' }, { key: 'shadow', label: 'Shadow', type: 'check' }, { key: 'outline', label: 'Outline', type: 'check' },
     ],
-    initial: { font: r.font ?? '', size: r.size ?? 11, color: r.color ?? '#000000', underline: r.underline ?? 'none', spacing: r.spacing ?? 0, position: r.position ?? 0, scale: r.scale ?? 100, bold: !!r.bold, italic: !!r.italic, strike: !!r.strike, doubleStrike: !!r.doubleStrike, smallCaps: !!r.smallCaps, caps: !!r.caps, hidden: !!r.hidden, shadow: !!r.shadow, outline: !!r.outline },
+    initial: { emboss: !!r.emboss, imprint: !!r.imprint, font: r.font ?? '', size: r.size ?? 11, color: r.color ?? '#000000', underline: r.underline ?? 'none', spacing: r.spacing ?? 0, position: r.position ?? 0, scale: r.scale ?? 100, bold: !!r.bold, italic: !!r.italic, strike: !!r.strike, doubleStrike: !!r.doubleStrike, smallCaps: !!r.smallCaps, caps: !!r.caps, hidden: !!r.hidden, shadow: !!r.shadow, outline: !!r.outline },
     apply: (v) => s.formatRun(v as unknown as RunProps),
   };
 };
@@ -231,7 +235,54 @@ const insertBefore = (s: EditorStore, blocks: Paragraph[]): void => {
   s.commit({ ...d, blocks: [...moved.slice(0, blocks.length), first, ...moved.slice(blocks.length)] });
 };
 
+const EMOJI: [string, string][] = [
+  ['Faces', '😀😃😄😁😆😅😂🤣🙂🙃😉😊😇🥰😍🤩😘😋😜🤪😝🤗🤔🤨😐😑😶🙄😏😴😌😷🤒🤕🥳😎🤓🧐😕😟🙁😮😲😳🥺😢😭😤😠😡🤯😱😰😓'],
+  ['Hands', '👍👎👌✌🤞🤟🤘🤙👈👉👆👇☝👋🤚✋🖐👏🙌🤲🤝🙏✍💪'],
+  ['Hearts', '❤🧡💛💚💙💜🖤🤍🤎💔❣💕💞💓💗💖💘💝'],
+  ['Nature', '🌞🌝🌛⭐🌟✨⚡🔥🌈☀⛅☁🌧⛈❄🌊🌸🌹🌻🌼🌷🌱🌲🌳🌴🍀🍁🐶🐱🐭🐰🦊🐻🐼🦁🐯🐸🐵🐔🐧🐦🦋🐝'],
+  ['Food', '🍎🍊🍋🍌🍉🍇🍓🍑🍍🥭🥑🍅🥕🌽🍕🍔🍟🌮🍣🍰🎂🍪🍫🍩☕🍵🥤'],
+  ['Things', '📌📍📎✂📝📚📖📅📈📉📊💡🔍🔒🔑🔔⏰⌛💻📱⌨🖨📷🎥🎧🎵🎁🎉🏆🥇🚀✈🚗🏠🌍'],
+  ['Marks', '✅❌❓❗⚠🚫💯🔴🟠🟡🟢🔵🟣⚫⚪➡⬅⬆⬇🔁➕➖'],
+];
+
+const EmojiGrid = ({ store }: { store: EditorStore }) => (
+  <div className="emoji">
+    <h2>Emoji</h2>
+    {EMOJI.map(([title, list]) => (
+      <section key={title}><h3>{title}</h3>
+        <div className="symbols">{[...list].map((c) => <button key={c} onClick={() => { store.closeDialog(); store.typeText(c); }}>{c}</button>)}</div>
+      </section>
+    ))}
+    <footer><button className="tool" onClick={() => store.closeDialog()}>Close</button></footer>
+  </div>
+);
+
+const BULLET_CHOICES: [string, string][] = ['•', '◦', '▪', '–', '→', '✓', '★', '◆', '➤', '❖'].map((c) => [c, c]);
+
+const extraForm = (s: EditorStore, id: string, props?: Record<string, unknown>): FormDef | null => {
+  switch (id) {
+    case 'password': return { title: 'This document has a password', ok: 'Open', fields: [{ key: 'pw', label: 'Password', type: 'password' }], initial: { pw: '' }, apply: (v) => void openProtected(s, props?.['bytes'] as Uint8Array, String(props?.['name']), props?.['handle'], String(v['pw'])) };
+    case 'protect': return { title: 'Protect with a password', fields: [{ key: 'pw', label: 'Password (leave empty to remove)', type: 'password' }, { key: 'again', label: 'Type it again', type: 'password' }], initial: { pw: '', again: '' }, apply: (v) => setFilePassword(s, String(v['pw']), String(v['again'])) };
+    case 'video': return { title: 'Online video', ok: 'Add', fields: [{ key: 'url', label: 'Video link' }, { key: 'title', label: 'Title' }], initial: { url: '', title: '' }, apply: (v) => void insertVideo(s, String(v['url']).trim(), String(v['title'])) };
+    case 'textArt': return { title: 'Text art', ok: 'Add', fields: [{ key: 'text', label: 'Text' }, { key: 'style', label: 'Look', type: 'select', options: TEXT_ART.map((a) => [a.id, a.name]) }, { key: 'size', label: 'Size (pt)', type: 'number', step: 1 }], initial: { text: '', style: 'bold', size: 48 }, apply: (v) => { if (String(v['text']).trim()) insertTextArt(s, String(v['text']), String(v['style']), Number(v['size']) || 48); } };
+    case 'dropCap': {
+      const cur = currentPara(s).dropCap;
+      return { title: 'Large first letter', fields: [{ key: 'kind', label: 'Position', type: 'select', options: [['none', 'None'], ['drop', 'In the text'], ['margin', 'In the margin']] }, { key: 'lines', label: 'Lines tall', type: 'number', step: 1 }], initial: { kind: cur?.kind ?? 'drop', lines: cur?.lines ?? 3 }, apply: (v) => s.commit(setParaProps(s.doc, s.sel, { dropCap: v['kind'] === 'none' ? undefined : { kind: v['kind'] as 'drop', lines: Math.max(2, Math.min(10, Number(v['lines']) || 3)) } })) };
+    }
+    case 'listStart': return { title: 'Restart numbering', fields: [{ key: 'start', label: 'Start at', type: 'number', step: 1 }], initial: { start: 1 }, apply: (v) => restartList(s, Number(v['start']) || 1) };
+    case 'bullet': return { title: 'Choose a bullet', fields: [{ key: 'char', label: 'Bullet', type: 'select', options: BULLET_CHOICES }, { key: 'custom', label: 'Or type your own' }], initial: { char: '•', custom: '' }, apply: (v) => setBullet(s, [...String(v['custom']).trim()][0] ?? String(v['char'])) };
+    case 'formula': return { title: 'Formula', ok: 'Add', fields: [{ key: 'text', label: 'Formula' }], initial: { text: 'SUM(ABOVE)' }, apply: (v) => insertFormula(s, String(v['text'])) };
+    case 'pageAlign': return { title: 'Align text on the page', fields: [{ key: 'v', label: 'Position', type: 'select', options: [['top', 'Top'], ['center', 'Center'], ['bottom', 'Bottom']] }], initial: { v: s.doc.section.vAlign ?? 'top' }, apply: (v) => setSection(s, { vAlign: v['v'] === 'top' ? undefined : v['v'] as 'center' }) };
+    case 'language': return { title: 'Language of the text', fields: [{ key: 'lang', label: 'Language', type: 'select', options: [['en-US', 'English (US)'], ['en-GB', 'English (UK)'], ['ar-SA', 'Arabic'], ['fr-FR', 'French'], ['es-ES', 'Spanish'], ['de-DE', 'German']] }], initial: { lang: currentRun(s).lang ?? 'en-US' }, apply: (v) => s.formatRun({ lang: String(v['lang']) }) };
+    case 'citeStyle': return { title: 'Citation style', fields: [{ key: 'style', label: 'Style', type: 'select', options: [['APA', 'APA'], ['MLA', 'MLA'], ['Chicago', 'Chicago'], ['Harvard', 'Harvard'], ['IEEE', 'IEEE']] }], initial: { style: s.doc.settings.citationStyle ?? 'APA' }, apply: (v) => setCitationStyle(s, String(v['style'])) };
+    case 'authority': return { title: 'Mark an authority', ok: 'Mark', fields: [{ key: 'text', label: 'Citation' }, { key: 'cat', label: 'Category', type: 'select', options: [['1', 'Cases'], ['2', 'Statutes'], ['3', 'Other authorities'], ['4', 'Rules'], ['5', 'Treatises'], ['6', 'Regulations'], ['7', 'Constitutional provisions']] }], initial: { text: isCollapsed(s.sel) ? '' : selectedText(s.doc, s.sel), cat: '1' }, apply: (v) => markAuthority(s, String(v['text']), String(v['cat'])) };
+    default: return null;
+  }
+};
+
 const formFor = (s: EditorStore, id: string, props?: Record<string, unknown>): FormDef | null => {
+  const extra = extraForm(s, id, props);
+  if (extra) return extra;
   switch (id) {
     case 'font': return fontForm(s);
     case 'paragraph': return paraForm(s);
@@ -408,6 +459,8 @@ export const DialogHost = ({ store }: { store: EditorStore }) => {
   if (d.id === 'cite') body = <CitePicker store={store} />;
   if (d.id === 'cross') body = <CrossPicker store={store} />;
   if (d.id === 'symbol') body = <SymbolGrid store={store} />;
+  if (d.id === 'emoji') body = <EmojiGrid store={store} />;
+  if (d.id === 'draw') body = <DrawDialog store={store} />;
   if (d.id === 'palette') body = <Palette store={store} />;
   if (d.id === 'count') {
     const r = stats(store);

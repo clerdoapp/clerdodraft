@@ -10,6 +10,8 @@ import { findAll, nextMatch, replaceAll, replaceOne, type FindOptions } from '..
 import { mail } from '../features/mailReview';
 import { run } from '../editor/commands';
 import { ProofPane } from './ProofPane';
+import { TranslatePane, WordPane } from './WordPane';
+import { VersionsPane } from './ExtraViews';
 
 const S = 1.9;
 
@@ -93,11 +95,22 @@ const CommentCard = ({ store, c, replies }: { store: EditorStore; c: Comment; re
 
 const CommentsPane = ({ store }: { store: EditorStore }) => {
   const all = Object.values(store.doc.comments);
+  const [show, setShow] = useState('all');
+  const people = [...new Set(all.map((c) => c.author).filter(Boolean))];
+  const visible = (c: Comment) => show === 'all' || (show === 'open' && !c.resolved) || (show === 'done' && !!c.resolved) || show === `by:${c.author}`;
   return (
     <Pane store={store} title="Comments">
       <button className="tool" onClick={() => run(store, 'ins.comment')}>Add a comment on the selection</button>
+      {!!all.length && (
+        <label className="field"><span>Show</span>
+          <select value={show} onChange={(e) => setShow(e.target.value)}>
+            <option value="all">All comments</option><option value="open">Open</option><option value="done">Resolved</option>
+            {people.map((p) => <option key={p} value={`by:${p}`}>From {p}</option>)}
+          </select>
+        </label>
+      )}
       {!all.length && <p className="muted">No comments yet.</p>}
-      {all.filter((c) => !c.parent).map((c) => <CommentCard key={c.id} store={store} c={c} replies={all.filter((r) => r.parent === c.id)} />)}
+      {all.filter((c) => !c.parent && visible(c)).map((c) => <CommentCard key={c.id} store={store} c={c} replies={all.filter((r) => r.parent === c.id)} />)}
     </Pane>
   );
 };
@@ -108,8 +121,8 @@ const ChangesPane = ({ store }: { store: EditorStore }) => {
     return p.runs.flatMap((r) => {
       const start = off;
       off += r.text.length;
-      const rev = r.ins ?? r.del;
-      return rev ? [{ p, start, end: off, rev, kind: r.ins ? 'Added' : 'Removed', text: r.text }] : [];
+      const rev = r.ins ?? r.del ?? r.fmtRev?.rev;
+      return rev ? [{ p, start, end: off, rev, kind: r.ins ? 'Added' : r.del ? 'Removed' : 'Formatted', text: r.text }] : [];
     });
   });
   return (
@@ -169,6 +182,9 @@ export const Inspector = ({ store }: { store: EditorStore }) => {
     case 'changes': return <ChangesPane store={store} />;
     case 'styles': return <StylesPane store={store} />;
     case 'mail': return <MailPane store={store} />;
+    case 'versions': return <VersionsPane store={store} />;
+    case 'words': return <WordPane store={store} />;
+    case 'translate': return <TranslatePane store={store} />;
     case 'proof': return <ProofPane store={store} onClose={() => store.setView({ pane: null })} />;
     default: return null;
   }

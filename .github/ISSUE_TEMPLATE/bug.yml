@@ -1,0 +1,28 @@
+name: Bug report
+description: Something doesn't work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "0.2.0"
+  - type: dropdown
+    id: system
+    attributes:
+      label: System
+      options: [Windows, macOS, Linux, iPad, Web browser]
+    validations:
+      required: true
+  - type: textarea
+    id: file
+    attributes:
+      label: Sample file
+      description: If a document looks wrong, attach a small sample. Don't attach anything private.

@@ -1,6 +1,6 @@
 import { blankDoc } from '../core/defaults';
 import { type Doc, type Revision, type RunProps, type Section, type Selection, type StoryId, newId } from '../core/model';
-import { backspace, deleteForward, deleteSelection, insertAtom, insertContent, insertText, propsAt, setRunProps, splitParagraph, type EditContext, type EditResult } from '../core/ops';
+import { backspace, deleteForward, deleteSelection, insertAtom, insertContent, insertText, mapRunsInSelection, propsAt, setRunProps, splitParagraph, type EditContext, type EditResult } from '../core/ops';
 import { collapsed, docStart, findPara, isCollapsed, paraLength, storyBlocks } from '../core/tree';
 import type { Atom, Block } from '../core/model';
 import { layoutDocument } from '../layout/paginate';
@@ -21,11 +21,14 @@ export interface ViewState {
   theme: 'light' | 'dark' | 'system';
   printing: boolean;
   webWidth: number; // points available in web view
+  reader?: boolean;
+  split?: boolean;
 }
 
 export interface FileState {
   name: string;
   handle: unknown; // FileSystemFileHandle or a desktop path
+  password?: string; // set while the file is protected; never stored
   dirty: boolean;
   lastSaved?: number;
 }
@@ -305,7 +308,9 @@ export class EditorStore {
       this.emit();
       return;
     }
-    this.commit(setRunProps(this.doc, this.sel, patch));
+    const rev = this.doc.settings.trackChanges ? this.revision : undefined;
+    if (rev) this.commit(mapRunsInSelection(this.doc, this.sel, (r) => ({ ...r, props: { ...r.props, ...patch }, ...(r.ins || r.del ? {} : { fmtRev: r.fmtRev ?? { rev, old: r.props } }) })));
+    else this.commit(setRunProps(this.doc, this.sel, patch));
   }
 
   enterStory(story: StoryId): void {

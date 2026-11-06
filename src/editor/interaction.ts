@@ -57,6 +57,8 @@ export const fragStyle = (store: EditorStore, f: Frag): CSSProperties => {
   if (e.position) { s.position = 'relative'; s.top = -e.position; }
   if (e.hidden) { decor.push('underline'); s.textDecorationStyle = 'dotted'; }
   if (e.shadow) s.textShadow = '1px 1px 1px rgba(0,0,0,.35)';
+  if (e.emboss) { s.textShadow = '-1px -1px 0 rgba(255,255,255,.9), 1px 1px 1px rgba(0,0,0,.45)'; s.color = s.color ?? '#c8c8c8'; }
+  if (e.imprint) { s.textShadow = '1px 1px 0 rgba(255,255,255,.9), -1px -1px 1px rgba(0,0,0,.45)'; s.color = s.color ?? '#c8c8c8'; }
   if (e.outline) { s.color = 'transparent'; s.WebkitTextStroke = `0.6px ${e.color ?? '#000'}`; }
   const r = f.run;
   if (r) {

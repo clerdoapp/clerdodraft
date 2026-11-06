@@ -19,6 +19,10 @@ import { ContextMenu } from './ContextMenu';
 import { Ruler } from './Ruler';
 import { registerReferences } from '../features/references';
 import { restoreDraft, startAutosave } from '../features/files';
+import { registerWriting } from '../features/writing';
+import { registerObjects } from '../features/objects';
+import { SplitView } from './ExtraViews';
+import { ReaderOverlay } from './ReaderOverlay';
 
 const coarseScreen = matchMedia('(pointer: coarse)').matches;
 
@@ -32,6 +36,8 @@ export const App = () => {
     registerTemplates();
     registerProof();
     registerReferences();
+    registerWriting();
+    registerObjects();
     const s = new EditorStore(new CanvasMeasurer());
     s.proof = new Proofer(s);
     registerAutoType(s);
@@ -67,12 +73,13 @@ export const App = () => {
       {!reading && <TopBar store={store} />}
       <div className="work">
         {!reading && <Rail store={store} />}
-        <main className="stage">{store.view.showRuler && store.view.mode === 'print' && !coarseScreen && <Ruler store={store} />}<Canvas store={store} /></main>
+        <main className="stage">{store.view.showRuler && store.view.mode === 'print' && !coarseScreen && <Ruler store={store} />}<Canvas store={store} />{store.view.split && <SplitView store={store} />}</main>
         {!reading && <Inspector store={store} />}
       </div>
       <StatusBar store={store} />
       <DialogHost store={store} />
       {store.menu && <ContextMenu store={store} />}
+      {store.view.reader && <ReaderOverlay store={store} />}
       {store.toast && <div className="toast" role="status">{store.toast}</div>}
     </div>
   );

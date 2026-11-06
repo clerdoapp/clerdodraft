@@ -1,6 +1,13 @@
 import { blankDoc } from '../core/defaults';
 import type { EditorStore } from '../editor/store';
+import type { Doc } from '../core/model';
 import { readDocx, writeDocx } from '../docx';
+import { isCompound, readCompound } from '../formats/cfb';
+import { readHtml } from '../formats/html';
+import { readMarkdown } from '../formats/markdown';
+import { readOdt } from '../formats/odt';
+import { readRtf } from '../formats/rtf';
+import { decodeText, readText } from '../formats/text';
 
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 const DB = 'clerdodraft';
@@ -23,15 +30,63 @@ interface SaveHandle {
 }
 
 const types = [{ description: 'Documents', accept: { [DOCX]: ['.docx'] } }];
+const OPEN_EXT = ['.docx', '.docm', '.dotx', '.doc', '.odt', '.rtf', '.pdf', '.txt', '.md', '.markdown', '.html', '.htm'];
+const openTypes = [{ description: 'Documents', accept: { [DOCX]: OPEN_EXT } }];
 
 export const baseName = (name: string): string => name.replace(/\.docx$/i, '');
 
 export const newDocument = (store: EditorStore): void => store.load(blankDoc());
 
-export const openBytes = (store: EditorStore, bytes: Uint8Array, name: string, handle: unknown): void => {
+class NeedsPassword extends Error {}
+
+export const openProtected = async (store: EditorStore, bytes: Uint8Array, name: string, handle: unknown, password: string): Promise<void> => {
   try {
-    store.load(readDocx(bytes), { name: baseName(name), handle });
+    const { decryptPackage } = await import('../formats/crypt');
+    store.load(readDocx(await decryptPackage(bytes, password)), { name: baseName(name), handle, password });
   } catch (e) {
+    store.notify(e instanceof Error ? e.message : "This file couldn't be opened.");
+  }
+};
+
+export const setFilePassword = (store: EditorStore, password: string, again: string): void => {
+  if (password !== again) { store.notify('The two passwords are different.'); return; }
+  store.file = { ...store.file, password: password || undefined, dirty: true };
+  store.emit();
+  store.notify(password ? 'The password applies from your next save. It cannot be recovered if you forget it.' : 'The password will be removed at your next save.');
+};
+
+const fileBytes = async (store: EditorStore): Promise<Uint8Array> => {
+  const data = writeDocx(store.doc);
+  if (!store.file.password) return data;
+  const { encryptPackage } = await import('../formats/crypt');
+  return encryptPackage(data, store.file.password);
+};
+
+// Other formats open as a new document, so Save never writes over the original.
+const importDoc = async (bytes: Uint8Array, name: string): Promise<Doc | null> => {
+  const ext = /\.([a-z0-9]+)$/i.exec(name)?.[1]?.toLowerCase() ?? '';
+  const zip = bytes[0] === 0x50 && bytes[1] === 0x4b;
+  if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return (await import('../formats/pdf')).readPdf(bytes);
+  if (isCompound(bytes)) {
+    if (readCompound(bytes).has('EncryptedPackage')) throw new NeedsPassword();
+    return (await import('../formats/doc')).readDoc(bytes);
+  }
+  if (zip && ext === 'odt') return readOdt(bytes);
+  if (zip) return null;
+  const text = decodeText(bytes);
+  if (text.startsWith('{\\rtf')) return readRtf(text);
+  if (ext === 'md' || ext === 'markdown') return readMarkdown(text);
+  if (ext === 'html' || ext === 'htm' || /^\s*<(!doctype|html)/i.test(text)) return readHtml(text);
+  return readText(text);
+};
+
+export const openBytes = async (store: EditorStore, bytes: Uint8Array, name: string, handle: unknown): Promise<void> => {
+  try {
+    const other = await importDoc(bytes, name);
+    if (other) store.load(other, { name: name.replace(/\.[a-z0-9]+$/i, ''), handle: null });
+    else store.load(readDocx(bytes), { name: baseName(name), handle });
+  } catch (e) {
+    if (e instanceof NeedsPassword) { store.openDialog('password', { bytes, name, handle }); return; }
     store.notify(e instanceof Error ? e.message : "This file couldn't be opened.");
   }
 };
@@ -40,16 +95,16 @@ export const openFile = async (store: EditorStore): Promise<void> => {
   const d = desktop();
   if (d) {
     const r = await d.open();
-    if (r) openBytes(store, r.data, r.name, r.path);
+    if (r) await openBytes(store, r.data, r.name, r.path);
     return;
   }
   const w = window as PickerWindow;
   if (w.showOpenFilePicker) {
     try {
-      const [h] = await w.showOpenFilePicker({ types });
+      const [h] = await w.showOpenFilePicker({ types: openTypes });
       if (!h) return;
       const f = await h.getFile();
-      openBytes(store, new Uint8Array(await f.arrayBuffer()), f.name, h);
+      await openBytes(store, new Uint8Array(await f.arrayBuffer()), f.name, h);
     } catch (e) {
       if ((e as DOMException).name !== 'AbortError') store.notify("This file couldn't be opened.");
     }
@@ -57,10 +112,10 @@ export const openFile = async (store: EditorStore): Promise<void> => {
   }
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = `.docx,${DOCX}`;
+  input.accept = OPEN_EXT.join(',');
   input.onchange = async () => {
     const f = input.files?.[0];
-    if (f) openBytes(store, new Uint8Array(await f.arrayBuffer()), f.name, null);
+    if (f) await openBytes(store, new Uint8Array(await f.arrayBuffer()), f.name, null);
   };
   input.click();
 };
@@ -93,14 +148,16 @@ const plainDownload = (data: BlobPart, name: string, mime: string): void => {
   window.setTimeout(() => URL.revokeObjectURL(url), 30000);
 };
 
+const keepVersion = (store: EditorStore): void => { if (!store.file.password) void import('./versions').then((v) => v.saveVersion(store, 'Saved')).catch(() => undefined); };
+
 export const saveFile = async (store: EditorStore, as = false): Promise<void> => {
   try {
-    const data = writeDocx(store.doc);
+    const data = await fileBytes(store);
     const name = `${store.file.name}.docx`;
     const d = desktop();
     if (d) {
       const r = await d.save(as ? null : (store.file.handle as string | null), name, data);
-      if (r) { store.file = { name: baseName(r.name), handle: r.path, dirty: false, lastSaved: Date.now() }; store.emit(); }
+      if (r) { store.file = { ...store.file, name: baseName(r.name), handle: r.path, dirty: false, lastSaved: Date.now() }; store.emit(); keepVersion(store); }
       return;
     }
     const w = window as PickerWindow;
@@ -111,29 +168,34 @@ export const saveFile = async (store: EditorStore, as = false): Promise<void> =>
       const out = await h.createWritable();
       await out.write(data);
       await out.close();
-      store.file = { name: baseName(h.name), handle: h, dirty: false, lastSaved: Date.now() };
+      store.file = { ...store.file, name: baseName(h.name), handle: h, dirty: false, lastSaved: Date.now() };
       store.emit();
+      keepVersion(store);
       return;
     }
     download(data as BlobPart, name, DOCX);
     store.file = { ...store.file, dirty: false, lastSaved: Date.now() };
     store.emit();
+    keepVersion(store);
   } catch (e) {
     if ((e as DOMException).name === 'AbortError') return;
     store.notify(e instanceof Error ? e.message : "This document couldn't be saved.");
   }
 };
 
-const idb = (): Promise<IDBDatabase> =>
+export const openDb = (): Promise<IDBDatabase> =>
   new Promise((resolve, reject) => {
-    const r = indexedDB.open(DB, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('docs');
+    const r = indexedDB.open(DB, 2);
+    r.onupgradeneeded = () => {
+      if (!r.result.objectStoreNames.contains('docs')) r.result.createObjectStore('docs');
+      if (!r.result.objectStoreNames.contains('versions')) r.result.createObjectStore('versions', { keyPath: 'id', autoIncrement: true });
+    };
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);
   });
 
 const put = async (value: unknown): Promise<void> => {
-  const db = await idb();
+  const db = await openDb();
   await new Promise<void>((res, rej) => {
     const t = db.transaction('docs', 'readwrite');
     t.objectStore('docs').put(value, KEY);
@@ -143,7 +205,7 @@ const put = async (value: unknown): Promise<void> => {
 };
 
 const get = async (): Promise<{ data: Uint8Array; name: string; at: number } | undefined> => {
-  const db = await idb();
+  const db = await openDb();
   return new Promise((res, rej) => {
     const r = db.transaction('docs').objectStore('docs').get(KEY);
     r.onsuccess = () => res(r.result as never);
@@ -154,7 +216,7 @@ const get = async (): Promise<{ data: Uint8Array; name: string; at: number } | u
 // Recovery copy kept on this device only, separate from the user's own files.
 export const startAutosave = (store: EditorStore): (() => void) => {
   const timer = window.setInterval(() => {
-    if (!store.file.dirty) return;
+    if (!store.file.dirty || store.file.password) return;
     void put({ data: writeDocx(store.doc), name: store.file.name, at: Date.now() }).catch(() => undefined);
   }, 8000);
   const onLeave = (e: BeforeUnloadEvent) => { if (store.file.dirty) e.preventDefault(); };
@@ -163,6 +225,7 @@ export const startAutosave = (store: EditorStore): (() => void) => {
 };
 
 export const restoreDraft = async (store: EditorStore): Promise<void> => {
+  if (new URLSearchParams(location.search).has('new')) return;
   try {
     const d = await get();
     if (d && !store.file.dirty) {

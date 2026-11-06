@@ -18,7 +18,8 @@ export interface Measurer {
 }
 
 export interface Frag {
-  kind: 'text' | 'tab' | 'atom' | 'mark';
+  kind: 'text' | 'tab' | 'atom' | 'mark' | 'hyphen';
+  drop?: { size: number; width: number }; // enlarged first letter
   from: number;
   to: number;
   text: string;
@@ -105,6 +106,7 @@ export interface Page {
   lineNumbers: { x: number; y: number; n: number; size: number }[];
   columnRules: { x: number; y: number; h: number }[];
   wordsBefore?: number;
+  leftMargin?: number; // set on mirrored pages
 }
 
 export interface LayoutOptions {

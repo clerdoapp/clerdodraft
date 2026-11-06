@@ -2,6 +2,7 @@ import { ATOM_CHAR, type Align, type Paragraph, type ParaProps, type Run, type R
 import { computeLabels, effectivePara, effectiveRun, styleChain } from '../core/styles';
 import type { Block } from '../core/model';
 import type { FontSpec, Frag, Line, LayoutEnv, ParaLayout } from './types';
+import { hyphenateSync } from 'hyphen/en';
 
 const RTL_CHAR = /[֐-ࣿיִ-﷿ﹰ-﻿]/;
 const CJK = /[⺀-鿿가-힯豈-﫿＀-￯]/;
@@ -23,6 +24,7 @@ interface Token {
   font: FontSpec;
   width: number;
   brk?: 'line' | 'page' | 'column';
+  drop?: { size: number; width: number };
 }
 
 const displayText = (t: string, eff: RunProps): string => (eff.caps || eff.smallCaps ? t.toLocaleUpperCase() : t);
@@ -157,7 +159,7 @@ const cache: Cache = new WeakMap();
 
 export const layoutParagraph = (env: LayoutEnv, blocks: Block[], p: Paragraph, width: number, overlay?: RunProps, shape?: LineShape, tablePara?: ParaProps): ParaLayout => {
   const label = computeLabels(env.doc, blocks).get(p.id);
-  const key = `${width.toFixed(2)}|${env.opts.showDeleted}|${env.opts.showHidden}|${label?.text ?? ''}|${overlay ? JSON.stringify(overlay) : ''}|${tablePara ? JSON.stringify(tablePara) : ''}`;
+  const key = `${env.doc.settings.autoHyphenation ? 'h' : ''}${width.toFixed(2)}|${env.opts.showDeleted}|${env.opts.showHidden}|${label?.text ?? ''}|${overlay ? JSON.stringify(overlay) : ''}|${tablePara ? JSON.stringify(tablePara) : ''}`;
   if (!shape) {
     let byPara = cache.get(env.doc.styles);
     if (!byPara) cache.set(env.doc.styles, (byPara = new WeakMap()));
@@ -192,6 +194,8 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
   const first = eff.firstLine ?? 0;
   const align = swapAlign(eff.align ?? 'left', rtl);
   const { tokens, volatile } = tokenize(env, p, eff, overlay);
+  const autoHyphen = !!env.doc.settings.autoHyphenation && !eff.suppressHyphenation;
+  const drop = eff.dropCap ? dropLetter(env, tokens, eff.dropCap) : undefined;
   const tabs = [...(eff.tabs ?? [])].sort((a, b) => a.pos - b.pos);
   const def = env.doc.settings.defaultTabStop || 36;
   const markEff = overlay ? { ...overlay, ...effectiveRun(env.doc, eff, p.markProps ?? {}) } : effectiveRun(env.doc, eff, p.markProps ?? {});
@@ -200,7 +204,6 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
   let i = 0;
   let y = 0;
   let isFirst = true;
-  const n = tokens.length;
   let labelInfo: Line['label'];
   if (label && label.text) {
     const lvlEff = { ...effectiveRun(env.doc, eff, p.markProps ?? {}), ...label.level.runProps, ...stripColorUnderline() };
@@ -214,7 +217,7 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
     const est = lines.length ? lines[lines.length - 1]!.height : (markEff.size ?? 11) * 1.25;
     const s = shape ? shape(lines.length, y, est) : { left: 0, right: 0, dy: 0 };
     y += s.dy;
-    const startX = lineStart + s.left;
+    const startX = lineStart + s.left + (drop && lines.length < drop.lines ? drop.shift : 0);
     const avail = width - startX - indentR - s.right;
     let x = 0;
     let lineLabel: Line['label'];
@@ -242,7 +245,8 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
     let pendingTab: { frag: Frag; stop: TabStop; startX: number } | null = null;
     const pushText = (t: Token) => {
       const last = frags[frags.length - 1];
-      if (last && last.kind === 'text' && last.run === t.run && last.to === t.from && sameFont(last.font, t.font)) {
+      if (t.drop) frags.push({ kind: 'text', from: t.from, to: t.to, text: t.text, width: 0, run: t.run, eff: t.eff, font: t.font, drop: t.drop });
+      else if (last && last.kind === 'text' && !last.drop && last.run === t.run && last.to === t.from && sameFont(last.font, t.font)) {
         last.text += t.text;
         last.to = t.to;
         last.width += t.width;
@@ -256,7 +260,7 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
       else if (stop.kind === 'right') { frag.width = Math.max(0, stop.pos - startX - sx - used); x = sx + frag.width + used; }
       pendingTab = null;
     };
-    while (i < n) {
+    while (i < tokens.length) {
       const t = tokens[i]!;
       if (t.kind === 'break') {
         resolveTab();
@@ -290,6 +294,18 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
         continue;
       }
       if (x + t.width > avail + 0.01 && frags.length) {
+        const cut = t.kind === 'text' && !pendingTab ? hyphenCut(env, t, avail - x, autoHyphen) : 0;
+        if (cut) {
+          const a: Token = { ...t, to: t.from + cut, text: t.text.slice(0, cut), width: measure(env, t.text.slice(0, cut), t.eff, t.font) };
+          const b: Token = { ...t, from: t.from + cut, text: t.text.slice(cut), width: measure(env, t.text.slice(cut), t.eff, t.font) };
+          tokens.splice(i, 1, a, b);
+          pushText(a);
+          const width = measure(env, '-', t.eff, t.font);
+          frags.push({ kind: 'hyphen', from: a.to, to: a.to, text: '-', width, run: t.run, eff: t.eff, font: t.font });
+          x += a.width + width;
+          i++;
+          break;
+        }
         if (lastBreakI > startI) {
           i = lastBreakI;
           frags.length = lastBreakFrag;
@@ -360,7 +376,7 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
     }
     const textWidth = Math.max(0, x - trailing);
     const metrics = lineMetrics(env, frags, markEff, eff);
-    const ended = i >= n;
+    const ended = i >= tokens.length;
     let wordSpacing = 0;
     const justify = align === 'justify' || align === 'distribute';
     if (justify && !ended && !brk) {
@@ -389,7 +405,7 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
       isLast: ended,
       dy: s.dy || undefined,
     };
-    if (brk && i >= n) {
+    if (brk && i >= tokens.length) {
       // A trailing break leaves an empty line for the caret to sit on.
       lines.push({ ...line, isLast: false });
       y += metrics.height;
@@ -401,7 +417,7 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
     y += metrics.height;
     isFirst = false;
     if (i === startI) i++; // always advance
-  } while (i < n);
+  } while (i < tokens.length);
 
   const to = p.runs.reduce((s, r) => s + r.text.length, 0);
   if (lines.length) lines[lines.length - 1]!.to = to;
@@ -422,6 +438,45 @@ const compute = (env: LayoutEnv, p: Paragraph, width: number, label: ReturnType<
     indentR,
     volatile,
   };
+};
+
+// Splits the first letter off so it can sit large beside the first lines.
+const dropLetter = (env: LayoutEnv, tokens: Token[], cap: NonNullable<ParaProps['dropCap']>): { lines: number; shift: number } | undefined => {
+  const t = tokens[0];
+  if (!t || t.kind !== 'text') return undefined;
+  const letter = [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(t.text)][0]!.segment;
+  const size = t.font.size * cap.lines * 1.16;
+  const width = env.m.width(letter, { ...t.font, size }) + 3;
+  const a: Token = { ...t, to: t.from + letter.length, text: letter, width: 0, drop: { size, width } };
+  const rest = t.text.slice(letter.length);
+  tokens.splice(0, 1, a, ...(rest ? [{ ...t, from: a.to, text: rest, width: measure(env, rest, t.eff, t.font) }] : []));
+  return { lines: cap.lines, shift: cap.kind === 'margin' ? 0 : width };
+};
+
+const breakPoints = (text: string, auto: boolean, lang?: string): number[] => {
+  const out: number[] = [];
+  for (let i = 0; i < text.length; i++) if (text[i] === '\u00ad') out.push(i + 1);
+  if (!auto || (lang && !lang.toLowerCase().startsWith('en'))) return out;
+  const m = /^([^A-Za-z]*)([A-Za-z]{5,})/.exec(text);
+  if (!m) return out;
+  let at = m[1]!.length;
+  for (const ch of hyphenateSync(m[2]!)) {
+    if (ch === '\u00ad') out.push(at);
+    else at++;
+  }
+  return out.sort((a, b) => a - b);
+};
+
+// Longest start of the word that still fits on this line along with its hyphen.
+const hyphenCut = (env: LayoutEnv, t: Token, room: number, auto: boolean): number => {
+  const hyphen = measure(env, '-', t.eff, t.font);
+  let best = 0;
+  for (const at of breakPoints(t.text, auto, t.eff.lang)) {
+    if (at >= t.text.length) continue;
+    if (measure(env, t.text.slice(0, at), t.eff, t.font) + hyphen > room + 0.01) break;
+    best = at;
+  }
+  return best;
 };
 
 const stripColorUnderline = (): RunProps => ({ underline: 'none', strike: false });

@@ -122,6 +122,7 @@ export const computeLabels = (doc: Doc, blocks: Block[]): Map<Id, ListLabel> => 
   if (hit) return hit;
   const out = new Map<Id, ListLabel>();
   const counters = new Map<string, number[]>();
+  const restarted = new Set<string>();
   for (const p of walkParagraphs(blocks)) {
     const eff = effectivePara(doc, p.props);
     const num = eff.numbering;
@@ -134,7 +135,10 @@ export const computeLabels = (doc: Doc, blocks: Block[]): Map<Id, ListLabel> => 
     let c = counters.get(key);
     if (!c) counters.set(key, (c = []));
     for (let i = 0; i < num.level; i++) if (c[i] === undefined) c[i] = (levels[i]?.start ?? 1);
-    c[num.level] = c[num.level] === undefined ? lvl.start : c[num.level]! + 1;
+    const restart = inst.overrides?.[num.level]?.start;
+    const marker = `${num.numId}:${num.level}`;
+    if (restart !== undefined && !restarted.has(marker)) { restarted.add(marker); c[num.level] = restart; }
+    else c[num.level] = c[num.level] === undefined ? lvl.start : c[num.level]! + 1;
     c.length = num.level + 1;
     const text = lvl.format === 'bullet' ? (BULLET_MAP[lvl.text] ?? lvl.text) : lvl.text.replace(/%(\d)/g, (_, d: string) => {
       const i = Number(d) - 1;

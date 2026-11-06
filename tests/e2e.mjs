@@ -170,6 +170,84 @@ try {
     await page.waitForTimeout(200);
     await page.screenshot({ path: join(out, 'sample.png') });
   }
+
+  const rail = async (name) => { const b = page.locator('.rail').getByRole('button', { name, exact: true }); if ((await b.getAttribute('aria-pressed')) !== 'true') await b.click(); };
+  const tool = (name) => page.locator('.toolpanel button', { hasText: name }).first().click();
+  const drop = (name, b64) => page.evaluate(([n, x]) => {
+    const bin = Uint8Array.from(atob(x), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    dt.items.add(new File([bin], n));
+    document.querySelector('.canvas').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+  }, [name, b64]);
+  await drop('notes.md', Buffer.from('# Plan\n\nSome **bold** words here.\n\n- one\n- two\n').toString('base64'));
+  await page.waitForTimeout(400);
+  ok((await doc()).text[0] === 'Plan', 'opens Markdown');
+  await drop('old.rtf', Buffer.from('{\\rtf1\\ansi{\\b Rich}\\par}').toString('base64'));
+  await page.waitForTimeout(400);
+  ok((await doc()).text[0] === 'Rich', 'opens rich text');
+  await drop('page.html', Buffer.from('<html><body><h1>Web</h1><ul><li>a</li></ul><table><tr><td>x</td></tr></table></body></html>').toString('base64'));
+  await page.waitForTimeout(400);
+  ok((await doc()).text.includes('[tbl]'), 'opens a web page with a table');
+  if (process.env.SAMPLE_PDF) {
+    await drop('paper.pdf', readFileSync(process.env.SAMPLE_PDF).toString('base64'));
+    await page.waitForTimeout(2500);
+    ok((await doc()).text.join(' ').includes('after the table'), 'reads the text of a PDF');
+  }
+  if (process.env.SAMPLE_LOCKED) {
+    await drop('locked.docx', readFileSync(process.env.SAMPLE_LOCKED).toString('base64'));
+    await page.waitForSelector('input[type=password]');
+    await page.fill('input[type=password]', 'pw');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(1500);
+    ok((await doc()).text.join(' ').includes('after the table'), 'opens a password protected file');
+  }
+  await page.evaluate(() => { const s = window.__store; s.file = { ...s.file, password: undefined }; });
+  await rail('Review');
+  await tool('Word book');
+  await page.fill('.inspector input', 'happy');
+  await page.waitForSelector('.wordchips button');
+  ok((await page.locator('.wordchips button').count()) > 3, 'word book shows similar words');
+  await page.screenshot({ path: join(out, 'wordbook.png') });
+  await rail('Add');
+  await tool('Emoji');
+  await page.locator('.emoji .symbols button').first().click();
+  await page.waitForTimeout(100);
+  ok((await doc()).text.join('').includes('😀'), 'emoji picker');
+  await tool('Draw with a pen');
+  const pad = await page.locator('.drawbox canvas').boundingBox();
+  await page.mouse.move(pad.x + 40, pad.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(pad.x + 200, pad.y + 120, { steps: 6 });
+  await page.mouse.up();
+  await page.screenshot({ path: join(out, 'draw.png') });
+  await page.locator('.drawbox .primary').click();
+  await page.waitForTimeout(500);
+  ok(await page.evaluate(() => Object.values(window.__store.doc.media).length > 0), 'pen drawing becomes a picture');
+  await rail('Page');
+  await tool('Forest');
+  ok(await page.evaluate(() => window.__store.doc.styles.styles.Heading1.run.color === '#1b5e3b'), 'document theme');
+  await tool('Automatic hyphens');
+  ok(await page.evaluate(() => window.__store.doc.settings.autoHyphenation === true), 'hyphenation switch');
+  await page.screenshot({ path: join(out, 'themes.png') });
+  await rail('View');
+  await tool('Split view');
+  await page.waitForSelector('.splitview .page');
+  ok(true, 'split view');
+  await page.screenshot({ path: join(out, 'split.png') });
+  await tool('Split view');
+  await tool('Gridlines');
+  ok((await page.locator('.page.gridded').count()) > 0, 'gridlines');
+  await tool('Gridlines');
+  await tool('Focus reader');
+  await page.waitForSelector('.reader .readbody');
+  await page.screenshot({ path: join(out, 'reader.png') });
+  await page.keyboard.press('Escape');
+  ok((await page.locator('.reader').count()) === 0, 'focus reader opens and closes');
+  await rail('Doc');
+  await tool('Version history');
+  await page.locator('.inspector button', { hasText: 'Save this version' }).click();
+  await page.waitForSelector('.inspector .card');
+  ok(true, 'version history keeps a version');
   ok(errors.length === 0, `no console errors ${errors.slice(0, 3).join(' | ')}`);
   await page.screenshot({ path: join(out, 'final.png') });
   console.log(out);

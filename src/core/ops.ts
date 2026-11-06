@@ -472,7 +472,11 @@ export const resolveRevisions = (doc: Doc, story: StoryId, accept: boolean, sel?
     if (targets && !targets.has(p.id)) return;
     d = updatePara(d, story, p.id, (q) => ({
       ...q,
-      runs: normalizeRuns(q.runs.flatMap((r) => {
+      runs: normalizeRuns(q.runs.map((r) => {
+        if (!r.fmtRev || (revisionId && r.fmtRev.rev.id !== revisionId)) return r;
+        const { fmtRev, ...rest } = r;
+        return accept ? rest : { ...rest, props: fmtRev.old };
+      }).flatMap((r) => {
         const rev = r.ins ?? r.del;
         if (!rev || (revisionId && rev.id !== revisionId)) return [r];
         const k = paraKeepsRun(r, accept);

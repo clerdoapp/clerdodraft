@@ -188,8 +188,8 @@ const shapeXml = (atom: ShapeAtom, st: WriteState): string => {
   return `<mc:AlternateContent><mc:Choice Requires="wps">${drawing}</mc:Choice></mc:AlternateContent>`;
 };
 
-const textRuns = (r: Run, del: boolean): string => {
-  const pr = rPr(r.props);
+const textRuns = (r: Run, del: boolean, st?: WriteState): string => {
+  const pr = r.fmtRev && st ? `<w:rPr>${rPrInner(r.props)}<w:rPrChange${revAttrs(r.fmtRev.rev, st)}><w:rPr>${rPrInner(r.fmtRev.old)}</w:rPr></w:rPrChange></w:rPr>` : rPr(r.props);
   let out = '';
   let buf = '';
   const tag = del ? 'w:delText' : 'w:t';
@@ -227,7 +227,7 @@ const atomXml = (r: Run, st: WriteState): string => {
 const revAttrs = (rev: Revision, st: WriteState): string => ` w:id="${nextId(st)}" w:author="${a(rev.author)}" w:date="${a(rev.date)}"`;
 
 const runXml = (r: Run, st: WriteState): string => {
-  const body = r.atom ? atomXml(r, st) : textRuns(r, !!r.del);
+  const body = r.atom ? atomXml(r, st) : textRuns(r, !!r.del, st);
   if (r.ins) return `<w:ins${revAttrs(r.ins, st)}>${body}</w:ins>`;
   if (r.del) return `<w:del${revAttrs(r.del, st)}>${body}</w:del>`;
   return body;
@@ -333,7 +333,18 @@ const sectPr = (s: Section, st: WriteState): string => {
   return `<w:sectPr>${x}</w:sectPr>`;
 };
 
+const dropCapXml = (p: Paragraph, st: WriteState): string => {
+  const { dropCap, ...props } = p.props;
+  const first = p.runs[0]!;
+  const letter = [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(first.text)][0]!.segment;
+  const size = Math.round((first.props.size ?? 11) * dropCap!.lines * 1.16);
+  const head = `<w:p><w:pPr><w:keepNext/><w:framePr w:dropCap="${dropCap!.kind}" w:lines="${dropCap!.lines}" w:wrap="around" w:vAnchor="text" w:hAnchor="text"/></w:pPr><w:r><w:rPr>${rPrInner({ ...first.props, size })}</w:rPr><w:t>${escapeText(letter)}</w:t></w:r></w:p>`;
+  const rest = first.text.slice(letter.length);
+  return head + paraXml({ ...p, props, runs: rest ? [{ ...first, text: rest }, ...p.runs.slice(1)] : p.runs.slice(1) }, st);
+};
+
 const paraXml = (p: Paragraph, st: WriteState): string => {
+  if (p.props.dropCap && p.runs[0]?.text && !p.runs[0].atom) return dropCapXml(p, st);
   let mark = rPrInner(p.markProps ?? {});
   if (p.markIns) mark = `<w:ins${revAttrs(p.markIns, st)}/>${mark}`;
   if (p.markDel) mark = `<w:del${revAttrs(p.markDel, st)}/>${mark}`;
@@ -474,7 +485,7 @@ const SETTINGS_ORDER = ['writeProtection', 'view', 'zoom', 'removePersonalInform
 const settingsXml = (doc: Doc): string => {
   const s = doc.settings;
   const original = doc.preserved?.parts['word/settings.xml'];
-  const controlled = new Set(['w:trackRevisions', 'w:evenAndOddHeaders', 'w:defaultTabStop', 'w:autoHyphenation', 'w:documentProtection', 'w:displayBackgroundShape']);
+  const controlled = new Set(['w:mirrorMargins', 'w:trackRevisions', 'w:evenAndOddHeaders', 'w:defaultTabStop', 'w:autoHyphenation', 'w:documentProtection', 'w:displayBackgroundShape']);
   let kept: XNode[] = [];
   if (original) {
     try { kept = kids(parseXml(strFromU8(original))).filter((c) => !controlled.has(c.name)); } catch { kept = []; }
@@ -482,6 +493,7 @@ const settingsXml = (doc: Doc): string => {
   const add: XNode[] = [{ name: 'w:defaultTabStop', attrs: { 'w:val': String(twips(s.defaultTabStop)) }, children: [] }];
   if (s.trackChanges) add.push({ name: 'w:trackRevisions', attrs: {}, children: [] });
   if (s.evenAndOddHeaders) add.push({ name: 'w:evenAndOddHeaders', attrs: {}, children: [] });
+  if (s.mirrorMargins) add.push({ name: 'w:mirrorMargins', attrs: {}, children: [] });
   if (s.autoHyphenation) add.push({ name: 'w:autoHyphenation', attrs: {}, children: [] });
   if (s.pageColor) add.push({ name: 'w:displayBackgroundShape', attrs: {}, children: [] });
   if (s.protection) {
@@ -670,7 +682,7 @@ export const writeDocx = (doc: Doc): Uint8Array => {
     const person = (a: string) => { const [last, first] = a.split(',').map((x) => x.trim()); return `<b:Person><b:Last>${esc(last)}</b:Last>${first ? `<b:First>${esc(first)}</b:First>` : ''}</b:Person>`; };
     const opt = (t: string, v?: string) => (v ? `<b:${t}>${esc(v)}</b:${t}>` : '');
     const items = doc.sources.map((s) => `<b:Source><b:Tag>${esc(s.tag)}</b:Tag><b:SourceType>${esc(s.type)}</b:SourceType><b:Author><b:Author><b:NameList>${s.authors.map(person).join('')}</b:NameList></b:Author></b:Author>${opt('Title', s.title)}${opt('Year', s.year)}${opt('Publisher', s.publisher)}${opt('City', s.city)}${opt('JournalName', s.journal)}${opt('URL', s.url)}</b:Source>`).join('');
-    put('customXml/itemSources.xml', `${HEAD}<b:Sources xmlns:b="${NS['b']}" SelectedStyle="" StyleName="">${items}</b:Sources>`);
+    put('customXml/itemSources.xml', `${HEAD}<b:Sources xmlns:b="${NS['b']}" SelectedStyle="" StyleName="${a(doc.settings.citationStyle ?? '')}">${items}</b:Sources>`);
     docRels.add(`${TYPE}/customXml`, '../customXml/itemSources.xml');
   }
   put('word/_rels/document.xml.rels', docRels.xml());
