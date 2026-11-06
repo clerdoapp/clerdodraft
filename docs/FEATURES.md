@@ -7,7 +7,8 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 ## Files
 - done: open and save .docx, keep unknown content on save, drag a file in to open, recovery copy on this device
 - done: print and save as PDF, export web page, Markdown, plain text, .odt, .rtf, document details
-- done: open .odt, .rtf, .md, .html, .txt; open .doc with formatting and .pdf with pictures
+- done: open .odt, .rtf, .md, .html, .txt; open .doc with formatting and pictures, and .pdf with pictures
+- done: EMF and WMF pictures drawn on the page
 - done: password-protected files, version history on this device
 - done: 41 templates in seven groups, including an Arabic letter
 - done: digital signatures: sign with a personal certificate or a .pfx file, check signatures on open
@@ -34,7 +35,7 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 - done: floating pictures with wrap; cover page; watermark
 - done: table formulas, emoji, screenshots, 12 text art styles, glow, reflection, gradient fill and outline color
 - done: drawing with a pen, and drawing again on any picture; online video links
-- done: embedded spreadsheets, documents and presentations, opened from the page; embedded objects in opened files are kept and shown
+- done: embed any file: spreadsheets, documents and presentations as themselves, every other kind as a standard package object; open embedded files from the page; embedded objects in opened files are kept and shown
 
 ## Page
 - done: size, direction, margins, columns, section breaks, page color, page border, line numbers, headers, footers, first and odd/even pages, page numbers
@@ -65,7 +66,7 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 ## Together
 - done: version history on this device
 - done: work together live, device to device, with invitation codes and no server
-- done: share links that carry the document
+- done: share links that carry the document; larger documents are handed over as a file
 
 ## Left out on purpose
 - Macro and scripting languages tied to one vendor, and their form controls

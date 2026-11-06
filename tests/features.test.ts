@@ -156,3 +156,47 @@ describe('signatures', () => {
     expect(info[0]!.intact).toBe(false);
   });
 });
+
+describe('older document pictures', () => {
+  it('reads pictures in the text, floating pictures and older vector pictures', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { readDoc } = await import('../src/formats/doc');
+    const d = readDoc(new Uint8Array(readFileSync('tests/fixtures/pictures.doc')));
+    const images = atomsOf(d).filter((a) => a.kind === 'image');
+    expect(images.length).toBe(4);
+    const mimes = images.map((a) => (a.kind === 'image' ? d.media[a.media]?.mime : ''));
+    expect(mimes).toEqual(['image/png', 'image/png', 'image/emf', 'image/wmf']);
+    const floating = images[1]!;
+    expect(floating.kind === 'image' && floating.float).toMatchObject({ relH: 'page', relV: 'paragraph', x: 300, y: 10 });
+    expect(floating.kind === 'image' && floating.wrap).toBe('square');
+    const emf = images[2]!.kind === 'image' ? d.media[images[2]!.media]!.data : new Uint8Array();
+    expect(emf[40]).toBe(0x20);
+    expect(new TextDecoder().decode(emf.subarray(41, 44))).toBe('EMF');
+  });
+});
+
+describe('embedding any file', () => {
+  it('wraps a file in a package object and reads it back', async () => {
+    const { makePackage, readPackage } = await import('../src/formats/olePackage');
+    const { readCompound } = await import('../src/formats/cfb');
+    const data = new Uint8Array(70000).map((_, i) => i % 251);
+    const bin = makePackage('تقرير.pdf', data);
+    expect([...readCompound(bin).keys()].sort()).toEqual(['\x01CompObj', '\x01Ole10Native', '\x03ObjInfo']);
+    const back = readPackage(bin)!;
+    expect(back.name).toBe('تقرير.pdf');
+    expect(back.data).toEqual(data);
+  });
+
+  it('keeps an embedded package through saving', async () => {
+    const { makePackage } = await import('../src/formats/olePackage');
+    const d = withBlocks([atomPara({ kind: 'raw', xml: '', label: 'File', width: 144, height: 96, object: { name: 'File', progId: 'Package', file: 'embeddings/oleObject_1.bin' } })]);
+    d.media = { 'embeddings/oleObject_1.bin': { mime: 'application/vnd.openxmlformats-officedocument.oleObject', data: makePackage('a.zip', strToU8('zip bytes')), name: 'a.zip' } };
+    const bytes = writeDocx(d);
+    const { unzipSync, strFromU8 } = await import('fflate');
+    const files = unzipSync(bytes);
+    expect(strFromU8(files['word/_rels/document.xml.rels']!)).toContain('relationships/oleObject');
+    expect(strFromU8(files['[Content_Types].xml']!)).toContain('Extension="bin" ContentType="application/vnd.openxmlformats-officedocument.oleObject"');
+    const back = atomsOf(readDocx(bytes)).find((a) => a.kind === 'raw');
+    expect(back?.kind === 'raw' && back.object?.progId).toBe('Package');
+  });
+});

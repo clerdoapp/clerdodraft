@@ -2,7 +2,7 @@ import { strFromU8, strToU8, unzlibSync, zlibSync } from 'fflate';
 import { readDocx, writeDocx } from '../docx';
 import type { EditorStore } from '../editor/store';
 
-const MAX_LINK = 1_500_000;
+const MAX_LINK = 2_000_000;
 
 const toB64 = (b: Uint8Array): string => { let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
 const fromB64 = (s: string): Uint8Array => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
@@ -24,7 +24,21 @@ export const makeShareLink = (store: EditorStore): string | null => {
 
 export const shareLink = async (store: EditorStore): Promise<void> => {
   const link = makeShareLink(store);
-  if (!link) { store.notify('This document is too large for a link. Send the file instead.'); return; }
+  if (!link) {
+    // Too large to travel inside a link: hand over the file itself instead.
+    const data = writeDocx(store.doc);
+    const name = `${store.file.name}.docx`;
+    const file = new File([data as BlobPart], name, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    try {
+      if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: store.file.name }); return; }
+    } catch (e) {
+      if ((e as DOMException).name === 'AbortError') return;
+    }
+    const { download } = await import('./files');
+    download(data as BlobPart, name, file.type);
+    store.notify('This document is too large for a link, so a copy was saved for you to send.');
+    return;
+  }
   try {
     if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ title: store.file.name, url: link });
     else { await navigator.clipboard.writeText(link); store.notify('Link copied. Anyone with it can open a copy of this document.'); }

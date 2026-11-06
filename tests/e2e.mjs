@@ -193,6 +193,11 @@ try {
     await page.waitForFunction(() => window.__store.doc.blocks.some((b) => b.type === 'p' && b.runs.map((r) => r.text).join('').includes('after the table')), null, { timeout: 15000 }).catch(() => undefined);
     ok((await doc()).text.join(' ').includes('after the table'), 'reads the text of a PDF');
   }
+  await drop('pictures.doc', readFileSync(new URL('./fixtures/pictures.doc', import.meta.url)).toString('base64'));
+  await page.waitForFunction(() => document.querySelectorAll('.page img').length >= 4, null, { timeout: 10000 }).catch(() => undefined);
+  const drawn = await page.evaluate(() => [...document.querySelectorAll('.page img')].map((i) => ({ ok: i.complete && i.naturalWidth > 0, data: i.src.startsWith('data:image/png') })));
+  ok(drawn.length >= 4 && drawn.every((d) => d.ok) && drawn.filter((d) => d.data).length === 2, `older document pictures, including EMF and WMF, are drawn (${JSON.stringify(drawn)})`);
+  await page.screenshot({ path: join(out, 'doc-pictures.png'), fullPage: true });
   if (process.env.SAMPLE_LOCKED) {
     await drop('locked.docx', readFileSync(process.env.SAMPLE_LOCKED).toString('base64'));
     await page.waitForSelector('input[type=password]');

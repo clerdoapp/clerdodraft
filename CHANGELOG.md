@@ -8,10 +8,12 @@
 - Interface in Arabic
 - Digital signatures: sign and check
 - Work together live, device to device; share links
-- Embedded spreadsheets, documents and presentations
+- Embed any file; spreadsheets, documents and presentations stay editable in other apps
 - Restricted editing by paragraph, comment reactions
 - Mail merge from spreadsheets, contacts and data files
-- `.doc` opens with formatting, `.pdf` opens with pictures
+- `.doc` opens with formatting and pictures, `.pdf` opens with pictures
+- EMF and WMF pictures are drawn on the page
+- Share as a link hands over the file when the document is too large for a link
 - Pictures from a web address, drawing on pictures, saved text keeps formatting
 - Floating grouped drawings drawn in place, tracked formatting marked on the page
 - Fixed: names with non-Latin letters in certificates

@@ -44,7 +44,6 @@ const EMBED: Record<string, [string, string, string]> = {
   pptx: ['PowerPoint.Show.12', 'Presentation', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
   pptm: ['PowerPoint.ShowMacroEnabled.12', 'Presentation', 'application/vnd.ms-powerpoint.presentation.macroEnabled.12'],
 };
-const EMBED_TYPES = Object.keys(EMBED).map((e) => `.${e}`).join(',');
 
 const fileCard = async (title: string, file: string): Promise<Uint8Array> => {
   const c = document.createElement('canvas');
@@ -61,13 +60,20 @@ const fileCard = async (title: string, file: string): Promise<Uint8Array> => {
 
 export const embedFile = async (s: EditorStore, f: File): Promise<void> => {
   const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
-  const kind = EMBED[ext];
-  if (!kind) { s.notify('Choose a spreadsheet, document or presentation file to embed.'); return; }
-  if (f.size > 128 * 1024 * 1024) { s.notify('This file is larger than 128 MB.'); return; }
+  const known = EMBED[ext];
   const id = newId();
-  const file = `embeddings/Embedded_${id}.${ext}`;
+  const bytes = new Uint8Array(await f.arrayBuffer());
+  let data: Uint8Array = bytes;
+  let file = `embeddings/Embedded_${id}.${ext}`;
+  let kind: [string, string, string] = known ?? ['Package', 'File', 'application/vnd.openxmlformats-officedocument.oleObject'];
+  if (!known) {
+    // Other files are wrapped in a package object.
+    try { data = (await import('../formats/olePackage')).makePackage(f.name, bytes); } catch (e) { s.notify(e instanceof Error ? e.message : "This file couldn't be embedded."); return; }
+    file = `embeddings/oleObject_${id}.bin`;
+    kind = ['Package', 'File', 'application/vnd.openxmlformats-officedocument.oleObject'];
+  }
   const preview = `media/embedded_${id}.png`;
-  const media = { ...s.doc.media, [file]: { mime: kind[2], data: new Uint8Array(await f.arrayBuffer()), name: f.name }, [preview]: { mime: 'image/png', data: await fileCard(kind[1], f.name), name: 'preview.png' } };
+  const media = { ...s.doc.media, [file]: { mime: kind[2], data, name: f.name }, [preview]: { mime: 'image/png', data: await fileCard(kind[1], f.name), name: 'preview.png' } };
   s.doc = { ...s.doc, media };
   s.insertAtom({ kind: 'raw', xml: '', label: kind[1], width: 144, height: 96, object: { name: kind[1], progId: kind[0], file, preview } }, {});
 };
@@ -78,7 +84,12 @@ const openEmbedded = (s: EditorStore): void => {
   const item = s.doc.media[a.object.file];
   if (!item) return;
   const name = item.name ?? a.object.file.split('/').pop() ?? 'embedded';
-  void import('./files').then((m) => m.download(item.data as BlobPart, name, item.mime));
+  void (async () => {
+    const files = await import('./files');
+    const inner = /\.bin$/i.test(a.object!.file!) ? (await import('../formats/olePackage')).readPackage(item.data) : null;
+    if (inner) files.download(inner.data as BlobPart, inner.name, 'application/octet-stream');
+    else files.download(item.data as BlobPart, name, item.mime);
+  })();
 };
 
 export const insertBlob = async (s: EditorStore, blob: Blob, name: string): Promise<void> => insertImageFile(s, new File([blob], name, { type: blob.type }));
@@ -268,7 +279,7 @@ export const registerObjects = (): void => {
     { id: 'share.link', label: 'Share as a link', group: 'File', run: (s) => void import('./share').then((m) => m.shareLink(s)) },
     { id: 'view.uiLang', label: 'العربية / English', group: 'View', run: () => { void import('../ui/i18n').then((m) => m.setUiLang(m.uiLang() === 'ar' ? 'en' : 'ar')); } },
     { id: 'obj.draw', label: 'Draw on this picture', group: 'Insert', enabled: (s) => selectedAtom(s)?.kind === 'image', run: (s) => s.openDialog('draw', { edit: true }) },
-    { id: 'ins.object', label: 'Embed a file', group: 'Insert', run: (s) => pickFile(EMBED_TYPES, (f) => void embedFile(s, f)) },
+    { id: 'ins.object', label: 'Embed a file', group: 'Insert', run: (s) => pickFile('', (f) => void embedFile(s, f)) },
     { id: 'obj.openEmbedded', label: 'Open the embedded file', group: 'Insert', enabled: (s) => { const a = selectedAtom(s); return a?.kind === 'raw' && !!a.object?.file; }, run: openEmbedded },
     { id: 'ins.icons', label: 'Icons', group: 'Insert', run: (s) => s.openDialog('icons') },
     { id: 'ins.webPicture', label: 'Picture from a web address', group: 'Insert', run: (s) => s.openDialog('webPicture') },

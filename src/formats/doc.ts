@@ -1,9 +1,10 @@
-import type { Block, Doc, Paragraph, ParaProps, Run, RunProps } from '../core/model';
+import { unzlibSync, inflateSync } from 'fflate';
+import type { Block, Doc, FloatPlacement, ImageAtom, Paragraph, ParaProps, Run, RunProps, WrapKind } from '../core/model';
 import { para } from '../core/model';
 import { DocBuilder, makeTable } from './build';
 import { readCompound } from './cfb';
 
-// Reads the older binary format: text, tables, and the common character and paragraph formatting.
+// Reads the older binary format: text, tables, pictures, and the common character and paragraph formatting.
 interface Piece { cp: number; len: number; fc: number; compressed: boolean }
 
 const pieces = (word: Uint8Array, table: Uint8Array): { text: string; list: Piece[] } => {
@@ -156,6 +157,180 @@ const find = <T>(spans: Span<T>[], fc: number): T | undefined => {
   return undefined;
 };
 
+// Pictures are stored as drawing records (a small tree of typed records) holding the picture file.
+interface Pic { mime: string; data: Uint8Array }
+
+const BLIP: Record<number, [string, boolean]> = {
+  0xf01a: ['image/emf', true], 0xf01b: ['image/wmf', true], 0xf01c: ['image/pict', true],
+  0xf01d: ['image/jpeg', false], 0xf01e: ['image/png', false], 0xf01f: ['image/bmp', false], 0xf029: ['image/tiff', false], 0xf02a: ['image/jpeg', false],
+};
+
+const dibToBmp = (dib: Uint8Array): Uint8Array => {
+  const v = new DataView(dib.buffer, dib.byteOffset, dib.byteLength);
+  const size = v.getUint32(0, true);
+  const bits = size === 12 ? v.getUint16(10, true) : v.getUint16(14, true);
+  const comp = size === 12 ? 0 : v.getUint32(16, true);
+  const used = size === 12 ? 0 : v.getUint32(32, true);
+  const pal = (bits <= 8 ? used || 1 << bits : 0) * (size === 12 ? 3 : 4) + (comp === 3 && size === 40 ? 12 : 0);
+  const out = new Uint8Array(14 + dib.length);
+  const o = new DataView(out.buffer);
+  out[0] = 0x42; out[1] = 0x4d;
+  o.setUint32(2, out.length, true);
+  o.setUint32(10, 14 + size + pal, true);
+  out.set(dib, 14);
+  return out;
+};
+
+const blipAt = (b: Uint8Array, at: number): Pic | null => {
+  if (at + 8 > b.length) return null;
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const inst = v.getUint16(at, true) >> 4;
+  const type = v.getUint16(at + 2, true);
+  const len = v.getUint32(at + 4, true);
+  const kind = BLIP[type];
+  if (!kind) return null;
+  const end = Math.min(b.length, at + 8 + len);
+  const uids = inst & 1 ? 32 : 16;
+  if (kind[1]) {
+    const h = at + 8 + uids;
+    const cbSave = v.getUint32(h + 28, true);
+    const compressed = b[h + 32] === 0;
+    let data = b.subarray(h + 34, Math.min(end, h + 34 + cbSave));
+    if (compressed) { try { data = data[0] === 0x78 ? unzlibSync(data) : inflateSync(data); } catch { return null; } }
+    else data = data.slice();
+    if (type === 0xf01b && !(data[0] === 0xd7 && data[1] === 0xcd)) {
+      // Pictures of this kind are stored without the placeable header; add it from the stored bounds.
+      const l = v.getInt32(h + 4, true); const t = v.getInt32(h + 8, true); const r = v.getInt32(h + 12, true); const bt = v.getInt32(h + 16, true);
+      const head = new Uint8Array(22); const hv = new DataView(head.buffer);
+      hv.setUint32(0, 0x9ac6cdd7, true);
+      hv.setInt16(6, l, true); hv.setInt16(8, t, true); hv.setInt16(10, r, true); hv.setInt16(12, bt, true);
+      hv.setUint16(14, 1440, true);
+      let sum = 0; for (let i = 0; i < 10; i++) sum ^= hv.getUint16(i * 2, true);
+      hv.setUint16(20, sum, true);
+      const fixed = new Uint8Array(22 + data.length); fixed.set(head); fixed.set(data, 22);
+      data = fixed;
+    }
+    return { mime: kind[0], data };
+  }
+  const data = b.slice(at + 8 + uids + 1, end);
+  return type === 0xf01f ? { mime: 'image/bmp', data: dibToBmp(data) } : { mime: kind[0], data };
+};
+
+// Walks drawing records, calling visit for each one; containers are walked into.
+const walkArt = (b: Uint8Array, from: number, to: number, visit: (type: number, at: number, len: number, inst: number) => boolean | void): void => {
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  let at = from;
+  while (at + 8 <= Math.min(to, b.length)) {
+    const verInst = v.getUint16(at, true);
+    const type = v.getUint16(at + 2, true);
+    const len = v.getUint32(at + 4, true);
+    if (type < 0xf000 || at + 8 + len > b.length + 8) return;
+    if (visit(type, at, len, verInst >> 4) === false) return;
+    if ((verInst & 0xf) === 0xf) walkArt(b, at + 8, at + 8 + len, visit);
+    at += 8 + len;
+  }
+};
+
+const fbsePic = (b: Uint8Array, at: number, len: number, word: Uint8Array): Pic | null => {
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const cbName = b[at + 8 + 33] ?? 0;
+  if (len > 36 + cbName) return blipAt(b, at + 8 + 36 + cbName);
+  const delay = v.getUint32(at + 8 + 28, true);
+  return delay && delay < word.length ? blipAt(word, delay) : null;
+};
+
+// A picture placed in the text: a picture header in the data stream, then its drawing records.
+const inlinePic = (data: Uint8Array, fc: number, word: Uint8Array): { pic: Pic; width: number; height: number } | null => {
+  if (fc + 68 > data.length) return null;
+  const v = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  const lcb = v.getUint32(fc, true);
+  const cbHeader = v.getUint16(fc + 4, true);
+  const mm = v.getInt16(fc + 6, true);
+  const end = Math.min(data.length, fc + lcb);
+  const goalX = v.getInt16(fc + 28, true); const goalY = v.getInt16(fc + 30, true);
+  const mx = v.getUint16(fc + 32, true) || 1000; const my = v.getUint16(fc + 34, true) || 1000;
+  const crop = [v.getInt16(fc + 36, true), v.getInt16(fc + 38, true), v.getInt16(fc + 40, true), v.getInt16(fc + 42, true)];
+  const width = Math.max(1, ((goalX - crop[0]! - crop[2]!) * mx) / 1000 / 20);
+  const height = Math.max(1, ((goalY - crop[1]! - crop[3]!) * my) / 1000 / 20);
+  let at = fc + cbHeader;
+  if (mm === 0x66) at += 1 + (data[at] ?? 0);
+  let pic: Pic | null = null;
+  if (mm === 0x64 || mm === 0x66) {
+    walkArt(data, at, end, (type, rec, len) => {
+      if (type === 0xf007) pic = fbsePic(data, rec, len, word);
+      else if (BLIP[type]) pic = blipAt(data, rec);
+      return pic ? false : undefined;
+    });
+  } else if (mm >= 1 && mm <= 8) {
+    // Older pictures hold a plain metafile right after the header.
+    const raw = data.slice(at, end);
+    const head = new Uint8Array(22); const hv = new DataView(head.buffer);
+    hv.setUint32(0, 0x9ac6cdd7, true); hv.setInt16(10, v.getInt16(fc + 8, true) || goalX, true); hv.setInt16(12, v.getInt16(fc + 10, true) || goalY, true); hv.setUint16(14, 1440, true);
+    const out = new Uint8Array(22 + raw.length); out.set(head); out.set(raw, 22);
+    pic = { mime: 'image/wmf', data: out };
+  }
+  return pic ? { pic, width, height } : null;
+};
+
+interface Floating { cp: number; spid: number; x: number; y: number; w: number; h: number; flags: number }
+
+// Floating pictures: anchor positions in one table, drawings and picture files in another.
+const floatingPics = (word: Uint8Array, table: Uint8Array): { anchors: Map<number, Floating>; pics: Map<number, Pic>; rel: Map<number, [number, number]> } => {
+  const v = new DataView(word.buffer, word.byteOffset, word.byteLength);
+  const t = new DataView(table.buffer, table.byteOffset, table.byteLength);
+  const anchors = new Map<number, Floating>();
+  const pics = new Map<number, Pic>();
+  const rel = new Map<number, [number, number]>();
+  const fcSpa = v.getUint32(474, true); const lcbSpa = v.getUint32(478, true);
+  if (lcbSpa && fcSpa + lcbSpa <= table.length) {
+    const n = (lcbSpa - 4) / 30;
+    for (let i = 0; i < n; i++) {
+      const cp = t.getUint32(fcSpa + i * 4, true);
+      const s = fcSpa + (n + 1) * 4 + i * 26;
+      const l = t.getInt32(s + 4, true); const top = t.getInt32(s + 8, true);
+      anchors.set(cp, { cp, spid: t.getUint32(s, true), x: l / 20, y: top / 20, w: (t.getInt32(s + 12, true) - l) / 20, h: (t.getInt32(s + 16, true) - top) / 20, flags: t.getUint16(s + 20, true) });
+    }
+  }
+  const fcDgg = v.getUint32(554, true); const lcbDgg = v.getUint32(558, true);
+  if (!lcbDgg || fcDgg + lcbDgg > table.length) return { anchors, pics, rel };
+  const store: (Pic | null)[] = [];
+  let dggEnd = fcDgg;
+  walkArt(table, fcDgg, fcDgg + 8 + t.getUint32(fcDgg + 4, true), (type, at, len) => {
+    if (type === 0xf000) dggEnd = at + 8 + len;
+    if (type === 0xf007) store.push(fbsePic(table, at, len, word));
+  });
+  const shapes = (from: number, to: number) => {
+    let spid = 0; let pib = 0;
+    walkArt(table, from, to, (type, at, len, inst) => {
+      if (type === 0xf004) { spid = 0; pib = 0; }
+      if (type === 0xf00a) spid = t.getUint32(at + 8, true);
+      if (type === 0xf00b || type === 0xf122) for (let k = 0; k < inst && 8 + k * 6 + 6 <= len + 8; k++) {
+        const id = t.getUint16(at + 8 + k * 6, true) & 0x3fff;
+        const val = t.getUint32(at + 8 + k * 6 + 2, true);
+        if (id === 0x0104) pib = val;
+        if ((id === 0x0390 || id === 0x0392) && spid) { const r = rel.get(spid) ?? [-1, -1]; r[id === 0x0390 ? 0 : 1] = val; rel.set(spid, r); }
+      }
+      if (spid && pib && store[pib - 1]) { pics.set(spid, store[pib - 1]!); pib = 0; }
+    });
+  };
+  // After the shared records come the drawings, each led by one byte saying where it belongs.
+  let at = dggEnd;
+  while (at + 9 <= fcDgg + lcbDgg) {
+    const len = t.getUint32(at + 1 + 4, true);
+    shapes(at + 1, at + 9 + len);
+    at += 9 + len;
+  }
+  return { anchors, pics, rel };
+};
+
+const floatFor = (f: Floating, rel?: [number, number]): { wrap: WrapKind; float: FloatPlacement } => {
+  // Positions set on the shape itself take priority over the anchor's own setting.
+  const bx = rel && rel[0] >= 0 ? rel[0] : (f.flags >> 1) & 3;
+  const by = rel && rel[1] >= 0 ? rel[1] : (f.flags >> 3) & 3; const wr = (f.flags >> 5) & 15; const below = !!(f.flags & 0x4000);
+  const wrap: WrapKind = wr === 1 ? 'topBottom' : wr === 3 ? (below ? 'behind' : 'front') : wr === 4 ? 'tight' : wr === 5 ? 'through' : 'square';
+  return { wrap, float: { relH: bx === 1 ? 'page' : bx === 2 ? 'column' : bx === 3 ? 'character' : 'margin', relV: by === 1 ? 'page' : by === 2 ? 'paragraph' : by === 3 ? 'line' : 'margin', x: f.x, y: f.y } };
+};
+
 export const readDoc = (bytes: Uint8Array): Doc => {
   const files = readCompound(bytes);
   const word = files.get('WordDocument');
@@ -171,9 +346,13 @@ export const readDoc = (bytes: Uint8Array): Doc => {
   const fonts = fontTable(word, table);
   const chpx = fkpRuns(word, table, v.getUint32(250, true), v.getUint32(254, true), (page, k) => {
     const off = page[(page[511]! + 1) * 4 + k]! * 2;
-    if (!off) return {};
-    return charProps(sprms(page, off + 1, off + 1 + page[off]!), fonts);
+    if (!off) return { props: {} as RunProps };
+    const list = sprms(page, off + 1, off + 1 + page[off]!);
+    const loc = list.find((s) => s.op === 0x6a03);
+    return { props: charProps(list, fonts), pic: loc ? loc.arg.getUint32(loc.at, true) : undefined };
   });
+  const dataStream = files.get('Data');
+  const floating = floatingPics(word, table);
   const papx = fkpRuns(word, table, v.getUint32(258, true), v.getUint32(262, true), (page, k) => {
     const crun = page[511]!;
     const off = page[(crun + 1) * 4 + k * 13]! * 2;
@@ -200,23 +379,39 @@ export const readDoc = (bytes: Uint8Array): Doc => {
     kept.push(i);
   }
 
-  const runAt = (i: number): RunProps => find(chpx, fcOf(list, kept[i]!)) ?? {};
+  const runAt = (i: number): RunProps => find(chpx, fcOf(list, kept[i]!))?.props ?? {};
+  const b = new DocBuilder();
+  const picture = (pic: Pic, width: number, height: number, place?: { wrap: WrapKind; float: FloatPlacement }): Run => {
+    const r = b.image({ mime: pic.mime, data: pic.data, width, height });
+    const k = !place && width > 468 ? 468 / width : 1;
+    const atom = { ...(r.atom as ImageAtom), width: Math.max(1, width * k), height: Math.max(1, height * k), ...(place ?? {}) };
+    return { ...r, atom };
+  };
   const paraAt = (i: number): ParaProps => find(papx, fcOf(list, kept[i]!)) ?? {};
   const clean = (c: string): string => (c === '\x1e' ? '-' : c === '\x1f' ? '­' : c === '\x0e' ? '\v' : c === '\x0b' ? '\n' : c === '\x0c' ? '\f' : /[\x01\x02\x05\x08]/.test(c) ? '' : c);
   const runs = (from: number, to: number): Run[] => {
     const out: Run[] = [];
     for (let i = from; i < to; i++) {
+      if (text[i] === '\x01' && dataStream) {
+        const loc = find(chpx, fcOf(list, kept[i]!))?.pic;
+        const found = loc !== undefined ? inlinePic(dataStream, loc, word) : null;
+        if (found) { out.push(picture(found.pic, found.width, found.height)); continue; }
+      }
+      if (text[i] === '\x08') {
+        const a = floating.anchors.get(kept[i]!);
+        const pic = a ? floating.pics.get(a.spid) : undefined;
+        if (a && pic) { out.push(picture(pic, a.w, a.h, floatFor(a, floating.rel.get(a.spid)))); continue; }
+      }
       const ch = clean(text[i]!);
       if (!ch) continue;
       const props = runAt(i);
       const last = out[out.length - 1];
-      if (last && JSON.stringify(last.props) === JSON.stringify(props)) last.text += ch;
+      if (last && !last.atom && JSON.stringify(last.props) === JSON.stringify(props)) last.text += ch;
       else out.push({ text: ch, props });
     }
     return out;
   };
 
-  const b = new DocBuilder();
   let rows: Block[][][] = [];
   let row: Block[][] = [];
   let cell: Block[] = [];

@@ -1,3 +1,4 @@
+import { isMetafile } from '../formats/metafile';
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent as RME } from 'react';
 import type { ImageAtom, RunProps, ShapeAtom, StoryId } from '../core/model';
 import { BOX_INSET_X, BOX_INSET_Y } from '../layout/paginate';
@@ -87,7 +88,7 @@ const FragView = ({ f, marks, store }: { f: Frag; marks: boolean; store: EditorS
     }
     if (a.kind === 'raw' && a.object) {
       const pic = a.object.preview ? store.doc.media[a.object.preview] : undefined;
-      return <span data-f={f.from} data-atom data-drawing className="embedded" style={{ width: a.width, height: a.height ?? 64 }} title={`${a.object.name}. Right-click to open it.`}>{pic && /^image\/(png|jpeg|gif|bmp|webp)$/.test(pic.mime) ? <img alt={a.object.name} src={mediaUrl(store, a.object.preview!)} draggable={false} /> : <span className="embedcard"><b>{a.object.name}</b><i>{a.object.file?.split('/').pop() ?? ''}</i></span>}</span>;
+      return <span data-f={f.from} data-atom data-drawing className="embedded" style={{ width: a.width, height: a.height ?? 64 }} title={`${a.object.name}. Right-click to open it.`}>{pic && (/^image\/(png|jpeg|gif|bmp|webp)$/.test(pic.mime) || isMetafile(pic.mime, pic.data)) ? <img alt={a.object.name} src={mediaUrl(store, a.object.preview!)} draggable={false} /> : <span className="embedcard"><b>{a.object.name}</b><i>{a.object.file?.split('/').pop() ?? ''}</i></span>}</span>;
     }
     if (a.kind === 'raw' && a.width && a.shapes?.length) return <span data-f={f.from} data-atom className="shape" style={{ width: a.width, height: a.height ?? 40 }}><DiagramView shapes={a.shapes} w={a.width} h={a.height ?? 40} /></span>;
     if (a.kind === 'raw' && a.width) return <span data-f={f.from} data-atom className="rawbox" style={{ width: a.width, height: a.height ?? 40 }}>{a.label}</span>;

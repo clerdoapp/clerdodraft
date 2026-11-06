@@ -199,7 +199,7 @@ const shapeXml = (atom: ShapeAtom, st: WriteState): string => {
 // A file embedded in the app is saved as an object with its picture, the way documents expect.
 const objectXml = (a0: RawAtom, pr: string, st: WriteState): string => {
   const o = a0.object!;
-  const file = o.file ? st.rels.add(`${TYPE}/package`, mediaPath(o.file).replace(/^word\//, '')) : '';
+  const file = o.file ? st.rels.add(`${TYPE}/${/\.bin$/i.test(o.file) ? 'oleObject' : 'package'}`, mediaPath(o.file).replace(/^word\//, '')) : '';
   const pic = o.preview ? st.rels.add(`${TYPE}/image`, mediaPath(o.preview).replace(/^word\//, '')) : '';
   const id = nextId(st);
   return `<w:r>${pr}<w:object w:dxaOrig="${Math.round((a0.width ?? 96) * 20)}" w:dyaOrig="${Math.round((a0.height ?? 64) * 20)}"><v:shape id="_x0000_i${1000 + id}" type="#_x0000_t75" style="width:${a0.width ?? 96}pt;height:${a0.height ?? 64}pt" o:ole="">${pic ? `<v:imagedata r:id="${pic}" o:title=""/>` : ''}</v:shape><o:OLEObject Type="Embed" ProgID="${a(o.progId ?? 'Package')}" ShapeID="_x0000_i${1000 + id}" DrawAspect="Icon" ObjectID="_${1000000000 + id}" r:id="${file}"/></w:object></w:r>`;

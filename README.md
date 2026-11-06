@@ -18,7 +18,7 @@ Write, review and lay out real documents, with your files staying on your own de
 
 - **Write:** more than 400 fonts plus every font on your computer, styles, lists, tabs, indents, large first letters, text art with glow, reflection and gradients, right-to-left paragraphs, autocorrect and smart typing. The interface is in English and Arabic.
 - **Lay out:** true page layout with sections, columns, headers, footers, footnotes, facing pages, watermarks, page borders, line numbers, automatic hyphens and document themes.
-- **Add:** tables with formulas, pictures with crop and adjustments, 20 chart kinds, 52 diagram layouts, about 150 shapes, 2,300 icons, embedded spreadsheets and presentations, text boxes, drawn equations, pen drawings, online video and audio links, screenshots, fill-in fields, symbols and emoji.
+- **Add:** tables with formulas, pictures with crop and adjustments, 20 chart kinds, 52 diagram layouts, about 150 shapes, 2,300 icons, embedded files of any kind, text boxes, drawn equations, pen drawings, online video and audio links, screenshots, fill-in fields, symbols and emoji.
 - **Cite:** contents, captions, cross-references, an index, a table of authorities, sources and bibliographies in APA, MLA, Chicago, Harvard and IEEE.
 - **Review:** tracked changes including formatting, comments with replies, reactions and filters, document compare, version history, restricted editing, digital signatures, spelling in seven languages and grammar, a built-in word book with meanings and similar words, read aloud and dictation.
 - **Mail:** merge from spreadsheets, contacts or data files with rules and a live preview, envelopes and label sheets.

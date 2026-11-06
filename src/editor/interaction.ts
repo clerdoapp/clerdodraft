@@ -3,6 +3,7 @@ import { ATOM_CHAR, para, type Block, type Doc, type Paragraph, type Pos, type R
 import { paraRaw, wordBoundary } from '../core/ops';
 import { collapsed, docEnd, docStart, findPara, flatten, isCollapsed, orderedSel, paraLength, selectedParas, selectedText, sliceRuns, storyBlocks } from '../core/tree';
 import { cssFamily } from '../layout/measure';
+import { isMetafile, metafileToPng } from '../formats/metafile';
 import type { Frag, PlacedLine } from '../layout/types';
 import { runCommandForKey } from './commands';
 import type { EditorStore } from './store';
@@ -16,7 +17,8 @@ export const mediaUrl = (store: EditorStore, key: string): string => {
   if (!m) urls.set(store.doc.media, (m = new Map()));
   let u = m.get(key);
   if (!u) {
-    u = URL.createObjectURL(new Blob([item.data as BlobPart], { type: item.mime }));
+    // Older vector pictures are drawn once into a bitmap the browser can show.
+    u = (isMetafile(item.mime, item.data) ? metafileToPng(item.data) : null) ?? URL.createObjectURL(new Blob([item.data as BlobPart], { type: item.mime }));
     m.set(key, u);
   }
   return u;

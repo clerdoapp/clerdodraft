@@ -8,8 +8,6 @@ Priorities for ClerdoDraft. [docs/FEATURES.md](docs/FEATURES.md) lists what exis
 - Code signing for Windows and macOS
 
 ## Later
-- Pictures inside `.doc` files
-- EMF and WMF drawings shown as pictures
 - Interface in more languages
 - Spelling for more languages
 
