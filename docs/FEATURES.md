@@ -13,6 +13,7 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 - next: digital signatures
 
 ## Text and paragraphs
+- done: more than 400 fonts: 212 open families built in, and the names of common office and system fonts drawn with open fonts of similar shape (the main ones with the same letter widths); every font installed on the computer in the desktop app, or in desktop browsers that allow it; symbol and dingbat fonts shown as the right characters
 - done: fonts, sizes, bold, italic, underlines, strike, super and subscript, capitals, color, marker, letter spacing, hidden text, clear formatting, change case, copy formatting
 - done: autocorrect, smart quotes, automatic lists and links while typing
 - done: alignment, indents, line and paragraph spacing, keep with next, keep lines, page break before, single-line control, tabs with leaders, shading, borders, right-to-left

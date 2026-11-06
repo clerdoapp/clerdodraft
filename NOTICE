@@ -3,7 +3,7 @@ Copyright (c) 2026 Clerdo.
 
 Bundled third-party material:
 - Lucide icons: ISC License.
-- Carlito, Caladea, Hanken Grotesk, Noto Naskh Arabic, Arimo, Tinos and Cousine fonts: SIL Open Font License 1.1.
+- 213 open font families: SIL Open Font License 1.1, Apache License 2.0 or Ubuntu Font Licence 1.0. Each family and its licence is listed in src/core/font-catalog.json.
 - React, fflate, nspell: MIT License.
 - English dictionaries (SCOWL, dictionary-en, dictionary-en-gb): MIT and BSD-style licenses.
 

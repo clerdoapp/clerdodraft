@@ -20,6 +20,7 @@ import { Ruler } from './Ruler';
 import { registerReferences } from '../features/references';
 import { restoreDraft, startAutosave } from '../features/files';
 import { registerWriting } from '../features/writing';
+import { loadComputerFonts } from '../features/systemFonts';
 import { registerObjects } from '../features/objects';
 import { SplitView } from './ExtraViews';
 import { ReaderOverlay } from './ReaderOverlay';
@@ -56,6 +57,7 @@ export const App = () => {
       const fit = (canvas.clientWidth - 32) / (page.width * (4 / 3));
       if (fit < 1) store.setView({ zoom: Math.max(0.25, +fit.toFixed(2)) });
     }
+    void loadComputerFonts(store);
     void restoreDraft(store);
     const stop = startAutosave(store);
     return () => { document.fonts.removeEventListener?.('loadingdone', onFont); stop(); };

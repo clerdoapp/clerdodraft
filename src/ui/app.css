@@ -274,3 +274,16 @@ kbd { font: 11px 'Hanken Grotesk', sans-serif; color: var(--muted); }
 .keysbox li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 2px; font-size: 13px; border-bottom: 1px solid var(--line, #eceef3); }
 .pages.twoup { display: grid; grid-template-columns: auto auto; gap: 0 14px; }
 .pages.twoup .overlay, .pages.twoup .ime { grid-column: 1; }
+
+.fontpick { position: relative; flex: 1; min-width: 0; }
+.fontbtn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 8px; border: 1px solid var(--line, #d9dbe3); border-radius: 7px; background: var(--panel, #fff); color: inherit; font-size: 13px; cursor: pointer; }
+.fontbtn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fontmenu { position: fixed; z-index: 70; width: 280px; box-sizing: border-box; background: var(--panel, #fff); color: inherit; border: 1px solid var(--line, #d9dbe3); border-radius: 10px; box-shadow: 0 8px 28px rgba(15,20,40,.18); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.fontmenu input { padding: 6px 8px; border: 1px solid var(--line, #d9dbe3); border-radius: 6px; background: transparent; color: inherit; }
+.fontcats { display: flex; flex-wrap: wrap; gap: 3px; }
+.fontcats button { font-size: 11.5px; padding: 2px 7px; border-radius: 10px; border: 1px solid var(--line, #d9dbe3); background: transparent; color: inherit; cursor: pointer; }
+.fontcats button.on { background: #2347ff; border-color: #2347ff; color: #fff; }
+.fontlist { flex: 1; min-height: 0; max-height: 360px; overflow: auto; }
+.fontlist h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; margin: 8px 4px 2px; opacity: .65; }
+.fontlist button { display: block; width: 100%; text-align: start; padding: 5px 6px; border: 0; border-radius: 5px; background: transparent; color: inherit; font-size: 15px; cursor: pointer; content-visibility: auto; contain-intrinsic-size: auto 28px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fontlist button:hover, .fontlist button.on { background: var(--hover, #eef0ff); }

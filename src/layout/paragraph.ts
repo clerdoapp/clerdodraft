@@ -4,6 +4,7 @@ import type { Block } from '../core/model';
 import type { FontSpec, Frag, Line, LayoutEnv, ParaLayout } from './types';
 import { hyphenateSync } from 'hyphen/en';
 import { equationBox } from './equation';
+import { symbolText } from '../core/fonts';
 
 const RTL_CHAR = /[֐-ࣿיִ-﷿ﹰ-﻿]/;
 const CJK = /[⺀-鿿가-힯豈-﫿＀-￯]/;
@@ -28,7 +29,7 @@ interface Token {
   drop?: { size: number; width: number };
 }
 
-const displayText = (t: string, eff: RunProps): string => (eff.caps || eff.smallCaps ? t.toLocaleUpperCase() : t);
+const displayText = (t: string, eff: RunProps): string => { const s = symbolText(eff.font, t); return eff.caps || eff.smallCaps ? s.toLocaleUpperCase() : s; };
 
 const measure = (env: LayoutEnv, text: string, eff: RunProps, font: FontSpec): number => {
   if (!text) return 0;
@@ -57,7 +58,8 @@ const atomMetrics = (env: LayoutEnv, r: Run, eff: RunProps, font: FontSpec): { w
     case 'equation': return { width: equationBox(env.m, a, font.size).w, text: '' };
     case 'control': { const v = a.value || a.title || 'Choose'; return { width: measure(env, v, eff, font) + 8, text: v }; }
     case 'checkbox': return { width: font.size * 1.05, text: a.checked ? '☒' : '☐' };
-    case 'raw': return { width: a.width ?? measure(env, `[${a.label}]`, eff, font), text: a.width ? '' : `[${a.label}]`, height: a.height };
+    case 'raw': if (a.glyph) return { width: measure(env, a.glyph, { ...eff, font: undefined }, { ...font, family: 'Noto Sans Symbols 2' }), text: a.glyph };
+      return { width: a.width ?? measure(env, `[${a.label}]`, eff, font), text: a.width ? '' : `[${a.label}]`, height: a.height };
   }
 };
 

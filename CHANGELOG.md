@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+- More than 400 fonts: 212 open families, and common document font names drawn with matching open fonts
+- The desktop app lists every font installed on the computer
+- Searchable font menu grouped by kind
+- Symbol and dingbat fonts show the right characters
+
 ## 0.3.0
 - Equations drawn on the page, with an editor and structured save
 - Diagrams, and grouped drawings drawn from files

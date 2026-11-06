@@ -8,6 +8,7 @@ import type { Box, Frag, Page, PlacedFloat, PlacedLine } from '../layout/types';
 import { fragStyle, handleCopy, handleKey, handlePaste, mediaUrl, posFromDom, wordAt, rectOfPos, ownSpans } from '../editor/interaction';
 import type { EditorStore } from '../editor/store';
 import { openBytes } from '../features/files';
+import { symbolText } from '../core/fonts';
 import { setParaProps } from '../core/ops';
 
 const PT = 4 / 3;
@@ -90,7 +91,8 @@ const FragView = ({ f, marks, store }: { f: Frag; marks: boolean; store: EditorS
     if (a.kind === 'equation') return <span data-f={f.from} data-atom data-drawing className="eq"><EquationView atom={a} size={f.font.size} store={store} color={f.eff.color} /></span>;
     return <span data-f={f.from} data-atom className={`atom ${a.kind}`} style={st}>{f.text}</span>;
   }
-  return <span data-f={f.from} style={st}>{f.run?.link ? <a data-link href="#" onClick={(e) => e.preventDefault()}>{f.text}</a> : f.text}</span>;
+  const shown = symbolText(f.eff.font, f.text);
+  return <span data-f={f.from} style={st}>{f.run?.link ? <a data-link href="#" onClick={(e) => e.preventDefault()}>{shown}</a> : shown}</span>;
 };
 
 const ShapeBody = ({ atom, store, marks }: { atom: ShapeAtom; store: EditorStore; marks: boolean }) => {

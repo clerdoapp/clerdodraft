@@ -16,7 +16,7 @@ Write, review and lay out real documents, with your files staying on your own de
 
 ## What it does
 
-- **Write:** fonts, styles, lists, tabs, indents, large first letters, text art, right-to-left paragraphs, autocorrect and smart typing.
+- **Write:** more than 400 fonts plus every font on your computer, styles, lists, tabs, indents, large first letters, text art, right-to-left paragraphs, autocorrect and smart typing.
 - **Lay out:** true page layout with sections, columns, headers, footers, footnotes, facing pages, watermarks, page borders, line numbers, automatic hyphens and document themes.
 - **Add:** tables with formulas, pictures with crop and adjustments, charts, diagrams, shapes, text boxes, drawn equations, pen drawings, online video and audio links, screenshots, fill-in fields, symbols and emoji.
 - **Cite:** contents, captions, cross-references, an index, a table of authorities, sources and bibliographies in APA, MLA, Chicago, Harvard and IEEE.
@@ -74,7 +74,7 @@ npm run e2e        # browser tests (needs Playwright)
 npm run dist       # desktop installers for this system
 ```
 
-Installers are built by GitHub Actions: push a tag such as `v0.3.0` that matches `package.json`, and [release.yml](.github/workflows/release.yml) builds every platform and publishes a release. Every push to `main` publishes the web app. **Check for updates** in the app follows the releases of the repository a build was made from.
+Installers are built by GitHub Actions: push a tag such as `v0.4.0` that matches `package.json`, and [release.yml](.github/workflows/release.yml) builds every platform and publishes a release. Every push to `main` publishes the web app. **Check for updates** in the app follows the releases of the repository a build was made from.
 
 More: [docs/development.md](docs/development.md) · [docs/architecture.md](docs/architecture.md) · [docs/file-formats.md](docs/file-formats.md)
 

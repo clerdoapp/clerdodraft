@@ -15,6 +15,7 @@ import { styleLabel } from './labels';
 import { selectedAtom, updateSelectedAtom } from '../features/images';
 import { SHAPES } from '../features/insert';
 import { ChartDialog } from './ChartDialog';
+import { FontPicker } from './FontPicker';
 import { openProtected, setFilePassword } from '../features/files';
 import { DiagramDialog, DrawDialog, EquationDialog, KeysDialog } from './ExtraViews';
 import { insertFormula, insertTextArt, insertVideo, restartList, setBullet, TEXT_ART } from '../features/objects';
@@ -27,7 +28,7 @@ type Val = string | number | boolean;
 interface Field {
   key: string;
   label: string;
-  type?: 'text' | 'number' | 'select' | 'check' | 'color' | 'area' | 'password' | 'date';
+  type?: 'text' | 'number' | 'select' | 'check' | 'color' | 'area' | 'password' | 'date' | 'font';
   options?: [string, string][];
   step?: number;
 }
@@ -54,7 +55,9 @@ const Form = ({ store, def }: { store: EditorStore; def: FormDef }) => {
               ? <><input type="checkbox" checked={!!v[f.key]} onChange={(e) => set({ ...v, [f.key]: e.target.checked })} /> {f.label}</>
               : <><span>{f.label}</span>{f.type === 'select'
                 ? <select value={String(v[f.key] ?? '')} onChange={(e) => set({ ...v, [f.key]: e.target.value })}>{f.options!.map(([a, b]) => <option key={a} value={a}>{b}</option>)}</select>
-                : f.type === 'area'
+                : f.type === 'font'
+                  ? <FontPicker store={store} value={String(v[f.key] ?? '')} onPick={(x) => set({ ...v, [f.key]: x })} />
+                  : f.type === 'area'
                   ? <textarea rows={4} value={String(v[f.key] ?? '')} onChange={(e) => set({ ...v, [f.key]: e.target.value })} />
                   : <input type={f.type ?? 'text'} step={f.step ?? (f.type === 'number' ? 0.5 : undefined)} value={String(v[f.key] ?? (f.type === 'color' ? '#000000' : ''))} onChange={(e) => set({ ...v, [f.key]: f.type === 'number' ? Number(e.target.value) : e.target.value })} />}</>}
           </label>
@@ -72,7 +75,7 @@ const fontForm = (s: EditorStore): FormDef => {
   return {
     title: 'Text settings',
     fields: [
-      { key: 'font', label: 'Font' }, { key: 'size', label: 'Size (pt)', type: 'number' }, { key: 'color', label: 'Color', type: 'color' },
+      { key: 'font', label: 'Font', type: 'font' }, { key: 'size', label: 'Size (pt)', type: 'number' }, { key: 'color', label: 'Color', type: 'color' },
       { key: 'underline', label: 'Underline', type: 'select', options: [['none', 'None'], ['single', 'Single'], ['double', 'Double'], ['thick', 'Thick'], ['dotted', 'Dotted'], ['dashed', 'Dashed'], ['wave', 'Wave'], ['words', 'Words only']] },
       { key: 'spacing', label: 'Letter spacing (pt)', type: 'number', step: 0.1 }, { key: 'position', label: 'Raise (pt)', type: 'number' }, { key: 'scale', label: 'Width (%)', type: 'number', step: 1 },
       { key: 'emboss', label: 'Raised', type: 'check' }, { key: 'imprint', label: 'Pressed', type: 'check' }, { key: 'bold', label: 'Bold', type: 'check' }, { key: 'italic', label: 'Italic', type: 'check' }, { key: 'strike', label: 'Strikethrough', type: 'check' }, { key: 'doubleStrike', label: 'Double strikethrough', type: 'check' }, { key: 'smallCaps', label: 'Small capitals', type: 'check' }, { key: 'caps', label: 'All capitals', type: 'check' }, { key: 'hidden', label: 'Hidden', type: 'check' }, { key: 'shadow', label: 'Shadow', type: 'check' }, { key: 'outline', label: 'Outline', type: 'check' },
@@ -134,7 +137,7 @@ const styleForm = (s: EditorStore, id: string, create: boolean): FormDef => {
     title: create ? 'New style' : `Edit ${styleLabel(cur)}`,
     fields: [
       { key: 'name', label: 'Name' }, { key: 'basedOn', label: 'Built on', type: 'select', options: [['', 'Nothing'], ...paragraphs.map((p) => [p.id, p.name] as [string, string])] },
-      { key: 'font', label: 'Font' }, { key: 'size', label: 'Size (pt)', type: 'number' }, { key: 'color', label: 'Color', type: 'color' },
+      { key: 'font', label: 'Font', type: 'font' }, { key: 'size', label: 'Size (pt)', type: 'number' }, { key: 'color', label: 'Color', type: 'color' },
       { key: 'bold', label: 'Bold', type: 'check' }, { key: 'italic', label: 'Italic', type: 'check' },
       { key: 'spaceBefore', label: 'Space before (pt)', type: 'number' }, { key: 'spaceAfter', label: 'Space after (pt)', type: 'number' }, { key: 'quick', label: 'Show in the style list', type: 'check' },
     ],

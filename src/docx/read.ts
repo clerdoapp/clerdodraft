@@ -1,3 +1,4 @@
+import { symbolChar } from '../core/fonts';
 import { strFromU8, unzipSync } from 'fflate';
 import { defaultStyles } from '../core/defaults';
 import {
@@ -503,7 +504,12 @@ const parseRun = (r: XNode, st: ParaState, inl: Inline): void => {
         addAtom(st, d ? { ...parseDrawing(d, ctx), ...(d ? { xml: serialize(c) } : {}) } as Atom : { kind: 'raw', xml: serialize(c), label: 'Graphic' }, props, inl);
         break;
       }
-      case 'w:sym': addAtom(st, { kind: 'raw', xml: serialize(c), label: 'Symbol', width: (props.size ?? 11) * 0.7, height: undefined }, props, inl); break;
+      case 'w:sym': {
+        const code = parseInt(c.attrs['w:char'] ?? '', 16);
+        const glyph = Number.isFinite(code) ? symbolChar(c.attrs['w:font'], String.fromCharCode(code)) : '';
+        addAtom(st, { kind: 'raw', xml: serialize(c), label: 'Symbol', glyph: glyph && glyph.charCodeAt(0) < 0xe000 || glyph.charCodeAt(0) > 0xf8ff ? glyph : '•' }, props, inl);
+        break;
+      }
       default: addAtom(st, { kind: 'raw', xml: serialize(c), label: 'Object' }, props, inl);
     }
   }

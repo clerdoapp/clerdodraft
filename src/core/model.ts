@@ -210,6 +210,7 @@ export interface RawAtom {
   width?: number;
   height?: number;
   shapes?: DiagramShape[]; // drawn in place of the label when the file includes a drawing
+  glyph?: string; // shown for a symbol character
 }
 
 export interface ControlAtom {

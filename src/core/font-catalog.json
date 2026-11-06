@@ -1,0 +1,2242 @@
+[
+ {
+  "family": "Abril Fatface",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Albert Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Alegreya",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Alegreya Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Alex Brush",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Alfa Slab One",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Allura",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Almarai",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Amatic SC",
+  "category": "handwriting",
+  "subsets": [
+   "cyrillic",
+   "hebrew",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Amiri",
+  "category": "serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Anton",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Architects Daughter",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Archivo",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Archivo Black",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Archivo Narrow",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Aref Ruqaa",
+  "category": "serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Arimo",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "hebrew",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Arvo",
+  "category": "serif",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Asap",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Assistant",
+  "category": "sans-serif",
+  "subsets": [
+   "hebrew",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Atkinson Hyperlegible",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Bangers",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Barlow",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Barlow Condensed",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Bebas Neue",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Bitter",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Black Ops One",
+  "category": "display",
+  "subsets": [
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Bodoni Moda",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "math",
+   "symbols"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Bowlby One SC",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Bungee",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cabin",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cabin Condensed",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cairo",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Caladea",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cardo",
+  "category": "serif",
+  "subsets": [
+   "gothic",
+   "greek",
+   "greek-ext",
+   "hebrew",
+   "latin",
+   "latin-ext",
+   "old-italic",
+   "runic"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Carlito",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Carter One",
+  "category": "display",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Caveat",
+  "category": "handwriting",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Changa",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cherry Cream Soda",
+  "category": "display",
+  "subsets": [
+   "latin"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Chewy",
+  "category": "display",
+  "subsets": [
+   "latin"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Chivo",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cinzel",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cinzel Decorative",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Comfortaa",
+  "category": "display",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Comic Neue",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Coming Soon",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Cookie",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cormorant",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cormorant Garamond",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Courier Prime",
+  "category": "monospace",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Cousine",
+  "category": "monospace",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "hebrew",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Coustard",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Creepster",
+  "category": "display",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Crimson Pro",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Crimson Text",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Dancing Script",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Della Respira",
+  "category": "serif",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Didact Gothic",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "DM Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Domine",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "EB Garamond",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "El Messiri",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "cyrillic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Epilogue",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Fascinate",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Figtree",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Fira Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Fjalla One",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Frank Ruhl Libre",
+  "category": "serif",
+  "subsets": [
+   "hebrew",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Fredericka the Great",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Fredoka",
+  "category": "sans-serif",
+  "subsets": [
+   "hebrew",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Gelasio",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "GFS Didot",
+  "category": "serif",
+  "subsets": [
+   "greek",
+   "greek-ext",
+   "latin",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Gloria Hallelujah",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Gochi Hand",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Great Vibes",
+  "category": "handwriting",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Harmattan",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Heebo",
+  "category": "sans-serif",
+  "subsets": [
+   "hebrew",
+   "latin",
+   "latin-ext",
+   "math",
+   "symbols"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Homemade Apple",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "IBM Plex Mono",
+  "category": "monospace",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "IBM Plex Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "IBM Plex Sans Arabic",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "IBM Plex Sans Condensed",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "IBM Plex Serif",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "IM Fell English",
+  "category": "serif",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Inconsolata",
+  "category": "monospace",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Indie Flower",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Inter",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Italianno",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "JetBrains Mono",
+  "category": "monospace",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Josefin Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Jost",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Kalam",
+  "category": "handwriting",
+  "subsets": [
+   "devanagari",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Kanit",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "thai",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Karla",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Katibeh",
+  "category": "display",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Lalezar",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Lateef",
+  "category": "serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Lato",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "League Spartan",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Lexend",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Libre Baskerville",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Libre Bodoni",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Libre Caslon Text",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Libre Franklin",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Limelight",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Linden Hill",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Lobster",
+  "category": "display",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Lora",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "math",
+   "symbols",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Luckiest Guy",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Mada",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Manrope",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Marhey",
+  "category": "display",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Markazi Text",
+  "category": "serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Martel",
+  "category": "serif",
+  "subsets": [
+   "devanagari",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Merienda",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Merriweather",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Mirza",
+  "category": "serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Monoton",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Montserrat",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Neucha",
+  "category": "handwriting",
+  "subsets": [
+   "cyrillic",
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Nothing You Could Do",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Kufi Arabic",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext",
+   "math",
+   "symbols"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Naskh Arabic",
+  "category": "serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext",
+   "math",
+   "symbols"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "devanagari",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Sans Arabic",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext",
+   "math",
+   "symbols"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Sans Devanagari",
+  "category": "sans-serif",
+  "subsets": [
+   "devanagari",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Sans Display",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Sans Hebrew",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic-ext",
+   "greek-ext",
+   "hebrew",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Sans Mono",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Sans Symbols",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "symbols"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Sans Symbols 2",
+  "category": "sans-serif",
+  "subsets": [
+   "braille",
+   "latin",
+   "latin-ext",
+   "math",
+   "mayan-numerals",
+   "symbols"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Sans Thai",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "thai"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Noto Serif",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "math",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Nunito",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Nunito Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Old Standard TT",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Open Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "hebrew",
+   "latin",
+   "latin-ext",
+   "math",
+   "symbols",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Oswald",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Outfit",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Overpass",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Pacifico",
+  "category": "handwriting",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Parisienne",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Pathway Gothic One",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Patrick Hand",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Permanent Marker",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Pinyon Script",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Pirata One",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Playball",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Playfair",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Playfair Display",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Plus Jakarta Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Poly",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Poppins",
+  "category": "sans-serif",
+  "subsets": [
+   "devanagari",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Prata",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "PT Mono",
+  "category": "monospace",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "PT Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "PT Serif",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Public Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Questrial",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Quicksand",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Radley",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Rakkas",
+  "category": "display",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Raleway",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Rammetto One",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Rasa",
+  "category": "serif",
+  "subsets": [
+   "gujarati",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Readex Pro",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Red Hat Display",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Reem Kufi",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Righteous",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Roboto",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "math",
+   "symbols",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Roboto Condensed",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Roboto Mono",
+  "category": "monospace",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Roboto Serif",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Roboto Slab",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Rock Salt",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Rubik",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "cyrillic",
+   "cyrillic-ext",
+   "hebrew",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Rye",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Sacramento",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Saira Condensed",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Sarabun",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "thai",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Satisfy",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Scheherazade New",
+  "category": "serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Schoolbell",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Shadows Into Light",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Short Stack",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Sora",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Sorts Mill Goudy",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Source Code Pro",
+  "category": "monospace",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Source Sans 3",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Source Serif 4",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Space Mono",
+  "category": "monospace",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Special Elite",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Spectral",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Spicy Rice",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Sriracha",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "thai",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Tajawal",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Tangerine",
+  "category": "handwriting",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Tinos",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "hebrew",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Ubuntu",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "UFL-1.0"
+ },
+ {
+  "family": "Ubuntu Mono",
+  "category": "monospace",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "greek-ext",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "UFL-1.0"
+ },
+ {
+  "family": "Ultra",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Uncial Antiqua",
+  "category": "display",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "UnifrakturMaguntia",
+  "category": "display",
+  "subsets": [
+   "latin"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Urbanist",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Varela Round",
+  "category": "sans-serif",
+  "subsets": [
+   "hebrew",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Vazirmatn",
+  "category": "sans-serif",
+  "subsets": [
+   "arabic",
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Vollkorn",
+  "category": "serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "greek",
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Work Sans",
+  "category": "sans-serif",
+  "subsets": [
+   "latin",
+   "latin-ext",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Yanone Kaffeesatz",
+  "category": "sans-serif",
+  "subsets": [
+   "cyrillic",
+   "cyrillic-ext",
+   "latin",
+   "latin-ext",
+   "math",
+   "symbols",
+   "vietnamese"
+  ],
+  "license": "OFL-1.1"
+ },
+ {
+  "family": "Yellowtail",
+  "category": "handwriting",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "Apache-2.0"
+ },
+ {
+  "family": "Zilla Slab",
+  "category": "serif",
+  "subsets": [
+   "latin",
+   "latin-ext"
+  ],
+  "license": "OFL-1.1"
+ }
+]

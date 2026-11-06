@@ -271,6 +271,15 @@ try {
   await page.waitForSelector('.keysbox li');
   ok(true, 'keyboard shortcut list');
   await page.locator('.keysbox button').click();
+
+  await rail('Write');
+  await page.locator('.fontbtn').first().click();
+  await page.fill('.fontmenu input', 'garamond');
+  ok((await page.locator('.fontlist button', { hasText: 'Garamond' }).count()) >= 2, 'font search finds document and open fonts');
+  await page.locator('.fontlist button', { hasText: 'EB Garamond' }).first().click();
+  await page.keyboard.type('Garamond text');
+  await page.waitForTimeout(300);
+  ok(await page.evaluate(() => document.fonts.check('16px "EB Garamond"')), 'chosen font loads');
   ok(errors.length === 0, `no console errors ${errors.slice(0, 3).join(' | ')}`);
   await page.screenshot({ path: join(out, 'final.png') });
   console.log(out);

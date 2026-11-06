@@ -1,32 +1,12 @@
 import type { FontMetrics, FontSpec, Measurer } from './types';
 
-// Metric-compatible open fonts stand in for common proprietary names. The document keeps the original name.
-const SUBSTITUTES: Record<string, string> = {
-  calibri: 'Carlito',
-  'calibri light': 'Carlito',
-  aptos: 'Carlito',
-  'aptos display': 'Carlito',
-  'aptos narrow': 'Carlito',
-  cambria: 'Caladea',
-  'cambria math': 'Caladea',
-  arial: 'Arimo',
-  helvetica: 'Arimo',
-  'times new roman': 'Tinos',
-  times: 'Tinos',
-  'courier new': 'Cousine',
-  courier: 'Cousine',
-  consolas: 'Cousine',
-};
+import { cssFamily, lookalikeOf } from '../core/fonts';
 
-export const cssFamily = (name: string): string => {
-  const sub = SUBSTITUTES[name.toLowerCase()];
-  const first = sub ? `"${sub}"` : `"${name.replaceAll('"', '')}"`;
-  return `${first}, "Noto Naskh Arabic", "Carlito", sans-serif`;
-};
+export { cssFamily };
 
 const fontCss = (f: FontSpec): string => `${f.italic ? 'italic ' : ''}${f.bold ? '700 ' : ''}${f.size}px ${cssFamily(f.family)}`;
 
-export const fontSubstitute = (name: string): string | undefined => SUBSTITUTES[name.toLowerCase()];
+export const fontSubstitute = (name: string): string | undefined => lookalikeOf(name);
 
 export class CanvasMeasurer implements Measurer {
   private ctx: CanvasRenderingContext2D;

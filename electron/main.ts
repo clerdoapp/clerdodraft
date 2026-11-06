@@ -1,6 +1,7 @@
 import { app, BrowserWindow, desktopCapturer, dialog, ipcMain, session, shell } from 'electron';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
+import { installedFonts } from './fonts';
 
 const MAX_FILE = 512 * 1024 * 1024;
 const FILTERS = [{ name: 'Documents', extensions: ['docx'] }];
@@ -36,6 +37,9 @@ const createWindow = (blank = false): void => {
 };
 
 ipcMain.on('window:new', () => createWindow(true));
+
+let fontList: Promise<string[]> | null = null;
+ipcMain.handle('fonts:list', () => (fontList ??= installedFonts().catch(() => [])));
 
 ipcMain.handle('file:open', async () => {
   const r = await dialog.showOpenDialog({ properties: ['openFile'], filters: OPEN_FILTERS });

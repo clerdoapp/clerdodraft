@@ -8,6 +8,7 @@ import { applyStyle } from '../core/ops';
 import { currentPara, currentRun, setSection, inTable } from '../features/coreCommands';
 import { A4, LETTER } from '../core/model';
 import { cssFamily } from '../layout/measure';
+import { FontPicker } from './FontPicker';
 import { applySpacing, applyTheme, SPACINGS, THEMES } from '../features/themes';
 
 const S = 1.9;
@@ -40,7 +41,6 @@ const Icons = ({ store, tools }: { store: EditorStore; tools: Tool[] }) => <div 
 const List_ = ({ store, tools }: { store: EditorStore; tools: Tool[] }) => <div className="toollist">{tools.map((t) => <Btn key={t.id} store={store} t={t} />)}</div>;
 const ids = (...x: string[]): Tool[] => x.map((id) => ({ id }));
 
-const FONTS = ['Calibri', 'Cambria', 'Arial', 'Times New Roman', 'Courier New', 'Carlito', 'Caladea', 'Arimo', 'Tinos', 'Cousine', 'Noto Naskh Arabic'];
 const SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72];
 const SWATCHES = ['#000000', '#404040', '#7f7f7f', '#c00000', '#e36c0a', '#bf9000', '#2e7d32', '#00838f', '#2347ff', '#6a1b9a'];
 const MARKERS = ['#ffff00', '#00ff00', '#00ffff', '#ff00ff', '#ffb74d', '#c0c0c0'];
@@ -49,10 +49,7 @@ const FontControls = ({ store }: { store: EditorStore }) => {
   const r = currentRun(store);
   return (
     <div className="fontctl">
-      <select aria-label="Font" value={FONTS.includes(r.font ?? '') ? r.font : ''} onMouseDown={(e) => e.stopPropagation()} onChange={(e) => store.formatRun({ font: e.target.value, fontCs: e.target.value })}>
-        {!FONTS.includes(r.font ?? '') && <option value="">{r.font ?? 'Font'}</option>}
-        {FONTS.map((f) => <option key={f}>{f}</option>)}
-      </select>
+      <FontPicker store={store} value={r.font} onPick={(f) => store.formatRun({ font: f, fontCs: f })} />
       <button className="tool icon" aria-label="Smaller text" onClick={() => run(store, 'fmt.shrink')}><Minus size={14} strokeWidth={S} /></button>
       <select aria-label="Size" value={SIZES.includes(r.size ?? 11) ? r.size : ''} onChange={(e) => store.formatRun({ size: Number(e.target.value) })}>
         {!SIZES.includes(r.size ?? 11) && <option value="">{r.size}</option>}
