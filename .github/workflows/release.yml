@@ -1,0 +1,136 @@
+# Builds ClerdoDraft for every platform and publishes a GitHub Release.
+#
+#   Publish:  push a tag that matches the version in package.json, e.g.
+#               git tag v0.1.0 && git push origin v0.1.0
+#   Test run: Actions > Release > Run workflow (builds everything and keeps the files as workflow
+#             artifacts, but publishes nothing).
+#
+# Check for updates in these builds follows this repository's releases (VITE_RELEASE_REPO).
+# The builds aren't code-signed: add signing secrets later.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  VITE_RELEASE_REPO: ${{ github.repository }}
+
+jobs:
+  version:
+    name: Check the version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: v
+        name: Tag matches package.json
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match package.json ($version)."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  windows:
+    name: Windows (.msi, .exe, .zip)
+    needs: version
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run dist
+      - uses: actions/upload-artifact@v6
+        with:
+          name: windows
+          path: |
+            release/*.msi
+            release/*.exe
+            release/*.zip
+          if-no-files-found: error
+
+  macos:
+    name: macOS (.dmg)
+    needs: version
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run dist
+      - uses: actions/upload-artifact@v6
+        with:
+          name: macos
+          path: |
+            release/*.dmg
+            release/*.zip
+          if-no-files-found: error
+
+  linux:
+    name: Linux (.AppImage, .deb, .rpm, .tar.gz)
+    needs: version
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y rpm
+      - run: npm ci
+      - run: npm run dist
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux
+          path: |
+            release/*.AppImage
+            release/*.deb
+            release/*.rpm
+            release/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Publish the release
+    # Publishes whatever built, so one unavailable runner doesn't hold back the others.
+    if: ${{ !cancelled() && github.ref_type == 'tag' && needs.version.result == 'success' }}
+    needs: [version, windows, macos, linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: |
+          set -euo pipefail
+          ls dist/* >/dev/null 2>&1 || { echo "::error::No platform built; nothing to publish."; exit 1; }
+          cd dist && rm -f SHA256SUMS.txt && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: ClerdoDraft ${{ needs.version.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+          files: dist/*
