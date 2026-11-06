@@ -1,18 +1,31 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent as RME } from 'react';
-import type { RunProps, ShapeAtom, StoryId } from '../core/model';
+import type { ImageAtom, RunProps, ShapeAtom, StoryId } from '../core/model';
 import { BOX_INSET_X, BOX_INSET_Y } from '../layout/paginate';
-import { ChartView, DiagramView, ShapeOutline } from './Drawings';
+import { ChartView, DiagramView, EquationView, ShapeOutline } from './Drawings';
 import { collapsed, findPara, isCollapsed, orderedSel, paraLength } from '../core/tree';
 import { cssFamily } from '../layout/measure';
 import type { Box, Frag, Page, PlacedFloat, PlacedLine } from '../layout/types';
 import { fragStyle, handleCopy, handleKey, handlePaste, mediaUrl, posFromDom, wordAt, rectOfPos, ownSpans } from '../editor/interaction';
 import type { EditorStore } from '../editor/store';
 import { openBytes } from '../features/files';
+import { setParaProps } from '../core/ops';
 
 const PT = 4 / 3;
 
 // On touch screens the keyboard stays closed until the person taps the page.
 const coarse = (): boolean => matchMedia('(pointer: coarse)').matches;
+
+const pictureFilter = (a: ImageAtom): string | undefined => {
+  const f = [a.gray ? 'grayscale(1)' : '', a.bright ? `brightness(${1 + a.bright / 100})` : '', a.contrast ? `contrast(${1 + a.contrast / 100})` : ''].filter(Boolean).join(' ');
+  return f || undefined;
+};
+
+const cropStyle = (a: ImageAtom): CSSProperties => {
+  const c = a.crop!;
+  const w = a.width / (1 - (c.l + c.r) / 100);
+  const h = a.height / (1 - (c.t + c.b) / 100);
+  return { position: 'absolute', width: w, height: h, left: (-c.l / 100) * w, top: (-c.t / 100) * h, filter: pictureFilter(a), maxWidth: 'none' };
+};
 
 const LineView = memo(function LineView({ line, marks, store }: { line: PlacedLine; marks: boolean; store: EditorStore }) {
   const style: CSSProperties = {
@@ -22,6 +35,7 @@ const LineView = memo(function LineView({ line, marks, store }: { line: PlacedLi
     height: line.height,
     lineHeight: `${line.height}px`,
     wordSpacing: line.wordSpacing || undefined,
+    ...(line.turn ? { transform: `rotate(${line.turn}deg)`, transformOrigin: '0 0' } : {}),
   };
   return (
     <div className="ln" dir={line.rtl ? 'rtl' : 'ltr'} data-para={line.para} data-story={line.story} data-from={line.from} data-to={line.to} style={style}>
@@ -59,7 +73,8 @@ const FragView = ({ f, marks, store }: { f: Frag; marks: boolean; store: EditorS
     const a = f.atom;
     if (a.kind === 'image') {
       if (a.wrap !== 'inline') return <span data-f={f.from} data-atom className="anchor" />;
-      return <img data-f={f.from} data-atom alt={a.alt ?? ''} src={mediaUrl(store, a.media)} style={{ width: a.width, height: a.height, verticalAlign: 'baseline', transform: a.rotation ? `rotate(${a.rotation}deg)` : undefined }} draggable={false} />;
+      if (a.crop) return <span data-f={f.from} data-atom className="cropped" style={{ width: a.width, height: a.height }}><img alt={a.alt ?? ''} src={mediaUrl(store, a.media)} draggable={false} style={cropStyle(a)} /></span>;
+      return <img data-f={f.from} data-atom alt={a.alt ?? ''} src={mediaUrl(store, a.media)} style={{ width: a.width, height: a.height, verticalAlign: 'baseline', filter: pictureFilter(a), transform: a.rotation ? `rotate(${a.rotation}deg)` : undefined }} draggable={false} />;
     }
     if (a.kind === 'shape') {
       if (a.wrap !== 'inline') return <span data-f={f.from} data-atom className="anchor" />;
@@ -71,6 +86,8 @@ const FragView = ({ f, marks, store }: { f: Frag; marks: boolean; store: EditorS
     }
     if (a.kind === 'raw' && a.width && a.shapes?.length) return <span data-f={f.from} data-atom className="shape" style={{ width: a.width, height: a.height ?? 40 }}><DiagramView shapes={a.shapes} w={a.width} h={a.height ?? 40} /></span>;
     if (a.kind === 'raw' && a.width) return <span data-f={f.from} data-atom className="rawbox" style={{ width: a.width, height: a.height ?? 40 }}>{a.label}</span>;
+    if (a.kind === 'control') return <span data-f={f.from} data-atom className="control" style={st}>{f.text}</span>;
+    if (a.kind === 'equation') return <span data-f={f.from} data-atom data-drawing className="eq"><EquationView atom={a} size={f.font.size} store={store} color={f.eff.color} /></span>;
     return <span data-f={f.from} data-atom className={`atom ${a.kind}`} style={st}>{f.text}</span>;
   }
   return <span data-f={f.from} style={st}>{f.run?.link ? <a data-link href="#" onClick={(e) => e.preventDefault()}>{f.text}</a> : f.text}</span>;
@@ -120,7 +137,8 @@ const FloatView = ({ f, store }: { f: PlacedFloat; store: EditorStore }) => {
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', up);
   };
-  if (a.kind === 'image') return <img className="float" data-float={`${f.para}:${f.offset}`} alt={a.alt ?? ''} src={mediaUrl(store, a.media)} style={st} onMouseDown={onDown} draggable={false} />;
+  if (a.kind === 'image' && a.crop) return <div className="float cropped" data-float={`${f.para}:${f.offset}`} style={st} onMouseDown={onDown}><img alt={a.alt ?? ''} src={mediaUrl(store, a.media)} draggable={false} style={cropStyle({ ...a, width: f.w, height: f.h })} /></div>;
+  if (a.kind === 'image') return <img className="float" data-float={`${f.para}:${f.offset}`} alt={a.alt ?? ''} src={mediaUrl(store, a.media)} style={{ ...st, filter: pictureFilter(a) }} onMouseDown={onDown} draggable={false} />;
   if (a.kind === 'chart') return <div className="float shape" data-float={`${f.para}:${f.offset}`} onMouseDown={onDown} style={st}><ChartView a={a} /></div>;
   return <div className="float shape" data-float={`${f.para}:${f.offset}`} onMouseDown={onDown} style={st}><ShapeBody atom={a} store={store} marks={store.view.showMarks} /></div>;
 };
@@ -343,6 +361,7 @@ export const Canvas = ({ store }: { store: EditorStore }) => {
       const brush = store.formatBrush;
       if (brush && !isCollapsed(store.sel)) {
         store.formatRun(brush.run);
+        if (brush.para) store.commit(setParaProps(store.doc, store.sel, { ...brush.para, numbering: undefined }));
         if (brush.once) store.formatBrush = null;
       }
     };
@@ -480,7 +499,7 @@ export const Canvas = ({ store }: { store: EditorStore }) => {
         else void import('../features/images').then((m) => m.insertImageFile(store, f));
       }}>
       <div className="pages-wrap" style={{ position: 'relative' }}>
-        <div className="pages" ref={pagesEl} style={{ zoom }}>
+        <div className={`pages${store.view.twoUp ? ' twoup' : ''}`} ref={pagesEl} style={{ zoom }}>
           {pageNodes}
           <div className="overlay" aria-hidden>
             {overlay.marks.map((m, i) => <div key={`m${i}`} className={`sq ${m.kind}`} style={{ left: m.x, top: m.y, width: m.w }} />)}

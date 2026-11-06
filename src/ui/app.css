@@ -258,3 +258,19 @@ kbd { font: 11px 'Hanken Grotesk', sans-serif; color: var(--muted); }
 .splitview { flex: 1; min-height: 0; overflow: auto; background: var(--bg); border-top: 2px solid var(--line, #d9dbe3); }
 .drawbox { width: min(760px, 86vw); }
 .drawbox canvas { width: 100%; aspect-ratio: 12 / 7; background: #fff; border: 1px solid var(--line, #d9dbe3); border-radius: 8px; cursor: crosshair; display: block; margin-top: 8px; }
+
+.mathsvg { display: inline-block; overflow: visible; }
+.eq { display: inline-block; }
+.cropped { position: relative; display: inline-block; overflow: hidden; vertical-align: baseline; }
+.control { background: #e8ecff; border-radius: 3px; padding: 0 4px; }
+.eqbox { width: min(560px, 88vw); }
+.eqkeys { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.eqkeys button { padding: 3px 8px; border: 1px solid var(--line, #d9dbe3); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; font-size: 13px; }
+.eqbox textarea { width: 100%; box-sizing: border-box; font-family: "Cousine", monospace; font-size: 13px; padding: 8px; }
+.eqpreview { margin-top: 10px; min-height: 60px; max-height: 300px; overflow: auto; padding: 14px; background: #fff; color: #000; border: 1px solid var(--line, #d9dbe3); border-radius: 8px; text-align: center; }
+.keysbox { width: min(460px, 86vw); }
+.keysbox input { width: 100%; box-sizing: border-box; padding: 6px 8px; margin-bottom: 8px; }
+.keysbox ul { list-style: none; margin: 0; padding: 0; max-height: 52vh; overflow: auto; }
+.keysbox li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 2px; font-size: 13px; border-bottom: 1px solid var(--line, #eceef3); }
+.pages.twoup { display: grid; grid-template-columns: auto auto; gap: 0 14px; }
+.pages.twoup .overlay, .pages.twoup .ime { grid-column: 1; }

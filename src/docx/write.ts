@@ -1,3 +1,4 @@
+import { parseMath, toOmml } from '../core/math';
 import { strFromU8, strToU8, zipSync } from 'fflate';
 import type {
   Block, BorderLine, CellProps, ChartAtom, Comment, Doc, FloatPlacement, ImageAtom, NumberingLevel, Paragraph, ParaBorders, ParaProps, Revision, Run, RunProps, Section, ShapeAtom, DrawingAtom, Style, Table, TableBorders, TableProps,
@@ -130,6 +131,9 @@ const floatXml = (body: string, atom: DrawingAtom, st: WriteState): string => {
   return `<wp:anchor distT="${emu(f.distT)}" distB="${emu(f.distB)}" distL="${emu(f.distL ?? 9)}" distR="${emu(f.distR ?? 9)}" simplePos="0" relativeHeight="${id + 1000}" behindDoc="${atom.wrap === 'behind' ? 1 : 0}" locked="0" layoutInCell="1" allowOverlap="1"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="${f.relH}">${posH}</wp:positionH><wp:positionV relativeFrom="${f.relV}">${posV}</wp:positionV><wp:extent cx="${emu(atom.width)}" cy="${emu(atom.height)}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>${wrap}${body}</wp:anchor>`;
 };
 
+const blipEffects = (i: ImageAtom): string => (i.gray ? '<a:grayscl/>' : '') + (i.bright || i.contrast ? `<a:lum bright="${Math.round((i.bright ?? 0) * 1000)}" contrast="${Math.round((i.contrast ?? 0) * 1000)}"/>` : '');
+const cropXml = (i: ImageAtom): string => (i.crop ? `<a:srcRect l="${Math.round(i.crop.l * 1000)}" t="${Math.round(i.crop.t * 1000)}" r="${Math.round(i.crop.r * 1000)}" b="${Math.round(i.crop.b * 1000)}"/>` : '');
+
 const imageXml = (atom: ImageAtom, st: WriteState): string => {
   const item = st.doc.media[atom.media];
   if (!item) return '';
@@ -140,7 +144,7 @@ const imageXml = (atom: ImageAtom, st: WriteState): string => {
   const cx = Math.round(atom.width * 12700);
   const cy = Math.round(atom.height * 12700);
   const rot = atom.rotation ? ` rot="${Math.round(atom.rotation * 60000)}"` : '';
-  const inner = `<wp:docPr id="${id}" name="Picture ${id}"${atom.alt ? ` descr="${a(atom.alt)}"` : ''}/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="${NS['pic']}"><pic:pic><pic:nvPicPr><pic:cNvPr id="${id}" name="Picture ${id}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm${rot}><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic>`;
+  const inner = `<wp:docPr id="${id}" name="Picture ${id}"${atom.alt ? ` descr="${a(atom.alt)}"` : ''}/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="${NS['pic']}"><pic:pic><pic:nvPicPr><pic:cNvPr id="${id}" name="Picture ${id}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}">${blipEffects(atom)}</a:blip>${cropXml(atom)}<a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm${rot}><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic>`;
   if (atom.wrap === 'inline') return `<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>${inner}</wp:inline></w:drawing>`;
   return `<w:drawing>${floatXml(inner, atom, st)}</w:drawing>`;
 };
@@ -217,7 +221,11 @@ const atomXml = (r: Run, st: WriteState): string => {
       return `<w:r>${pr}<w:fldChar w:fldCharType="begin"${a0.locked ? ' w:fldLock="1"' : ''}/></w:r><w:r>${pr}<w:instrText xml:space="preserve"> ${escapeText(a0.instr)} </w:instrText></w:r><w:r>${pr}<w:fldChar w:fldCharType="separate"/></w:r><w:r>${pr}<w:t xml:space="preserve">${escapeText(a0.result)}</w:t></w:r><w:r>${pr}<w:fldChar w:fldCharType="end"/></w:r>`;
     case 'footnote': return `<w:r><w:rPr><w:rStyle w:val="FootnoteReference"/></w:rPr><w:footnoteReference w:id="${a(a0.id)}"/></w:r>`;
     case 'endnote': return `<w:r><w:rPr><w:rStyle w:val="EndnoteReference"/></w:rPr><w:endnoteReference w:id="${a(a0.id)}"/></w:r>`;
-    case 'equation': return a0.omml ?? `<m:oMath><m:r><m:t>${escapeText(a0.source)}</m:t></m:r></m:oMath>`;
+    case 'equation': return a0.omml ?? toOmml(parseMath(a0.source));
+    case 'control': {
+      const kind = a0.control === 'dropdown' ? `<w:dropDownList>${(a0.options ?? []).map((o) => `<w:listItem w:displayText="${a(o)}" w:value="${a(o)}"/>`).join('')}</w:dropDownList>` : a0.control === 'date' ? '<w:date><w:dateFormat w:val="MMMM d, yyyy"/></w:date>' : '<w:text/>';
+      return `<w:sdt><w:sdtPr>${a0.title ? `<w:alias w:val="${a(a0.title)}"/>` : ''}${kind}</w:sdtPr><w:sdtContent><w:r>${pr}<w:t xml:space="preserve">${escapeText(a0.value)}</w:t></w:r></w:sdtContent></w:sdt>`;
+    }
     case 'checkbox': return `<w:sdt><w:sdtPr><w14:checkbox><w14:checked w14:val="${a0.checked ? 1 : 0}"/><w14:checkedState w14:val="2612" w14:font="MS Gothic"/><w14:uncheckedState w14:val="2610" w14:font="MS Gothic"/></w14:checkbox></w:sdtPr><w:sdtContent><w:r>${pr}<w:t>${a0.checked ? '\u2612' : '\u2610'}</w:t></w:r></w:sdtContent></w:sdt>`;
     case 'raw': return a0.xml.startsWith('<w:r>') || a0.xml.startsWith('<w:r ') ? a0.xml : `<w:r>${pr}${a0.xml}</w:r>`;
     default: return '';

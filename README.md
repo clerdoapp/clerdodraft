@@ -18,10 +18,10 @@ Write, review and lay out real documents, with your files staying on your own de
 
 - **Write:** fonts, styles, lists, tabs, indents, large first letters, text art, right-to-left paragraphs, autocorrect and smart typing.
 - **Lay out:** true page layout with sections, columns, headers, footers, footnotes, facing pages, watermarks, page borders, line numbers, automatic hyphens and document themes.
-- **Add:** tables with formulas, pictures, charts, shapes, text boxes, pen drawings, online video links, screenshots, equations, symbols and emoji.
+- **Add:** tables with formulas, pictures with crop and adjustments, charts, diagrams, shapes, text boxes, drawn equations, pen drawings, online video and audio links, screenshots, fill-in fields, symbols and emoji.
 - **Cite:** contents, captions, cross-references, an index, a table of authorities, sources and bibliographies in APA, MLA, Chicago, Harvard and IEEE.
 - **Review:** tracked changes including formatting, comments with replies and filters, document compare, version history, spelling and grammar, a built-in word book with meanings and similar words, read aloud and dictation.
-- **Mail:** merge from a spreadsheet file, envelopes and labels.
+- **Mail:** merge from a spreadsheet file with rules and a live preview, envelopes and label sheets.
 - **Read:** page, web, draft and reading views, a focus reader, split view, dark mode and an outline.
 - **Files:** opens and saves `.docx`, including password-protected files, and keeps content it doesn't understand instead of dropping it. Also opens `.doc`, `.odt`, `.rtf`, `.pdf`, `.md`, `.html` and `.txt`, and exports `.odt`, `.rtf`, `.pdf`, `.html`, `.md` and `.txt`.
 - **Private:** no account, no server, no tracking. Spelling and the word book work offline.
@@ -57,8 +57,7 @@ ClerdoDraft is in **alpha**. Everyday writing, review and layout work, and some 
 
 - live co-editing and share links;
 - digital signatures;
-- embedded objects and audio;
-- creating diagrams (ones already in a file are shown and kept);
+- embedded objects;
 - an Arabic spelling dictionary.
 
 [ROADMAP.md](ROADMAP.md) and [docs/gaps.md](docs/gaps.md) track what's next.
@@ -75,7 +74,7 @@ npm run e2e        # browser tests (needs Playwright)
 npm run dist       # desktop installers for this system
 ```
 
-Installers are built by GitHub Actions: push a tag such as `v0.2.0` that matches `package.json`, and [release.yml](.github/workflows/release.yml) builds every platform and publishes a release. Every push to `main` publishes the web app. **Check for updates** in the app follows the releases of the repository a build was made from.
+Installers are built by GitHub Actions: push a tag such as `v0.3.0` that matches `package.json`, and [release.yml](.github/workflows/release.yml) builds every platform and publishes a release. Every push to `main` publishes the web app. **Check for updates** in the app follows the releases of the repository a build was made from.
 
 More: [docs/development.md](docs/development.md) · [docs/architecture.md](docs/architecture.md) · [docs/file-formats.md](docs/file-formats.md)
 

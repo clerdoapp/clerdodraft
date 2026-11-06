@@ -1,12 +1,18 @@
-import { newId, para, textRun, type ImageAtom, type RunProps } from '../core/model';
-import { insertBlocksAfter, setParaProps } from '../core/ops';
-import { findPara, flatten, storyBlocks, updatePara } from '../core/tree';
+import { newId, para, textRun, type Block, type Doc, type ImageAtom, type RunProps, type Table, type TableCell } from '../core/model';
+import { insertBlocksAfter, setParaProps, updateTable } from '../core/ops';
+import { findPara, flatten, paraText, storyBlocks, updatePara, walkParagraphs } from '../core/tree';
 import { register } from '../editor/commands';
 import { cellOf } from '../editor/interaction';
 import type { EditorStore } from '../editor/store';
-import { currentPara, ensureList, inTable } from './coreCommands';
-import { insertImageFile } from './images';
+import { currentPara, ensureList, inTable, pickFile } from './coreCommands';
+import { readAny } from './files';
+import { insertImageFile, selectedAtom } from './images';
 import { formulaResult } from './tableFormula';
+
+export interface SavedBlock { name: string; text: string }
+const BLOCK_KEY = 'clerdodraft.blocks';
+export const savedBlocks = (): SavedBlock[] => { try { return JSON.parse(localStorage.getItem(BLOCK_KEY) ?? '[]') as SavedBlock[]; } catch { return []; } };
+export const storeBlocks = (list: SavedBlock[]): void => { try { localStorage.setItem(BLOCK_KEY, JSON.stringify(list)); } catch { /* kept for this session only */ } };
 
 export const insertBlob = async (s: EditorStore, blob: Blob, name: string): Promise<void> => insertImageFile(s, new File([blob], name, { type: blob.type }));
 
@@ -119,10 +125,84 @@ export const insertFormula = (s: EditorStore, formula: string): void => {
   s.insertAtom({ kind: 'field', field: 'other', instr: ` ${f} `, result });
 };
 
+const cellText = (c: TableCell): string => [...walkParagraphs(c.blocks)].map(paraText).join(' ');
+
+const fitColumns = (t: Table): Table => {
+  const total = t.grid.reduce((a, b) => a + b, 0);
+  const longest = t.grid.map((_, c) => Math.max(4, ...t.rows.map((r) => Math.min(60, cellText(r.cells[c] ?? { id: '', props: {}, blocks: [] }).length))));
+  const sum = longest.reduce((a, b) => a + b, 0);
+  const grid = longest.map((n) => (n / sum) * total);
+  return { ...t, grid, rows: t.rows.map((r) => ({ ...r, cells: r.cells.map((c, i) => ({ ...c, props: { ...c.props, width: grid[i] } })) })) };
+};
+
+const evenColumns = (t: Table): Table => {
+  const w = t.grid.reduce((a, b) => a + b, 0) / t.grid.length;
+  return { ...t, grid: t.grid.map(() => w), rows: t.rows.map((r) => ({ ...r, cells: r.cells.map((c) => ({ ...c, props: { ...c.props, width: w * (c.props.gridSpan ?? 1) } })) })) };
+};
+
+const turnCell = (t: Table, row: number, cell: number): Table => ({
+  ...t,
+  rows: t.rows.map((r, i) => (i !== row ? r : { ...r, cells: r.cells.map((c, k) => {
+    if (k !== cell) return c;
+    const next = !c.props.textDirection ? 'btLr' : c.props.textDirection === 'btLr' ? 'tbRl' : undefined;
+    return { ...c, props: { ...c.props, textDirection: next } };
+  }) })),
+});
+
+const tableChange = (s: EditorStore, fn: (t: Table, row: number, cell: number) => Table): void => s.commit(updateTable(s.doc, s.sel.focus.story, s.sel.focus.para, fn));
+
+const splitTable = (s: EditorStore): void => {
+  const cell = cellOf(s);
+  if (!cell || cell.r === 0) { s.notify('Click in a lower row first.'); return; }
+  const blocks = s.doc.blocks;
+  const at = blocks.indexOf(cell.table);
+  if (at < 0) { s.notify('This table is inside another one.'); return; }
+  const top: Table = { ...cell.table, rows: cell.table.rows.slice(0, cell.r) };
+  const bottom: Table = { ...cell.table, id: newId(), rows: cell.table.rows.slice(cell.r) };
+  s.commit({ ...s.doc, blocks: [...blocks.slice(0, at), top, para(), bottom, ...blocks.slice(at + 1)] });
+};
+
+// Lists from the other document get new ids so they can't collide with lists here.
+const insertFromFile = async (s: EditorStore, f: File): Promise<void> => {
+  const incoming = await readAny(new Uint8Array(await f.arrayBuffer()), f.name);
+  const map = new Map<string, string>();
+  const abstracts = { ...s.doc.numbering.abstracts };
+  const instances = { ...s.doc.numbering.instances };
+  for (const [id, inst] of Object.entries(incoming.numbering.instances)) {
+    const nid = newId();
+    const aid = `${nid}a`;
+    const abs = incoming.numbering.abstracts[inst.abstractId];
+    if (abs) abstracts[aid] = { ...abs, id: aid };
+    instances[nid] = { ...inst, id: nid, abstractId: aid };
+    map.set(id, nid);
+  }
+  const fix = (b: Block): Block => {
+    if (b.type === 'p') return { ...b, id: newId(), section: undefined, props: b.props.numbering ? { ...b.props, numbering: { ...b.props.numbering, numId: map.get(b.props.numbering.numId) ?? b.props.numbering.numId } } : b.props };
+    if (b.type === 'tbl') return { ...b, id: newId(), rows: b.rows.map((r) => ({ ...r, id: newId(), cells: r.cells.map((c) => ({ ...c, id: newId(), blocks: c.blocks.map(fix) })) })) };
+    return b;
+  };
+  const styles = { ...incoming.styles.styles, ...s.doc.styles.styles };
+  const doc: Doc = { ...s.doc, media: { ...s.doc.media, ...incoming.media }, numbering: { abstracts, instances }, styles: { ...s.doc.styles, styles } };
+  s.commit(insertBlocksAfter(doc, s.sel.focus.story, s.sel.focus.para, incoming.blocks.map(fix)));
+};
+
 export const registerObjects = (): void => {
   register(
+    { id: 'ins.diagram', label: 'Diagram', group: 'Insert', run: (s) => s.openDialog('diagram') },
+    { id: 'ins.control', label: 'Fill-in field', group: 'Insert', run: (s) => s.openDialog('control') },
+    { id: 'ins.blocks', label: 'Saved text', group: 'Insert', run: (s) => s.togglePane('blocks'), active: (s) => s.view.pane === 'blocks' },
+    { id: 'ins.file', label: 'Text from a file', group: 'Insert', run: (s) => pickFile('.docx,.odt,.rtf,.md,.html,.txt,.doc', (f) => void insertFromFile(s, f)) },
+    { id: 'obj.equation', label: 'Edit equation', group: 'Insert', enabled: (s) => selectedAtom(s)?.kind === 'equation', run: (s) => s.openDialog('equation') },
+    { id: 'obj.picture', label: 'Crop and adjust picture', group: 'Insert', enabled: (s) => selectedAtom(s)?.kind === 'image', run: (s) => s.openDialog('pictureFix') },
+    { id: 'obj.control', label: 'Change value', group: 'Insert', enabled: (s) => selectedAtom(s)?.kind === 'control', run: (s) => s.openDialog('controlValue') },
+    { id: 'tbl.fit', label: 'Fit columns to text', group: 'Table', enabled: inTable, run: (s) => tableChange(s, fitColumns) },
+    { id: 'tbl.even', label: 'Even out columns', group: 'Table', enabled: inTable, run: (s) => tableChange(s, evenColumns) },
+    { id: 'tbl.dir', label: 'Turn cell text', group: 'Table', enabled: inTable, run: (s) => tableChange(s, turnCell) },
+    { id: 'tbl.splitTable', label: 'Split table here', group: 'Table', enabled: inTable, run: splitTable },
+    { id: 'view.twoUp', label: 'Pages side by side', group: 'View', run: (s) => s.setView({ twoUp: !s.view.twoUp }), active: (s) => !!s.view.twoUp },
+    { id: 'help.keys', label: 'Keyboard shortcuts', group: 'Help', keys: 'f1', run: (s) => s.openDialog('keys') },
     { id: 'ins.draw', label: 'Draw with a pen', group: 'Insert', run: (s) => s.openDialog('draw') },
-    { id: 'ins.video', label: 'Online video', group: 'Insert', run: (s) => s.openDialog('video') },
+    { id: 'ins.video', label: 'Online video or audio', group: 'Insert', run: (s) => s.openDialog('video') },
     { id: 'ins.screenshot', label: 'Screenshot', group: 'Insert', enabled: () => !!navigator.mediaDevices?.getDisplayMedia, run: (s) => void screenshot(s) },
     { id: 'ins.textArt', label: 'Text art', group: 'Insert', run: (s) => s.openDialog('textArt') },
     { id: 'par.dropCap', label: 'Large first letter', group: 'Paragraph', run: (s) => s.openDialog('dropCap') },

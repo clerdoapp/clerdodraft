@@ -9,7 +9,7 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 - done: print and save as PDF, export web page, Markdown, plain text, .odt, .rtf, document details
 - done: open .odt, .rtf, .md, .html, .txt; open .doc (text and tables) and .pdf (text)
 - done: password-protected files, version history on this device
-- basic: templates (4)
+- done: 10 templates
 - next: digital signatures
 
 ## Text and paragraphs
@@ -17,7 +17,7 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 - done: autocorrect, smart quotes, automatic lists and links while typing
 - done: alignment, indents, line and paragraph spacing, keep with next, keep lines, page break before, single-line control, tabs with leaders, shading, borders, right-to-left
 - done: bulleted, numbered and multilevel lists; styles: apply, edit, create; contextual spacing
-- basic: format copy applies text formatting only
+- done: format copy applies text and paragraph formatting
 - done: ruler with indents, margins and tab stops
 - done: paragraph border settings, cell color and border settings
 - done: list restart and custom bullets, large first letters, text effects, document themes, spacing presets, automatic and optional hyphens
@@ -25,16 +25,19 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 ## Objects
 - done: column width from the ruler; picture settings, wrap, rotate, drag floating pictures
 - done: tables: rows, columns, merge, split, header rows, sort, text conversion, table styles, nested tables; pictures: insert, paste, resize, alt text on import; links; bookmarks; date and time; checkbox; symbols
-- done: charts (columns, bars, line, area, pie, ring) with a data editor, saved with their numbers; text boxes; 13 shapes with fill and outline; imported diagrams are drawn and kept
-- basic: grouped drawings stay in the file but show as a placeholder; floating pictures with wrap (import, layout); equations (text form, kept intact from imported files); cover page; watermark (app only)
+- done: charts (columns, bars, line, area, pie, ring) with a data editor, saved with their numbers; text boxes; 13 shapes with fill and outline; diagrams (process, cycle, hierarchy, list, pyramid, overlap); imported diagrams and grouped drawings are drawn and kept
+- done: equations drawn on the page with an editor, read and saved as structured math
+- done: picture crop, brightness, contrast, black and white; fill-in fields (text, list, date); saved text; text from a file
+- done: fit columns to text, even out columns, split table, text turned in cells
+- basic: floating pictures with wrap (import, layout); cover page; watermark (app only)
 - done: table formulas, emoji, screenshots, text art
 - basic: drawing with a pen (saved as a picture), online video (saved as a linked picture)
-- next: creating diagrams, audio, embedded objects
+- next: embedded objects
 
 ## Page
 - done: size, direction, margins, columns, section breaks, page color, page border, line numbers, headers, footers, first and odd/even pages, page numbers
 - done: facing pages, text aligned on the page
-- next: column balancing, text direction in cells
+- done: column balancing above a continuous break
 
 ## References
 - done: contents with refresh, footnotes, endnotes, captions, sources, citations, bibliography, cross-references, table of figures, index
@@ -49,13 +52,12 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 
 ## Mail
 - done: merge from .csv, fields, merge to a new file, envelopes, labels
-- basic: preview by finishing the merge
-- next: inline merge preview, printed-label sizes, merge rules
+- done: recipient preview inside the document, merge rules, standard label sheets
 
 ## View
 - done: page view, reading view, outline panel with level changes, zoom, formatting marks, dark mode, command search
 - done: web view and draft view
-- done: split view, new window, gridlines, focus reader
+- done: split view, new window, pages side by side, gridlines, focus reader, keyboard shortcut list
 
 ## Together
 - done: version history on this device

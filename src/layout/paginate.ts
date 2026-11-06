@@ -65,6 +65,7 @@ const columnWidths = (t: Table, avail: number): number[] => {
 const visibleBorder = (b?: BorderLine): BorderLine | undefined => (b && b.style !== 'nil' && b.style !== 'none' ? b : undefined);
 
 interface CellLaid extends Laid {
+  turn?: 'btLr' | 'tbRl';
   cellIndex: number;
   span: number;
   x: number;
@@ -74,6 +75,9 @@ interface CellLaid extends Laid {
   fill?: string;
   border: { top?: BorderLine; bottom?: BorderLine; left?: BorderLine; right?: BorderLine };
 }
+
+const TURNED_WIDTH = 2000;
+const TURNED_PAD = 4;
 
 class Engine {
   env: LayoutEnv;
@@ -364,12 +368,15 @@ class Engine {
           right: visibleBorder(col + span >= widths.length ? (cell.props.borders?.right ?? style.borders.right) : (cell.props.borders?.right ?? b.insideV)),
         };
         const innerW = Math.max(8, w - m.left - m.right);
-        const laid = cell.props.vMerge === 'continue' ? { lines: [], boxes: [], height: 0 } : this.cellFlow(cell.blocks, story, innerW, overlay, tablePara);
+        const turn = cell.props.textDirection === 'btLr' || cell.props.textDirection === 'tbRl' ? cell.props.textDirection : undefined;
+        const laid = cell.props.vMerge === 'continue' ? { lines: [], boxes: [], height: 0 } : this.cellFlow(cell.blocks, story, turn ? TURNED_WIDTH : innerW, overlay, tablePara);
+        const long = turn ? laid.lines.reduce((a, l) => Math.max(a, l.textWidth), 0) : 0;
         cells.push({
           ...laid,
           lines: laid.lines.map((l) => ({ ...l, x: l.x + x + m.left, y: l.y + m.top })),
-          boxes: laid.boxes.map((q) => ({ ...q, x: q.x + x + m.left, y: q.y + m.top })),
-          height: laid.height + m.top + m.bottom,
+          boxes: turn ? [] : laid.boxes.map((q) => ({ ...q, x: q.x + x + m.left, y: q.y + m.top })),
+          height: turn ? long + m.top + m.bottom + TURNED_PAD * 2 : laid.height + m.top + m.bottom,
+          turn,
           cellIndex: ci, span, x, w, props: cell.props, vSpan: 1, fill, border,
         });
         col += span;
@@ -431,7 +438,16 @@ class Engine {
       if (c.vSpan > 1 && rowsAfter) for (let k = 0; k < c.vSpan - 1; k++) cellH += rowsAfter[k]?.height ?? 0;
       boxes.push({ x: x + c.x, y, w: c.w, h: cellH, fill: c.fill, ...c.border });
       const extra = c.props.vAlign === 'center' ? (cellH - c.height) / 2 : c.props.vAlign === 'bottom' ? cellH - c.height : 0;
-      if (full) {
+      if (full && c.turn) {
+        // Turned text starts at the bottom left or the top right of the cell.
+        const inset = c.lines[0] ? c.lines[0].x - c.x : 0;
+        for (const l of c.lines) {
+          const across = l.y - (c.lines[0]?.y ?? 0);
+          lines.push(c.turn === 'btLr'
+            ? { ...l, turn: -90, x: x + c.x + inset + across, y: y + cellH - TURNED_PAD }
+            : { ...l, turn: 90, x: x + c.x + c.w - inset - across, y: y + TURNED_PAD });
+        }
+      } else if (full) {
         for (const l of c.lines) lines.push({ ...l, x: l.x + x, y: l.y + y + Math.max(0, extra) });
         for (const q of c.boxes) boxes.push({ ...q, x: q.x + x, y: q.y + y + Math.max(0, extra) });
       }
@@ -584,6 +600,7 @@ class Engine {
       const kind = si === 0 ? 'nextPage' : (sec.breakType ?? 'nextPage');
       if (si === 0) this.newPage(sec, true);
       else if (kind === 'continuous' && sec.pageWidth === this.section.pageWidth) {
+        this.balanceColumns();
         this.section = sec;
         const top = this.y + this.prevSpaceAfter;
         this.setColumns(sec, top);
@@ -613,6 +630,38 @@ class Engine {
     this.flushNotes();
     this.endnotes();
     this.finish();
+  }
+
+  // A continuous break evens out the columns above it, keeping each line in reading order.
+  balanceColumns(): void {
+    const cols = this.columns;
+    if (cols.length < 2) return;
+    const top = this.regionTop;
+    const body = this.page.body;
+    if (body.boxes.some((b) => b.y >= top - 0.5)) return;
+    const own = body.lines.filter((l) => l.y >= top - 0.5);
+    if (!own.length) return;
+    const home = (l: PlacedLine) => Math.max(0, cols.findIndex((c) => l.x >= c.x - 0.5 && l.x < c.x + c.w));
+    const steps = own.map((l, i) => {
+      const next = own[i + 1];
+      const same = next && home(next) === home(l);
+      return { l, h: same ? next.y - l.y : l.height };
+    });
+    const total = steps.reduce((s, x) => s + x.h, 0);
+    const target = total / cols.length;
+    let col = 0;
+    let y = 0;
+    let tallest = 0;
+    for (const { l, h } of steps) {
+      if (y > 0 && y + h / 2 > target && col < cols.length - 1) { col++; y = 0; }
+      const from = cols[home(l)]!;
+      l.x += cols[col]!.x - from.x;
+      l.y = top + y;
+      y += h;
+      tallest = Math.max(tallest, y);
+    }
+    this.col = 0;
+    this.y = top + tallest;
   }
 
   endnotes(): void {

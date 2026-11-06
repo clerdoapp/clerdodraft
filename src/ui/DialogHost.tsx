@@ -16,7 +16,7 @@ import { selectedAtom, updateSelectedAtom } from '../features/images';
 import { SHAPES } from '../features/insert';
 import { ChartDialog } from './ChartDialog';
 import { openProtected, setFilePassword } from '../features/files';
-import { DrawDialog } from './ExtraViews';
+import { DiagramDialog, DrawDialog, EquationDialog, KeysDialog } from './ExtraViews';
 import { insertFormula, insertTextArt, insertVideo, restartList, setBullet, TEXT_ART } from '../features/objects';
 import { markAuthority, setCitationStyle } from '../features/references';
 import { insertCitation, insertCrossRef, markIndexEntry, referenceTargets, saveSource } from '../features/references';
@@ -27,7 +27,7 @@ type Val = string | number | boolean;
 interface Field {
   key: string;
   label: string;
-  type?: 'text' | 'number' | 'select' | 'check' | 'color' | 'area' | 'password';
+  type?: 'text' | 'number' | 'select' | 'check' | 'color' | 'area' | 'password' | 'date';
   options?: [string, string][];
   step?: number;
 }
@@ -263,6 +263,35 @@ const extraForm = (s: EditorStore, id: string, props?: Record<string, unknown>):
   switch (id) {
     case 'password': return { title: 'This document has a password', ok: 'Open', fields: [{ key: 'pw', label: 'Password', type: 'password' }], initial: { pw: '' }, apply: (v) => void openProtected(s, props?.['bytes'] as Uint8Array, String(props?.['name']), props?.['handle'], String(v['pw'])) };
     case 'protect': return { title: 'Protect with a password', fields: [{ key: 'pw', label: 'Password (leave empty to remove)', type: 'password' }, { key: 'again', label: 'Type it again', type: 'password' }], initial: { pw: '', again: '' }, apply: (v) => setFilePassword(s, String(v['pw']), String(v['again'])) };
+    case 'pictureFix': {
+      const a = selectedAtom(s);
+      if (a?.kind !== 'image') return null;
+      const c = a.crop ?? { l: 0, t: 0, r: 0, b: 0 };
+      return {
+        title: 'Crop and adjust picture',
+        fields: [{ key: 'l', label: 'Crop left (%)', type: 'number', step: 1 }, { key: 'r', label: 'Crop right (%)', type: 'number', step: 1 }, { key: 't', label: 'Crop top (%)', type: 'number', step: 1 }, { key: 'b', label: 'Crop bottom (%)', type: 'number', step: 1 }, { key: 'bright', label: 'Brightness (-100 to 100)', type: 'number', step: 5 }, { key: 'contrast', label: 'Contrast (-100 to 100)', type: 'number', step: 5 }, { key: 'gray', label: 'Black and white', type: 'check' }],
+        initial: { ...c, bright: a.bright ?? 0, contrast: a.contrast ?? 0, gray: !!a.gray },
+        apply: (v) => {
+          const fit = (k: string) => Math.max(0, Math.min(45, Number(v[k]) || 0));
+          const crop = { l: fit('l'), t: fit('t'), r: fit('r'), b: fit('b') };
+          const wide = (1 - (crop.l + crop.r) / 100) / (1 - (c.l + c.r) / 100);
+          const tall = (1 - (crop.t + crop.b) / 100) / (1 - (c.t + c.b) / 100);
+          updateSelectedAtom(s, { crop: crop.l || crop.t || crop.r || crop.b ? crop : undefined, width: a.width * wide, height: a.height * tall, bright: Number(v['bright']) || undefined, contrast: Number(v['contrast']) || undefined, gray: v['gray'] ? true : undefined });
+        },
+      };
+    }
+    case 'control': return {
+      title: 'Fill-in field', ok: 'Add',
+      fields: [{ key: 'kind', label: 'Kind', type: 'select', options: [['text', 'Text'], ['dropdown', 'List of choices'], ['date', 'Date']] }, { key: 'title', label: 'Name' }, { key: 'options', label: 'Choices, one per line', type: 'area' }],
+      initial: { kind: 'text', title: '', options: '' },
+      apply: (v) => { const options = String(v['options']).split('\n').map((o) => o.trim()).filter(Boolean); s.insertAtom({ kind: 'control', control: v['kind'] as 'text', title: String(v['title']) || undefined, value: '', options: v['kind'] === 'dropdown' ? options : undefined }); },
+    };
+    case 'controlValue': {
+      const a = selectedAtom(s);
+      if (a?.kind !== 'control') return null;
+      const field: Field = a.control === 'dropdown' ? { key: 'value', label: a.title ?? 'Choice', type: 'select', options: (a.options ?? []).map((o) => [o, o]) } : { key: 'value', label: a.title ?? 'Value', type: a.control === 'date' ? 'date' : 'text' };
+      return { title: a.title ?? 'Fill in', fields: [field], initial: { value: a.value }, apply: (v) => updateSelectedAtom(s, { value: String(v['value']) }) };
+    }
     case 'video': return { title: 'Online video', ok: 'Add', fields: [{ key: 'url', label: 'Video link' }, { key: 'title', label: 'Title' }], initial: { url: '', title: '' }, apply: (v) => void insertVideo(s, String(v['url']).trim(), String(v['title'])) };
     case 'textArt': return { title: 'Text art', ok: 'Add', fields: [{ key: 'text', label: 'Text' }, { key: 'style', label: 'Look', type: 'select', options: TEXT_ART.map((a) => [a.id, a.name]) }, { key: 'size', label: 'Size (pt)', type: 'number', step: 1 }], initial: { text: '', style: 'bold', size: 48 }, apply: (v) => { if (String(v['text']).trim()) insertTextArt(s, String(v['text']), String(v['style']), Number(v['size']) || 48); } };
     case 'dropCap': {
@@ -318,7 +347,6 @@ const formFor = (s: EditorStore, id: string, props?: Record<string, unknown>): F
         s.commit(updatePara(s.doc, s.sel.focus.story, s.sel.focus.para, (p) => ({ ...p, bookmarks: [...(p.bookmarks ?? []), { name, start: Math.min(a, b), end: Math.max(a, b) }] })));
       },
     };
-    case 'equation': return { title: 'Equation', fields: [{ key: 'source', label: 'Equation text', type: 'area' }], initial: { source: 'a^2 + b^2 = c^2' }, apply: (v) => s.insertAtom({ kind: 'equation', source: String(v['source']) }) };
     case 'comment': return { title: 'Comment', ok: 'Add', fields: [{ key: 'text', label: 'Comment', type: 'area' }], initial: { text: '' }, apply: (v) => addCommentHere(s, String(v['text'])) };
     case 'caption': return { title: 'Caption', ok: 'Add', fields: [{ key: 'label', label: 'Label', type: 'select', options: [['Figure', 'Figure'], ['Table', 'Table'], ['Equation', 'Equation']] }, { key: 'text', label: 'Text' }], initial: { label: 'Figure', text: '' }, apply: (v) => seqCaption(s, String(v['label']), String(v['text'])) };
     case 'cover': return {
@@ -439,7 +467,7 @@ const formFor = (s: EditorStore, id: string, props?: Record<string, unknown>): F
       };
     }
     case 'envelope': return { title: 'Envelope', ok: 'Create', fields: [{ key: 'to', label: 'To', type: 'area' }, { key: 'from', label: 'From', type: 'area' }], initial: { to: '', from: '' }, apply: (v) => makeEnvelope(s, String(v['to']), String(v['from'])) };
-    case 'labels': return { title: 'Labels', ok: 'Create', fields: [{ key: 'text', label: 'Label text', type: 'area' }, { key: 'across', label: 'Across', type: 'number', step: 1 }, { key: 'down', label: 'Down', type: 'number', step: 1 }], initial: { text: '', across: 2, down: 7 }, apply: (v) => makeLabels(s, String(v['text']), Number(v['across']), Number(v['down'])) };
+    case 'labels': return { title: 'Labels', ok: 'Create', fields: [{ key: 'text', label: 'Label text', type: 'area' }, { key: 'sheet', label: 'Sheet', type: 'select', options: [['3x10', 'Address, 30 on a page'], ['2x10', 'Shipping, 20 on a page'], ['2x7', 'Standard, 14 on a page'], ['2x5', 'Large, 10 on a page'], ['3x8', 'Medium, 24 on a page'], ['2x4', 'Name badge, 8 on a page'], ['1x1', 'Full page'], ['custom', 'Custom size']] }, { key: 'across', label: 'Across', type: 'number', step: 1 }, { key: 'down', label: 'Down', type: 'number', step: 1 }], initial: { text: '', sheet: '2x7', across: 2, down: 7 }, apply: (v) => { const [ax, dn] = v['sheet'] === 'custom' ? [Number(v['across']), Number(v['down'])] : String(v['sheet']).split('x').map(Number) as [number, number]; makeLabels(s, String(v['text']), ax, dn); } };
     default: return null;
   }
 };
@@ -461,6 +489,9 @@ export const DialogHost = ({ store }: { store: EditorStore }) => {
   if (d.id === 'symbol') body = <SymbolGrid store={store} />;
   if (d.id === 'emoji') body = <EmojiGrid store={store} />;
   if (d.id === 'draw') body = <DrawDialog store={store} />;
+  if (d.id === 'equation') body = <EquationDialog store={store} />;
+  if (d.id === 'diagram') body = <DiagramDialog store={store} />;
+  if (d.id === 'keys') body = <KeysDialog store={store} />;
   if (d.id === 'palette') body = <Palette store={store} />;
   if (d.id === 'count') {
     const r = stats(store);

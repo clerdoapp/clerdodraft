@@ -117,6 +117,10 @@ export interface ImageAtom {
   wrap: WrapKind;
   float?: FloatPlacement;
   rotation?: number;
+  crop?: { l: number; t: number; r: number; b: number }; // percent of the original picture
+  bright?: number; // -100 to 100
+  contrast?: number; // -100 to 100
+  gray?: boolean;
 }
 
 export type FieldKind = 'page' | 'numpages' | 'date' | 'time' | 'author' | 'title' | 'section' | 'seq' | 'ref' | 'merge' | 'other';
@@ -208,7 +212,14 @@ export interface RawAtom {
   shapes?: DiagramShape[]; // drawn in place of the label when the file includes a drawing
 }
 
-export type Atom = ImageAtom | FieldAtom | NoteRefAtom | EquationAtom | ShapeAtom | ChartAtom | CheckboxAtom | RawAtom;
+export interface ControlAtom {
+  kind: 'control';
+  control: 'text' | 'dropdown' | 'date';
+  title?: string;
+  value: string;
+  options?: string[];
+}
+export type Atom = ImageAtom | FieldAtom | NoteRefAtom | EquationAtom | ShapeAtom | ChartAtom | CheckboxAtom | RawAtom | ControlAtom;
 
 export const ATOM_CHAR = '￼';
 

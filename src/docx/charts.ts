@@ -129,3 +129,41 @@ export const parseDiagram = (x: XNode, theme: Theme): DiagramShape[] => {
   }
   return out;
 };
+
+// Grouped drawings hold shapes in their own coordinates, sometimes nested groups inside groups.
+export const parseGroup = (group: XNode, theme: Theme): DiagramShape[] => {
+  const out: DiagramShape[] = [];
+  const num = (n: XNode | undefined, a: string): number => Number(n?.attrs[a] ?? 0);
+  const walk = (g: XNode, sx: number, sy: number, dx: number, dy: number) => {
+    const xf = kid(kid(g, 'wpg:grpSpPr'), 'a:xfrm');
+    const ext = kid(xf, 'a:ext'); const ch = kid(xf, 'a:chExt'); const off = kid(xf, 'a:off'); const co = kid(xf, 'a:chOff');
+    const kx = sx * (num(ext, 'cx') / (num(ch, 'cx') || num(ext, 'cx') || 1));
+    const ky = sy * (num(ext, 'cy') / (num(ch, 'cy') || num(ext, 'cy') || 1));
+    const ox = dx + num(off, 'x') * sx - num(co, 'x') * kx;
+    const oy = dy + num(off, 'y') * sy - num(co, 'y') * ky;
+    for (const c of kids(g)) {
+      if (c.name === 'wpg:grpSp') walk(c, kx, ky, ox, oy);
+      if (c.name !== 'wps:wsp') continue;
+      const pr = kid(c, 'wps:spPr');
+      const x = kid(pr, 'a:xfrm');
+      const o = kid(x, 'a:off'); const e = kid(x, 'a:ext');
+      if (!o || !e) continue;
+      const style = kid(c, 'wps:style');
+      const ln = kid(pr, 'a:ln');
+      const body = find(c, 'w:txbxContent');
+      const size = find(body, 'w:sz')?.attrs['w:val'];
+      const color = find(body, 'w:color')?.attrs['w:val'];
+      out.push({
+        x: (ox + num(o, 'x') * kx) / 12700, y: (oy + num(o, 'y') * ky) / 12700, w: (num(e, 'cx') * kx) / 12700, h: (num(e, 'cy') * ky) / 12700,
+        prst: kid(pr, 'a:prstGeom')?.attrs['prst'] ?? 'rect',
+        fill: kid(pr, 'a:noFill') ? undefined : drawingColor(kid(pr, 'a:solidFill'), theme) ?? drawingColor(kid(style, 'a:fillRef'), theme),
+        stroke: kid(ln, 'a:noFill') ? undefined : drawingColor(kid(ln, 'a:solidFill'), theme) ?? drawingColor(kid(style, 'a:lnRef'), theme),
+        text: body ? kids(body, 'w:p').map((p) => allText(p, 'w:t')).filter(Boolean).join(' ') || undefined : undefined,
+        color: color && color !== 'auto' ? `#${color}` : '#000000',
+        size: size ? Number(size) / 2 : undefined,
+      });
+    }
+  };
+  walk(group, 1, 1, 0, 0);
+  return out;
+};

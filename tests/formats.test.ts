@@ -230,3 +230,102 @@ o=io.BytesIO(); f.decrypt(o, verify_integrity=True); open(${JSON.stringify(join(
     expect(readFileSync(join(dir, 'open.docx')).length).toBe(plain.length);
   }, 30000);
 });
+
+describe('equations', () => {
+  it('reads linear text into a math tree', async () => {
+    const { parseMath } = await import('../src/core/math');
+    expect(parseMath('(a+b)/2').t).toBe('frac');
+    expect(parseMath('x^2').t).toBe('script');
+    expect(parseMath('sqrt(x)').t).toBe('root');
+    expect(parseMath('∑_(i=1)^(n)').t).toBe('nary');
+    expect(() => parseMath('(((x')).not.toThrow();
+    expect(() => parseMath(')/^_')).not.toThrow();
+  });
+
+  it('lays out taller than plain text, and saves as structured math', async () => {
+    const { parseMath, layoutMath, toOmml } = await import('../src/core/math');
+    const box = layoutMath(parseMath('(a+b)/(c+d)'), 11, { width: (t, s) => t.length * s * 0.5 });
+    expect(box.asc + box.desc).toBeGreaterThan(18);
+    expect(toOmml(parseMath('a/b'))).toContain('<m:f>');
+    const { readDocx, writeDocx } = await import('../src/docx');
+    const d: Doc = { ...blankDoc(), blocks: [para([{ text: '￼', props: {}, atom: { kind: 'equation', source: 'x^2/(y+1)' } }])] };
+    const back = (readDocx(writeDocx(d)).blocks[0] as Paragraph).runs[0]!.atom;
+    expect(back?.kind === 'equation' && back.source).toBe('(x^2)/(y+1)');
+  });
+});
+
+describe('drawings, fields and pictures', () => {
+  it('builds a diagram that reopens as shapes', async () => {
+    const { diagramAtom } = await import('../src/features/diagrams');
+    const { readDocx, writeDocx } = await import('../src/docx');
+    const atom = diagramAtom('process', 'One\nTwo\nThree', '#2347ff');
+    const d: Doc = { ...blankDoc(), blocks: [para([{ text: '￼', props: {}, atom }])] };
+    const bytes = writeDocx(d);
+    const a = (readDocx(bytes).blocks[0] as Paragraph).runs[0]!.atom;
+    expect(a?.kind === 'raw' && a.shapes?.filter((x) => x.text).map((x) => x.text)).toEqual(['One', 'Two', 'Three']);
+    expect(a?.kind === 'raw' && Math.round(a.shapes![0]!.w)).toBeGreaterThan(50);
+    if (has('soffice')) {
+      const dir = mkdtempSync(join(tmpdir(), 'dia-'));
+      writeFileSync(join(dir, 'a.docx'), bytes);
+      execFileSync('soffice', ['--headless', '--convert-to', 'pdf', '--outdir', dir, join(dir, 'a.docx')], { stdio: 'ignore', timeout: 60000 });
+      expect(readFileSync(join(dir, 'a.pdf')).length).toBeGreaterThan(1000);
+    }
+  }, 70000);
+
+  it('keeps fill-in fields and picture edits', async () => {
+    const { readDocx, writeDocx } = await import('../src/docx');
+    const PNG = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64'));
+    const base = blankDoc();
+    const d: Doc = { ...base, media: { 'media/a.png': { mime: 'image/png', data: PNG } }, blocks: [para([
+      { text: '￼', props: {}, atom: { kind: 'control', control: 'dropdown', title: 'Size', value: 'Big', options: ['Big', 'Small'] } },
+      { text: '￼', props: {}, atom: { kind: 'image', media: 'media/a.png', width: 50, height: 50, wrap: 'inline', crop: { l: 10, t: 0, r: 20, b: 0 }, bright: 20, gray: true } },
+    ])] };
+    const runs = (readDocx(writeDocx(d)).blocks[0] as Paragraph).runs;
+    expect(runs[0]!.atom).toMatchObject({ kind: 'control', control: 'dropdown', value: 'Big', options: ['Big', 'Small'] });
+    expect(runs[1]!.atom).toMatchObject({ kind: 'image', crop: { l: 10, r: 20 }, bright: 20, gray: true });
+  });
+
+  it('keeps tracked formatting', async () => {
+    const { readDocx, writeDocx } = await import('../src/docx');
+    const { resolveRevisions } = await import('../src/core/ops');
+    const rev = { id: '1', author: 'A', date: '2026-01-01T00:00:00Z' };
+    const d: Doc = { ...blankDoc(), blocks: [para([{ text: 'hello', props: { bold: true }, fmtRev: { rev, old: {} } }])] };
+    const back = readDocx(writeDocx(d));
+    const r = (back.blocks[0] as Paragraph).runs[0]!;
+    expect(r.fmtRev?.rev.author).toBe('A');
+    const rejected = resolveRevisions(back, 'body', false);
+    expect((rejected.blocks[0] as Paragraph).runs[0]!.props.bold).toBeUndefined();
+  });
+});
+
+describe('page and merge details', () => {
+  it('evens out columns above a continuous break', () => {
+    const base = blankDoc();
+    const body = Array.from({ length: 12 }, () => para([textRun('line')]));
+    const last = { ...body[11]!, section: { ...base.section, columns: { count: 2, space: 36 } } };
+    const d: Doc = { ...base, section: { ...base.section, breakType: 'continuous' }, blocks: [...body.slice(0, 11), last, para([textRun('after')])] };
+    const lines = layoutDocument(d, fake, opts).pages[0]!.body.lines;
+    const xs = new Set(lines.slice(0, 12).map((l) => Math.round(l.x)));
+    expect(xs.size).toBe(2);
+    const after = lines[lines.length - 1]!;
+    const firstCol = lines.slice(0, 12).filter((l) => Math.round(l.x) === Math.min(...xs));
+    expect(firstCol.length).toBeGreaterThanOrEqual(5);
+    expect(firstCol.length).toBeLessThanOrEqual(7);
+    expect(after.y).toBeLessThan(lines[0]!.y + firstCol.length * 30 + 20);
+  });
+
+  it('turns text inside a table cell', () => {
+    const t = createTable(1, 2, 400);
+    t.rows[0]!.cells[0] = { ...t.rows[0]!.cells[0]!, props: { ...t.rows[0]!.cells[0]!.props, textDirection: 'btLr' }, blocks: [para([textRun('turned text here')])] };
+    const d: Doc = { ...blankDoc(), blocks: [t, para()] };
+    const l = layoutDocument(d, fake, opts).pages[0]!.body.lines[0]!;
+    expect(l.turn).toBe(-90);
+  });
+
+  it('filters merge recipients by a rule', async () => {
+    const { passes } = await import('../src/features/mailReview');
+    expect(passes({ City: 'Riyadh' }, { column: 'City', op: 'is', value: 'riyadh' })).toBe(true);
+    expect(passes({ Age: '20' }, { column: 'Age', op: 'more', value: '30' })).toBe(false);
+    expect(passes({}, null)).toBe(true);
+  });
+});

@@ -12,7 +12,24 @@ export interface MailData {
 }
 
 // One merge source per open window; the fields themselves are saved in the document.
-export const mail: { data: MailData | null; preview: number | null } = { data: null, preview: null };
+export const mail: { data: MailData | null; preview: number | null; rule: MailRule | null } = { data: null, preview: null, rule: null };
+
+export interface MailRule { column: string; op: 'is' | 'not' | 'has' | 'more' | 'less'; value: string }
+
+export const passes = (row: Record<string, string>, r: MailRule | null): boolean => {
+  if (!r?.column) return true;
+  const v = (row[r.column] ?? '').trim();
+  const w = r.value.trim();
+  switch (r.op) {
+    case 'is': return v.toLowerCase() === w.toLowerCase();
+    case 'not': return v.toLowerCase() !== w.toLowerCase();
+    case 'has': return v.toLowerCase().includes(w.toLowerCase());
+    case 'more': return Number(v) > Number(w);
+    case 'less': return Number(v) < Number(w);
+  }
+};
+
+export const recipients = (): Record<string, string>[] => (mail.data?.rows ?? []).filter((r) => passes(r, mail.rule));
 
 export const parseCsv = (text: string): MailData => {
   const rows: string[][] = [];
@@ -48,12 +65,12 @@ const fillBlocks = (blocks: Block[], row: Record<string, string>): Block[] =>
     return b;
   });
 
-export const mergeDocument = (doc: Doc, data: MailData): Doc => {
+export const mergeDocument = (doc: Doc, data: MailData, rows = data.rows): Doc => {
   const blocks: Block[] = [];
-  data.rows.forEach((row, i) => {
+  rows.forEach((row, i) => {
     const part = fillBlocks(doc.blocks, row);
     blocks.push(...part);
-    if (i < data.rows.length - 1) blocks.push(para([{ text: '\f', props: {} }]));
+    if (i < rows.length - 1) blocks.push(para([{ text: '\f', props: {} }]));
   });
   return { ...doc, blocks };
 };
@@ -131,8 +148,8 @@ export const registerMailReview = (): void => {
     { id: 'mail.labels', label: 'Labels', group: 'Mail', run: (s) => s.openDialog('labels') },
     {
       id: 'mail.merge', label: 'Finish merge as a new file', group: 'Mail',
-      enabled: () => !!mail.data?.rows.length,
-      run: (s) => download(writeDocx(mergeDocument(s.doc, mail.data!)) as BlobPart, `${s.file.name} merged.docx`, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+      enabled: () => recipients().length > 0,
+      run: (s) => download(writeDocx(mergeDocument(s.doc, mail.data!, recipients())) as BlobPart, `${s.file.name} merged.docx`, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
     },
     {
       id: 'rev.compare', label: 'Compare with another document', group: 'Review',

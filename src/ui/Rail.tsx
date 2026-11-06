@@ -121,8 +121,8 @@ const SECTIONS: Section_[] = [
     id: 'doc', label: 'Doc', icon: FileText,
     body: (s) => (
       <>
-        <Group title="Document"><List_ store={s} tools={[{ id: 'file.new', icon: FilePlus2 }, { id: 'file.open', icon: FolderOpen }, { id: 'file.save', icon: Save }, { id: 'file.saveAs' }, { id: 'file.versions' }, { id: 'file.protect' }, { id: 'file.properties' }, { id: 'file.updates' }]} /></Group>
-        <Group title="Start from"><List_ store={s} tools={[{ id: 'tpl.letter' }, { id: 'tpl.report' }, { id: 'tpl.resume' }, { id: 'tpl.notes' }]} /></Group>
+        <Group title="Document"><List_ store={s} tools={[{ id: 'file.new', icon: FilePlus2 }, { id: 'file.open', icon: FolderOpen }, { id: 'file.save', icon: Save }, { id: 'file.saveAs' }, { id: 'file.versions' }, { id: 'file.protect' }, { id: 'file.properties' }, { id: 'help.keys' }, { id: 'file.updates' }]} /></Group>
+        <Group title="Start from"><List_ store={s} tools={[{ id: 'tpl.letter' }, { id: 'tpl.cover' }, { id: 'tpl.resume' }, { id: 'tpl.report' }, { id: 'tpl.essay' }, { id: 'tpl.invoice' }, { id: 'tpl.agenda' }, { id: 'tpl.notes' }, { id: 'tpl.plan' }, { id: 'tpl.newsletter' }]} /></Group>
         <Group title="Share out"><List_ store={s} tools={[{ id: 'file.print', icon: Printer }, { id: 'file.html' }, { id: 'file.md' }, { id: 'file.txt' }, { id: 'file.odt' }, { id: 'file.rtf' }]} /></Group>
       </>
     ),
@@ -156,8 +156,8 @@ const SECTIONS: Section_[] = [
     id: 'add', label: 'Add', icon: Plus,
     body: (s) => (
       <>
-        <Group title="Objects"><List_ store={s} tools={[{ id: 'ins.table', icon: Table2 }, { id: 'ins.picture', icon: Image }, { id: 'ins.chart', icon: ChartColumn }, { id: 'ins.textbox', icon: SquarePen }, { id: 'ins.equation', icon: Sigma }, { id: 'ins.symbol' }, { id: 'ins.emoji' }, { id: 'ins.checkbox', icon: CheckSquare }, { id: 'ins.draw' }, { id: 'ins.video' }, { id: 'ins.screenshot' }, { id: 'ins.textArt' }]} /></Group>
-        {inTable(s) && <Group title="This table"><List_ store={s} tools={ids('tbl.formula', 'tbl.cell', 'tbl.rowAbove', 'tbl.rowBelow', 'tbl.colLeft', 'tbl.colRight', 'tbl.merge', 'tbl.split', 'tbl.delRow', 'tbl.delCol', 'tbl.header', 'tbl.sortAsc', 'tbl.toText', 'tbl.delete')} /></Group>}
+        <Group title="Objects"><List_ store={s} tools={[{ id: 'ins.table', icon: Table2 }, { id: 'ins.picture', icon: Image }, { id: 'ins.chart', icon: ChartColumn }, { id: 'ins.textbox', icon: SquarePen }, { id: 'ins.equation', icon: Sigma }, { id: 'ins.symbol' }, { id: 'ins.emoji' }, { id: 'ins.checkbox', icon: CheckSquare }, { id: 'ins.diagram' }, { id: 'ins.draw' }, { id: 'ins.video' }, { id: 'ins.screenshot' }, { id: 'ins.textArt' }, { id: 'ins.control' }, { id: 'ins.blocks' }, { id: 'ins.file' }]} /></Group>
+        {inTable(s) && <Group title="This table"><List_ store={s} tools={ids('tbl.formula', 'tbl.fit', 'tbl.even', 'tbl.dir', 'tbl.splitTable', 'tbl.cell', 'tbl.rowAbove', 'tbl.rowBelow', 'tbl.colLeft', 'tbl.colRight', 'tbl.merge', 'tbl.split', 'tbl.delRow', 'tbl.delCol', 'tbl.header', 'tbl.sortAsc', 'tbl.toText', 'tbl.delete')} /></Group>}
         <Group title="Shapes"><List_ store={s} tools={[{ id: 'ins.rect', icon: Shapes }, ...ids('ins.round', 'ins.ellipse', 'ins.shape.triangle', 'ins.shape.diamond', 'ins.shape.hexagon', 'ins.shape.star5', 'ins.shape.rightArrow', 'ins.shape.leftArrow', 'ins.shape.upArrow', 'ins.shape.downArrow', 'ins.shape.line')]} /></Group>
         <Group title="Text"><List_ store={s} tools={[{ id: 'ins.link', icon: Link2 }, { id: 'ins.bookmark', icon: Bookmark }, { id: 'ins.date' }, { id: 'ins.time' }, { id: 'ins.textToTable' }]} /></Group>
         <Group title="Page parts"><List_ store={s} tools={ids('ins.cover', 'ins.header', 'ins.footer', 'ins.pageNum', 'ins.pageNumTop')} /></Group>
@@ -193,7 +193,7 @@ const SECTIONS: Section_[] = [
     id: 'view', label: 'View', icon: Eye,
     body: (s) => (
       <>
-        <Group title="Show"><List_ store={s} tools={[{ id: 'view.print', icon: ScanText }, { id: 'view.read', icon: BookOpen }, { id: 'view.reader' }, { id: 'view.web' }, { id: 'view.draft' }, { id: 'pane.nav', icon: ListTree }, { id: 'par.marks' }, { id: 'view.ruler' }, { id: 'view.grid' }, { id: 'view.split' }, { id: 'view.newWindow' }]} /></Group>
+        <Group title="Show"><List_ store={s} tools={[{ id: 'view.print', icon: ScanText }, { id: 'view.read', icon: BookOpen }, { id: 'view.reader' }, { id: 'view.web' }, { id: 'view.draft' }, { id: 'pane.nav', icon: ListTree }, { id: 'par.marks' }, { id: 'view.ruler' }, { id: 'view.grid' }, { id: 'view.twoUp' }, { id: 'view.split' }, { id: 'view.newWindow' }]} /></Group>
         <Group title="Markup"><div className="seg wrap">{([['All', 'all'], ['Simple', 'simple'], ['None', 'none'], ['Original', 'original']] as const).map(([l, m]) => <button key={m} className={s.view.markup === m ? 'on' : ''} onClick={() => s.setView({ markup: m })}>{l}</button>)}</div></Group>
         <Group title="Screen"><List_ store={s} tools={ids('view.zoomIn', 'view.zoomOut', 'view.zoom100', 'view.dark')} /></Group>
       </>

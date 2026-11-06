@@ -80,6 +80,9 @@ export const ContextMenu = ({ store }: { store: EditorStore }) => {
       {selectedAtom(store)?.kind === 'chart' && item('obj.chart')}
       {selectedAtom(store)?.kind === 'shape' && item('obj.text')}
       {selectedAtom(store)?.kind === 'shape' && item('obj.shapeSettings')}
+      {selectedAtom(store)?.kind === 'equation' && item('obj.equation')}
+      {selectedAtom(store)?.kind === 'control' && item('obj.control')}
+      {selectedAtom(store)?.kind === 'image' && item('obj.picture')}
       {selectedAtom(store) && item('obj.settings')}
       {item('ins.comment', 'Comment')}
       {item('ins.link', 'Link')}

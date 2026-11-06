@@ -7,11 +7,11 @@ import { headingLevel } from '../core/styles';
 import { flatten, paraLength, paraText, walkParagraphs } from '../core/tree';
 import type { EditorStore } from '../editor/store';
 import { findAll, nextMatch, replaceAll, replaceOne, type FindOptions } from '../features/find';
-import { mail } from '../features/mailReview';
+import { mail, recipients, type MailRule } from '../features/mailReview';
 import { run } from '../editor/commands';
 import { ProofPane } from './ProofPane';
 import { TranslatePane, WordPane } from './WordPane';
-import { VersionsPane } from './ExtraViews';
+import { BlocksPane, VersionsPane } from './ExtraViews';
 
 const S = 1.9;
 
@@ -157,6 +157,33 @@ const StylesPane = ({ store }: { store: EditorStore }) => {
   );
 };
 
+const MergeControls = ({ store, data }: { store: EditorStore; data: NonNullable<typeof mail.data> }) => {
+  const [rule, setRule] = useState<MailRule>(mail.rule ?? { column: '', op: 'is', value: '' });
+  const [at, setAt] = useState(0);
+  const list = recipients();
+  const show = (i: number | null) => { if (i === null) { store.setView({ mergeRow: null }); return; } const n = Math.max(0, Math.min(list.length - 1, i)); setAt(n); store.setView({ mergeRow: list[n] ?? null }); };
+  const change = (r: MailRule) => { setRule(r); mail.rule = r; if (store.view.mergeRow) show(0); else store.emit(); };
+  return (
+    <>
+      <section className="group"><h3>Preview</h3>
+        <label className="check"><input type="checkbox" checked={!!store.view.mergeRow} onChange={(e) => show(e.target.checked ? at : null)} /> Show a recipient in the document</label>
+        <div className="row">
+          <button className="tool" disabled={!store.view.mergeRow || at <= 0} onClick={() => show(at - 1)}>Previous</button>
+          <span className="muted">{list.length ? at + 1 : 0} of {list.length}</span>
+          <button className="tool" disabled={!store.view.mergeRow || at >= list.length - 1} onClick={() => show(at + 1)}>Next</button>
+        </div>
+      </section>
+      <section className="group"><h3>Only include</h3>
+        <label className="field"><span>Field</span><select value={rule.column} onChange={(e) => change({ ...rule, column: e.target.value })}><option value="">Everyone</option>{data.columns.map((c) => <option key={c}>{c}</option>)}</select></label>
+        {rule.column && <>
+          <label className="field"><span>Rule</span><select value={rule.op} onChange={(e) => change({ ...rule, op: e.target.value as MailRule['op'] })}><option value="is">is</option><option value="not">is not</option><option value="has">contains</option><option value="more">is more than</option><option value="less">is less than</option></select></label>
+          <label className="field"><span>Value</span><input value={rule.value} onChange={(e) => change({ ...rule, value: e.target.value })} /></label>
+        </>}
+      </section>
+    </>
+  );
+};
+
 const MailPane = ({ store }: { store: EditorStore }) => {
   const d = mail.data;
   const add = (c: string) => store.insertAtom({ kind: 'field', field: 'merge', instr: `MERGEFIELD ${c}`, result: `«${c}»` });
@@ -167,6 +194,7 @@ const MailPane = ({ store }: { store: EditorStore }) => {
         <>
           <p className="muted">{d.rows.length} recipients. Click a field to place it in the document.</p>
           {d.columns.map((c) => <button key={c} className="tool" onClick={() => add(c)}>{c}</button>)}
+          <MergeControls store={store} data={d} />
           <button className="tool" onClick={() => run(store, 'mail.merge')}>Finish as a new file</button>
         </>
       )}
@@ -183,6 +211,7 @@ export const Inspector = ({ store }: { store: EditorStore }) => {
     case 'styles': return <StylesPane store={store} />;
     case 'mail': return <MailPane store={store} />;
     case 'versions': return <VersionsPane store={store} />;
+    case 'blocks': return <BlocksPane store={store} />;
     case 'words': return <WordPane store={store} />;
     case 'translate': return <TranslatePane store={store} />;
     case 'proof': return <ProofPane store={store} onClose={() => store.setView({ pane: null })} />;

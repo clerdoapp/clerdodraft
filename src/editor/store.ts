@@ -1,5 +1,5 @@
 import { blankDoc } from '../core/defaults';
-import { type Doc, type Revision, type RunProps, type Section, type Selection, type StoryId, newId } from '../core/model';
+import { type Doc, type ParaProps, type Revision, type RunProps, type Section, type Selection, type StoryId, newId } from '../core/model';
 import { backspace, deleteForward, deleteSelection, insertAtom, insertContent, insertText, mapRunsInSelection, propsAt, setRunProps, splitParagraph, type EditContext, type EditResult } from '../core/ops';
 import { collapsed, docStart, findPara, isCollapsed, paraLength, storyBlocks } from '../core/tree';
 import type { Atom, Block } from '../core/model';
@@ -23,7 +23,21 @@ export interface ViewState {
   webWidth: number; // points available in web view
   reader?: boolean;
   split?: boolean;
+  twoUp?: boolean;
+  mergeRow?: Record<string, string> | null; // recipient shown in place of merge fields
 }
+
+const mergeName = (instr: string): string => /MERGEFIELD\s+"?([^"\s]+)"?/i.exec(instr)?.[1] ?? '';
+
+// Paragraph ids stay the same, so the caret and selection keep working during a preview.
+const withMergeValues = (doc: Doc, row: Record<string, string>): Doc => {
+  const fill = (blocks: Block[]): Block[] => blocks.map((b) => {
+    if (b.type === 'p') return b.runs.some((r) => r.atom?.kind === 'field' && r.atom.field === 'merge') ? { ...b, runs: b.runs.map((r) => (r.atom?.kind === 'field' && r.atom.field === 'merge' ? { ...r, atom: { ...r.atom, result: row[mergeName(r.atom.instr)] ?? '' } } : r)) } : b;
+    if (b.type === 'tbl') return { ...b, rows: b.rows.map((x) => ({ ...x, cells: x.cells.map((c) => ({ ...c, blocks: fill(c.blocks) })) })) };
+    return b;
+  });
+  return { ...doc, blocks: fill(doc.blocks) };
+};
 
 export interface FileState {
   name: string;
@@ -64,7 +78,7 @@ export class EditorStore {
   dialog: DialogState | null = null;
   pending: RunProps | null = null; // formatting chosen at a caret, applied to the next typed text
   author = readAuthor();
-  formatBrush: { run: RunProps; once: boolean } | null = null;
+  formatBrush: { run: RunProps; para?: ParaProps; once: boolean } | null = null;
   toast: string | null = null;
   version = 0;
   proof: import('../features/proof').Proofer | null = null;
@@ -76,7 +90,7 @@ export class EditorStore {
   private redoStack: Snapshot[] = [];
   private lastTyping = 0;
   private listeners = new Set<Listener>();
-  private measurer: Measurer;
+  readonly measurer: Measurer;
 
   constructor(measurer: Measurer) {
     this.measurer = measurer;
@@ -102,8 +116,9 @@ export class EditorStore {
 
   // Web and draft views lay the same document out on one long, seamless strip.
   private viewDoc(): Doc {
+    const base = this.view.mergeRow ? withMergeValues(this.doc, this.view.mergeRow) : this.doc;
     const mode = this.view.mode;
-    if (mode !== 'web' && mode !== 'draft') return this.doc;
+    if (mode !== 'web' && mode !== 'draft') return base;
     const strip = (s: Section): Section => ({
       ...s,
       pageHeight: 14400,
@@ -111,7 +126,7 @@ export class EditorStore {
       marginTop: 18, marginBottom: 18,
       ...(mode === 'web' ? { pageWidth: this.view.webWidth + 36, marginLeft: 18, marginRight: 18, columns: { count: 1, space: 0 } } : {}),
     });
-    return { ...this.doc, section: strip(this.doc.section), blocks: this.doc.blocks.map((b) => (b.type === 'p' && b.section ? { ...b, section: strip(b.section) } : b)) };
+    return { ...base, section: strip(base.section), blocks: base.blocks.map((b) => (b.type === 'p' && b.section ? { ...b, section: strip(b.section) } : b)) };
   }
 
   remeasure(): void {
@@ -192,7 +207,7 @@ export class EditorStore {
   }
 
   setView(patch: Partial<ViewState>): void {
-    const relayout = patch.markup !== undefined || patch.showMarks !== undefined || patch.mode !== undefined || patch.webWidth !== undefined;
+    const relayout = 'mergeRow' in patch || patch.markup !== undefined || patch.showMarks !== undefined || patch.mode !== undefined || patch.webWidth !== undefined;
     this.view = { ...this.view, ...patch };
     if (relayout) this.relayout();
     this.emit();

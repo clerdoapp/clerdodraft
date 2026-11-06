@@ -5,15 +5,10 @@ Priorities for ClerdoDraft. [docs/FEATURES.md](docs/FEATURES.md) lists what exis
 ## Next
 - Test on real Windows, macOS and iPad hardware and fix what turns up
 - Round-trip testing against a wide set of real-world documents
-- Create diagrams from a starter set
-- Inline mail merge preview and merge rules
-- Standard printed label sizes
-- Draw grouped drawings instead of a placeholder
-- Equation editor with drawn math
+- Digital signatures
 
 ## Later
 - Arabic spelling dictionary under a permissive licence
-- Text direction inside table cells
 - Restricted editing by section
 - Comment reactions
 - Interface translated into more languages, Arabic first

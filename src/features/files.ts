@@ -80,6 +80,8 @@ const importDoc = async (bytes: Uint8Array, name: string): Promise<Doc | null> =
   return readText(text);
 };
 
+export const readAny = async (bytes: Uint8Array, name: string): Promise<Doc> => (await importDoc(bytes, name)) ?? readDocx(bytes);
+
 export const openBytes = async (store: EditorStore, bytes: Uint8Array, name: string, handle: unknown): Promise<void> => {
   try {
     const other = await importDoc(bytes, name);

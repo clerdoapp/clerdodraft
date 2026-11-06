@@ -1,3 +1,7 @@
+import type { EquationAtom } from '../core/model';
+import type { MathBox } from '../core/math';
+import { equationBox, MATH_FONT } from '../layout/equation';
+import type { EditorStore } from '../editor/store';
 import { memo } from 'react';
 import type { ChartAtom, DiagramShape } from '../core/model';
 
@@ -195,5 +199,17 @@ export const DiagramView = ({ shapes, w, h }: { shapes: DiagramShape[]; w: numbe
         {s.text && <text x={s.w / 2} y={s.h / 2 + (s.size ?? 10) * 0.35} textAnchor="middle" fontSize={s.size ?? 10} fill={s.color ?? '#fff'}>{s.text}</text>}
       </g>
     ))}
+  </svg>
+);
+
+export const EquationView = ({ atom, size, store, color }: { atom: EquationAtom; size: number; store: EditorStore; color?: string }) => <MathView box={equationBox(store.measurer, atom, size)} color={color} />;
+
+export const MathView = ({ box, color = '#000' }: { box: MathBox; color?: string }) => (
+  <svg className="mathsvg" width={Math.ceil(box.w) + 1} height={Math.ceil(box.asc + box.desc)} viewBox={`0 ${-box.asc} ${Math.ceil(box.w) + 1} ${Math.ceil(box.asc + box.desc)}`} style={{ verticalAlign: -box.desc }} role="img" aria-label="Equation">
+    {box.draw.map((d, i) => {
+      if (d.k === 'text') return <text key={i} x={d.x} y={d.y} fontSize={d.size} fontStyle={d.italic ? 'italic' : undefined} fontFamily={MATH_FONT} fill={color}>{d.text}</text>;
+      if (d.k === 'line') return <line key={i} x1={d.x1} y1={d.y1} x2={d.x2} y2={d.y2} stroke={color} strokeWidth={d.w} />;
+      return <path key={i} d={d.d} fill="none" stroke={color} strokeWidth={d.w} />;
+    })}
   </svg>
 );

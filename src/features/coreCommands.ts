@@ -139,7 +139,7 @@ export const registerCoreCommands = (): void => {
     { id: 'edit.goto', label: 'Go to page', group: 'Edit', keys: 'mod+g f5', run: (s) => s.openDialog('goto') },
     { id: 'edit.palette', label: 'Search commands', group: 'Edit', keys: 'mod+/', run: (s) => s.openDialog('palette') },
     { id: 'edit.pasteText', label: 'Paste as plain text', group: 'Edit', keys: 'mod+shift+v', run: (s) => void navigator.clipboard.readText().then((t) => s.typeText(t)).catch(() => s.notify('Paste blocked by the browser. Use the keyboard paste.')) },
-    { id: 'edit.brush', label: 'Copy formatting', group: 'Edit', run: (s) => { s.formatBrush = s.formatBrush ? null : { run: findPara(s.doc, s.sel.focus) ? runProps(s) : {}, once: true }; s.emit(); }, active: (s) => !!s.formatBrush },
+    { id: 'edit.brush', label: 'Copy formatting', group: 'Edit', run: (s) => { s.formatBrush = s.formatBrush ? null : { run: findPara(s.doc, s.sel.focus) ? runProps(s) : {}, para: findPara(s.doc, s.sel.focus)?.props, once: true }; s.emit(); }, active: (s) => !!s.formatBrush },
 
     { id: 'fmt.bold', label: 'Bold', group: 'Text', keys: 'mod+b', run: toggle('bold'), active: (s) => !!currentRun(s).bold },
     { id: 'fmt.italic', label: 'Italic', group: 'Text', keys: 'mod+i', run: toggle('italic'), active: (s) => !!currentRun(s).italic },

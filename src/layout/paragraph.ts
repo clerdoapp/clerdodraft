@@ -3,6 +3,7 @@ import { computeLabels, effectivePara, effectiveRun, styleChain } from '../core/
 import type { Block } from '../core/model';
 import type { FontSpec, Frag, Line, LayoutEnv, ParaLayout } from './types';
 import { hyphenateSync } from 'hyphen/en';
+import { equationBox } from './equation';
 
 const RTL_CHAR = /[֐-ࣿיִ-﷿ﹰ-﻿]/;
 const CJK = /[⺀-鿿가-힯豈-﫿＀-￯]/;
@@ -53,7 +54,8 @@ const atomMetrics = (env: LayoutEnv, r: Run, eff: RunProps, font: FontSpec): { w
       const t = env.noteNumber(a.kind, a.id);
       return { width: measure(env, t, eff, font), text: t };
     }
-    case 'equation': return { width: measure(env, a.source, { ...eff, italic: true }, { ...font, italic: true }), text: a.source };
+    case 'equation': return { width: equationBox(env.m, a, font.size).w, text: '' };
+    case 'control': { const v = a.value || a.title || 'Choose'; return { width: measure(env, v, eff, font) + 8, text: v }; }
     case 'checkbox': return { width: font.size * 1.05, text: a.checked ? '☒' : '☐' };
     case 'raw': return { width: a.width ?? measure(env, `[${a.label}]`, eff, font), text: a.width ? '' : `[${a.label}]`, height: a.height };
   }
@@ -139,6 +141,7 @@ const lineMetrics = (env: LayoutEnv, frags: Frag[], fallback: RunProps, eff: Par
       continue;
     }
     if (a && a.kind === 'raw' && a.height) { asc = Math.max(asc, a.height); continue; }
+    if (a && a.kind === 'equation') { const b = equationBox(env.m, a, f.font.size); asc = Math.max(asc, b.asc); desc = Math.max(desc, b.desc); continue; }
     consider(f.eff.vertAlign ? { ...f.font, size: f.font.size / 0.65 } : f.font);
   }
   if (!asc && !desc) consider(fontOf(fallback));

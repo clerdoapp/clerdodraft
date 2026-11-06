@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+- Equations drawn on the page, with an editor and structured save
+- Diagrams, and grouped drawings drawn from files
+- Mail merge preview in the document, merge rules, label sheets
+- Column balancing, turned text in cells, pages side by side
+- Picture crop and adjustments, fill-in fields, saved text, text from a file
+- Fit, even out and split tables; format copy now includes paragraphs
+- Six more templates and a keyboard shortcut list
+
 ## 0.2.0
 - Word book with meanings and similar words, offline
 - Automatic and optional hyphens

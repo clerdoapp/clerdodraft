@@ -6,7 +6,7 @@ import {
 } from '../core/model';
 import { normalizeRuns } from '../core/tree';
 import { find, kid, kids, parseXml, serialize, textOf, type XNode } from './xml';
-import { drawingColor, parseChart, parseDiagram } from './charts';
+import { drawingColor, parseChart, parseDiagram, parseGroup } from './charts';
 
 const MAX_INFLATED = 512 * 1024 * 1024;
 
@@ -334,7 +334,10 @@ const parseDrawing = (n: XNode, ctx: Ctx): Atom => {
     if (data) {
       if (!ctx.media[path]) ctx.media[path] = { mime: MIME[path.split('.').pop()!.toLowerCase()] ?? 'application/octet-stream', data, name: path.split('/').pop() };
       const rot = num(find(box, 'a:xfrm')?.attrs['rot']);
-      return { kind: 'image', media: path, width, height, alt: docPr?.attrs['descr'], wrap: floating ? wrapOf(box!) : 'inline', float: floating ? placementOf(box!) : undefined, rotation: rot ? rot / 60000 : undefined };
+      const rect = find(box, 'a:srcRect')?.attrs;
+      const lum = kid(blip, 'a:lum')?.attrs;
+      const crop = rect && (rect['l'] || rect['t'] || rect['r'] || rect['b']) ? { l: Number(rect['l'] ?? 0) / 1000, t: Number(rect['t'] ?? 0) / 1000, r: Number(rect['r'] ?? 0) / 1000, b: Number(rect['b'] ?? 0) / 1000 } : undefined;
+      return { kind: 'image', media: path, width, height, alt: docPr?.attrs['descr'], wrap: floating ? wrapOf(box!) : 'inline', float: floating ? placementOf(box!) : undefined, rotation: rot ? rot / 60000 : undefined, crop, bright: lum?.['bright'] ? Number(lum['bright']) / 1000 : undefined, contrast: lum?.['contrast'] ? Number(lum['contrast']) / 1000 : undefined, gray: kid(blip, 'a:grayscl') ? true : undefined };
     }
   }
   const placed = { width, height, wrap: floating ? wrapOf(box!) : ('inline' as WrapKind), float: floating ? placementOf(box!) : undefined };
@@ -368,29 +371,40 @@ const parseDrawing = (n: XNode, ctx: Ctx): Atom => {
     const data = part ? ctx.files[resolvePath(ctx.partDir, part.target)] : undefined;
     if (data) shapes = parseDiagram(parseXml(strFromU8(data)), ctx.theme);
   }
-  const label = chartRef ? 'Chart' : find(box, 'dgm:relIds') ? 'Diagram' : 'Graphic';
+  const grouped = find(box, 'wpg:wgp');
+  if (grouped) shapes = parseGroup(grouped, ctx.theme);
+  const label = chartRef ? 'Chart' : find(box, 'dgm:relIds') || grouped ? 'Diagram' : 'Graphic';
   return shapes?.length || !floating ? { kind: 'raw', xml: serialize(n), label, width, height, shapes } : { kind: 'raw', xml: serialize(n), label };
 };
 
 const ommlText = (n: XNode): string => {
-  const out: string[] = [];
-  const walk = (x: XNode) => {
-    if (x.name === 'm:t') { out.push(textOf(x)); return; }
-    if (x.name === 'm:f') {
-      out.push('(');
-      kids(kid(x, 'm:num')).forEach(walk);
-      out.push(')/(');
-      kids(kid(x, 'm:den')).forEach(walk);
-      out.push(')');
-      return;
-    }
-    if (x.name === 'm:sSup') { kids(kid(x, 'm:e')).forEach(walk); out.push('^'); kids(kid(x, 'm:sup')).forEach(walk); return; }
-    if (x.name === 'm:sSub') { kids(kid(x, 'm:e')).forEach(walk); out.push('_'); kids(kid(x, 'm:sub')).forEach(walk); return; }
-    if (x.name === 'm:rad') { out.push('√('); kids(kid(x, 'm:e')).forEach(walk); out.push(')'); return; }
-    kids(x).forEach(walk);
+  const group = (x: XNode | undefined): string => {
+    const t = kids(x).map(node).join('');
+    return /^[\p{L}\p{N}]$/u.test(t) ? t : `(${t})`;
   };
-  walk(n);
-  return out.join('');
+  const node = (x: XNode): string => {
+    switch (x.name) {
+      case 'm:t': return textOf(x);
+      case 'm:f': return `${group(kid(x, 'm:num'))}/${group(kid(x, 'm:den'))}`;
+      case 'm:sSup': return `${group(kid(x, 'm:e'))}^${group(kid(x, 'm:sup'))}`;
+      case 'm:sSub': return `${group(kid(x, 'm:e'))}_${group(kid(x, 'm:sub'))}`;
+      case 'm:sSubSup': return `${group(kid(x, 'm:e'))}_${group(kid(x, 'm:sub'))}^${group(kid(x, 'm:sup'))}`;
+      case 'm:rad': return `sqrt${group(kid(x, 'm:e'))}`;
+      case 'm:nary': {
+        const op = kid(kid(x, 'm:naryPr'), 'm:chr')?.attrs['m:val'] ?? '∫';
+        const sub = kids(kid(x, 'm:sub')).length ? `_${group(kid(x, 'm:sub'))}` : '';
+        const sup = kids(kid(x, 'm:sup')).length ? `^${group(kid(x, 'm:sup'))}` : '';
+        return `${op}${sub}${sup} ${kids(kid(x, 'm:e')).map(node).join('')}`;
+      }
+      case 'm:d': {
+        const pr = kid(x, 'm:dPr');
+        return `${kid(pr, 'm:begChr')?.attrs['m:val'] ?? '('}${kids(x, 'm:e').map((e) => kids(e).map(node).join('')).join(', ')}${kid(pr, 'm:endChr')?.attrs['m:val'] ?? ')'}`;
+      }
+      case 'm:rPr': case 'm:ctrlPr': case 'w:rPr': case 'm:naryPr': case 'm:dPr': case 'm:fPr': case 'm:sSupPr': case 'm:sSubPr': case 'm:sSubSupPr': case 'm:radPr': return '';
+      default: return kids(x).map(node).join('');
+    }
+  };
+  return kids(n).map(node).join('');
 };
 
 interface Inline {
@@ -536,6 +550,13 @@ const parseInline = (nodes: XNode[], st: ParaState, inl: Inline): void => {
         const check = find(kid(c, 'w:sdtPr'), 'w14:checkbox');
         if (check) {
           addAtom(st, { kind: 'checkbox', checked: kid(check, 'w14:checked')?.attrs['w14:val'] === '1' }, parseRPr(find(c, 'w:rPr'), ctx.theme), inl);
+          break;
+        }
+        const pr = kid(c, 'w:sdtPr');
+        const list = kid(pr, 'w:dropDownList') ?? kid(pr, 'w:comboBox');
+        const content = textOf(kid(c, 'w:sdtContent'));
+        if (list || kid(pr, 'w:date')) {
+          addAtom(st, { kind: 'control', control: list ? 'dropdown' : 'date', title: kid(pr, 'w:alias')?.attrs['w:val'], value: content, options: list ? kids(list, 'w:listItem').map((o) => o.attrs['w:displayText'] ?? o.attrs['w:value'] ?? '') : undefined }, parseRPr(find(c, 'w:rPr'), ctx.theme), inl);
           break;
         }
         parseInline(kids(kid(c, 'w:sdtContent')), st, inl);

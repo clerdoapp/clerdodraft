@@ -57,6 +57,7 @@ export interface PlacedLine extends Line {
   story: StoryId;
   x: number; // left of the text box of the line
   y: number;
+  turn?: number; // degrees, for text turned inside a table cell
 }
 
 export interface Box {
