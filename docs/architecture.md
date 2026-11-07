@@ -34,3 +34,22 @@ The `.docx` reader keeps anything it doesn't model, as raw XML, and the writer p
 
 ## Offline
 A service worker generated at build time stores every file. Spelling runs in a worker. The word book and PDF reader load only when first needed.
+
+## Command line and agent server
+
+`src/cli` reuses the document model and file code without the editor:
+
+- `edit.ts` edits a document directly: outline, find, replace (keeping formatting, optionally as
+  tracked changes), Markdown insertion with lists and tables, comments, formatting.
+- `io.ts` reads and writes files on disk by content first and extension second.
+- `mcp.ts` is the Model Context Protocol server: JSON-RPC over standard input and output, one call at
+  a time.
+- `main.ts` is the command-line interface.
+
+`scripts/build-cli.mjs` bundles it into one file for Node.js 20 or newer, with the PDF reader's
+worker carried inside.
+
+## Interface languages
+
+`src/ui/i18n` holds one table per language, keyed by the English text. The chosen table is loaded on
+demand and applied to the interface as it appears; see [localization.md](localization.md).

@@ -129,6 +129,7 @@ export const registerCoreCommands = (): void => {
       run: (s) => void checkForUpdates(s),
     },
     { id: 'obj.settings', label: 'Picture settings', group: 'Insert', enabled: (s) => !!selectedAtom(s), run: (s) => s.openDialog('picture') },
+    { id: 'help.about', label: 'About ClerdoDraft', group: 'Help', run: (s) => s.openDialog('about') },
     { id: 'file.properties', label: 'Document details', group: 'File', run: (s) => s.openDialog('properties') },
 
     { id: 'edit.undo', label: 'Undo', group: 'Edit', keys: 'mod+z', run: (s) => s.undo(), enabled: (s) => s.canUndo },

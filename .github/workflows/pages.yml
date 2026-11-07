@@ -23,11 +23,17 @@ jobs:
       VITE_RELEASE_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Credit contributors
+        run: node scripts/contributors.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - run: npm run build
       - uses: actions/upload-pages-artifact@v5
         with:

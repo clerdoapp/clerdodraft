@@ -50,11 +50,17 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Credit contributors
+        run: node scripts/contributors.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - run: npm run dist
       - uses: actions/upload-artifact@v6
         with:
@@ -72,11 +78,17 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Credit contributors
+        run: node scripts/contributors.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - run: npm run dist
       - uses: actions/upload-artifact@v6
         with:
@@ -93,17 +105,28 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: sudo apt-get update && sudo apt-get install -y rpm
       - run: npm ci
+      - name: Credit contributors
+        run: node scripts/contributors.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - run: npm run dist
+      - name: Command-line tool
+        run: |
+          npm run cli
+          cp dist-cli/clerdodraft.mjs "release/clerdodraft-cli-${{ needs.version.outputs.version }}.mjs"
       - uses: actions/upload-artifact@v6
         with:
           name: linux
           path: |
+            release/*.mjs
             release/*.AppImage
             release/*.deb
             release/*.rpm

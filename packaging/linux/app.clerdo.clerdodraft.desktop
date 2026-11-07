@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Name=ClerdoDraft
+GenericName=Word Processor
+Comment=Write, review and lay out documents
+Exec=clerdodraft %F
+TryExec=clerdodraft
+Icon=app.clerdo.clerdodraft
+Terminal=false
+StartupNotify=true
+StartupWMClass=ClerdoDraft
+Categories=Office;WordProcessor;
+Keywords=document;word;processor;docx;odt;writer;text;letter;
+MimeType=application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/vnd.openxmlformats-officedocument.wordprocessingml.template;application/vnd.ms-word.document.macroEnabled.12;application/msword;application/vnd.oasis.opendocument.text;application/rtf;text/rtf;text/markdown;
+Actions=new-window;
+
+[Desktop Action new-window]
+Name=New window
+Exec=clerdodraft

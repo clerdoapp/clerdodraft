@@ -138,7 +138,7 @@ const SECTIONS: Section_[] = [
     id: 'doc', label: 'Doc', icon: FileText,
     body: (s) => (
       <>
-        <Group title="Document"><List_ store={s} tools={[{ id: 'file.new', icon: FilePlus2 }, { id: 'file.open', icon: FolderOpen }, { id: 'file.save', icon: Save }, { id: 'file.saveAs' }, { id: 'file.versions' }, { id: 'file.protect' }, { id: 'file.sign' }, { id: 'file.properties' }, { id: 'help.keys' }, { id: 'file.updates' }]} /></Group>
+        <Group title="Document"><List_ store={s} tools={[{ id: 'file.new', icon: FilePlus2 }, { id: 'file.open', icon: FolderOpen }, { id: 'file.save', icon: Save }, { id: 'file.saveAs' }, { id: 'file.versions' }, { id: 'file.protect' }, { id: 'file.sign' }, { id: 'file.properties' }, { id: 'help.keys' }, { id: 'file.updates' }, { id: 'help.about' }]} /></Group>
         <Group title="Start from"><List_ store={s} tools={[{ id: 'file.templates', label: `All templates (${TEMPLATES.length})` }, { id: 'tpl.letter' }, { id: 'tpl.resume' }, { id: 'tpl.report' }, { id: 'tpl.invoice' }]} /></Group>
         <Group title="Together"><List_ store={s} tools={ids('share.together', 'share.link')} /></Group>
         <Group title="Share out"><List_ store={s} tools={[{ id: 'file.print', icon: Printer }, { id: 'file.html' }, { id: 'file.md' }, { id: 'file.txt' }, { id: 'file.odt' }, { id: 'file.rtf' }]} /></Group>

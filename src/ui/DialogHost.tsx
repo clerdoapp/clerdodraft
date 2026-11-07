@@ -18,6 +18,8 @@ import { ChartDialog } from './ChartDialog';
 import { FontPicker } from './FontPicker';
 import { openProtected, setFilePassword } from '../features/files';
 import { pictureFromWeb } from '../features/objects';
+import { AboutDialog } from './AboutDialog';
+import { LanguageDialog } from './LanguageDialog';
 import { DiagramDialog, DrawDialog, EquationDialog, IconsDialog, KeysDialog, TemplatesDialog } from './ExtraViews';
 import { insertFormula, insertTextArt, insertVideo, restartList, setBullet, TEXT_ART } from '../features/objects';
 import { markAuthority, setCitationStyle } from '../features/references';
@@ -500,6 +502,8 @@ export const DialogHost = ({ store }: { store: EditorStore }) => {
   if (d.id === 'equation') body = <EquationDialog store={store} />;
   if (d.id === 'diagram') body = <DiagramDialog store={store} />;
   if (d.id === 'keys') body = <KeysDialog store={store} />;
+  if (d.id === 'about') body = <AboutDialog store={store} />;
+  if (d.id === 'uiLang') body = <LanguageDialog store={store} />;
   if (d.id === 'icons') body = <IconsDialog store={store} />;
   if (d.id === 'templates') body = <TemplatesDialog store={store} />;
   if (d.id === 'palette') body = <Palette store={store} />;

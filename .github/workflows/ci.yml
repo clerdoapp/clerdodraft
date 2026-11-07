@@ -22,3 +22,4 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libreoffice-writer python3-docx
       - run: npm test
       - run: npm run build
+      - run: npm run cli && node dist-cli/clerdodraft.mjs --version

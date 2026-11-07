@@ -17,8 +17,8 @@ const styled = (el: HTMLElement, p: RunProps): RunProps => {
   const st = el.style;
   if (tag === 'B' || tag === 'STRONG' || st.fontWeight === 'bold' || Number(st.fontWeight) >= 600) out.bold = true;
   if (tag === 'I' || tag === 'EM' || st.fontStyle === 'italic') out.italic = true;
-  if (tag === 'U' || st.textDecoration.includes('underline')) out.underline = 'single';
-  if (tag === 'S' || tag === 'STRIKE' || tag === 'DEL' || st.textDecoration.includes('line-through')) out.strike = true;
+  if (tag === 'U' || (st.textDecoration ?? '').includes('underline')) out.underline = 'single';
+  if (tag === 'S' || tag === 'STRIKE' || tag === 'DEL' || (st.textDecoration ?? '').includes('line-through')) out.strike = true;
   if (tag === 'SUP') out.vertAlign = 'super';
   if (tag === 'SUB') out.vertAlign = 'sub';
   if (tag === 'CODE' || tag === 'KBD' || tag === 'TT') out.font = 'Courier New';

@@ -277,7 +277,7 @@ export const registerObjects = (): void => {
     { id: 'file.sign', label: 'Signatures', group: 'File', run: (s) => s.togglePane('signatures'), active: (s) => s.view.pane === 'signatures' },
     { id: 'share.together', label: 'Work together', group: 'File', run: (s) => s.togglePane('together'), active: (s) => s.view.pane === 'together' },
     { id: 'share.link', label: 'Share as a link', group: 'File', run: (s) => void import('./share').then((m) => m.shareLink(s)) },
-    { id: 'view.uiLang', label: 'العربية / English', group: 'View', run: () => { void import('../ui/i18n').then((m) => m.setUiLang(m.uiLang() === 'ar' ? 'en' : 'ar')); } },
+    { id: 'view.uiLang', label: 'Interface language', group: 'View', run: (s) => s.openDialog('uiLang') },
     { id: 'obj.draw', label: 'Draw on this picture', group: 'Insert', enabled: (s) => selectedAtom(s)?.kind === 'image', run: (s) => s.openDialog('draw', { edit: true }) },
     { id: 'ins.object', label: 'Embed a file', group: 'Insert', run: (s) => pickFile('', (f) => void embedFile(s, f)) },
     { id: 'obj.openEmbedded', label: 'Open the embedded file', group: 'Insert', enabled: (s) => { const a = selectedAtom(s); return a?.kind === 'raw' && !!a.object?.file; }, run: openEmbedded },

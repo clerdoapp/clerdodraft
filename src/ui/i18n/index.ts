@@ -1,10 +1,46 @@
-import { AR, AR_SHAPES } from './ar';
+type Table = Record<string, string>;
 
-export type UiLang = 'en' | 'ar';
+// Interface languages. Each table is loaded only when it is chosen, keyed by the English text.
+export const LANGUAGES: { code: string; name: string; rtl?: boolean; load?: () => Promise<Table> }[] = [
+  { code: 'en', name: 'English' },
+  { code: 'ar', name: 'العربية', rtl: true, load: () => import('./ar').then((m) => ({ ...m.AR, ...m.AR_SHAPES })) },
+  { code: 'de', name: 'Deutsch', load: () => import('./de').then((m) => m.default) },
+  { code: 'es', name: 'Español', load: () => import('./es').then((m) => m.default) },
+  { code: 'fa', name: 'فارسی', rtl: true, load: () => import('./fa').then((m) => m.default) },
+  { code: 'fr', name: 'Français', load: () => import('./fr').then((m) => m.default) },
+  { code: 'hi', name: 'हिन्दी', load: () => import('./hi').then((m) => m.default) },
+  { code: 'id', name: 'Bahasa Indonesia', load: () => import('./id').then((m) => m.default) },
+  { code: 'it', name: 'Italiano', load: () => import('./it').then((m) => m.default) },
+  { code: 'ja', name: '日本語', load: () => import('./ja').then((m) => m.default) },
+  { code: 'ko', name: '한국어', load: () => import('./ko').then((m) => m.default) },
+  { code: 'nl', name: 'Nederlands', load: () => import('./nl').then((m) => m.default) },
+  { code: 'pl', name: 'Polski', load: () => import('./pl').then((m) => m.default) },
+  { code: 'pt', name: 'Português', load: () => import('./pt').then((m) => m.default) },
+  { code: 'ru', name: 'Русский', load: () => import('./ru').then((m) => m.default) },
+  { code: 'tr', name: 'Türkçe', load: () => import('./tr').then((m) => m.default) },
+  { code: 'uk', name: 'Українська', load: () => import('./uk').then((m) => m.default) },
+  { code: 'ur', name: 'اردو', rtl: true, load: () => import('./ur').then((m) => m.default) },
+  { code: 'zh', name: '简体中文', load: () => import('./zh').then((m) => m.default) },
+];
+
+export type UiLang = string;
 const KEY = 'clerdodraft.ui';
-const TABLE: Record<string, string> = { ...AR, ...AR_SHAPES };
+let TABLE: Table = {};
 
-export const uiLang = (): UiLang => { try { return localStorage.getItem(KEY) === 'ar' ? 'ar' : 'en'; } catch { return 'en'; } };
+export const uiLang = (): UiLang => {
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved && LANGUAGES.some((l) => l.code === saved)) return saved;
+  } catch { /* use the default */ }
+  return 'en';
+};
+
+// The first time, follow the system language when the app has it.
+export const startLang = (): UiLang => {
+  try { if (localStorage.getItem(KEY)) return uiLang(); } catch { return 'en'; }
+  const sys = (navigator.language || 'en').slice(0, 2).toLowerCase();
+  return LANGUAGES.some((l) => l.code === sys) ? sys : 'en';
+};
 
 // Keeps the English text so switching back is exact.
 const original = new WeakMap<Node, string>();
@@ -61,11 +97,16 @@ const apply = (root: Node, lang: UiLang): void => {
 
 let observer: MutationObserver | null = null;
 
-export const setUiLang = (lang: UiLang): void => {
-  try { localStorage.setItem(KEY, lang); } catch { /* this session only */ }
-  document.documentElement.lang = lang;
-  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+export const setUiLang = async (lang: UiLang, remember = true): Promise<void> => {
+  const def = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0]!;
+  if (remember) { try { localStorage.setItem(KEY, def.code); } catch { /* this session only */ } }
   observer?.disconnect();
+  // Put the English text back first, so moving between two languages starts from the source.
+  apply(document.body, 'en');
+  TABLE = def.load ? await def.load() : {};
+  lang = def.code;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = def.rtl ? 'rtl' : 'ltr';
   apply(document.body, lang);
   if (lang === 'en') { observer = null; return; }
   observer = new MutationObserver((list) => {

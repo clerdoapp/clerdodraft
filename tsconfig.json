@@ -6,5 +6,5 @@
     "noUncheckedIndexedAccess": false, "skipLibCheck": true, "isolatedModules": true, "noEmit": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["src", "tests", "electron", "vite.config.ts"]
+  "include": ["src", "tests", "electron", "scripts/*.ts", "vite.config.ts"]
 }

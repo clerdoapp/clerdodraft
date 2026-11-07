@@ -15,6 +15,7 @@ const KEY = 'autosave';
 
 interface Bridge {
   open(): Promise<{ path: string; name: string; data: Uint8Array } | null>;
+  launchFile?(): Promise<{ path: string; name: string; data: Uint8Array } | null>;
   save(path: string | null, name: string, data: Uint8Array): Promise<{ path: string; name: string } | null>;
 }
 
@@ -99,6 +100,19 @@ export const openBytes = async (store: EditorStore, bytes: Uint8Array, name: str
   } catch (e) {
     if (e instanceof NeedsPassword) { store.openDialog('password', { bytes, name, handle }); return; }
     store.notify(e instanceof Error ? e.message : "This file couldn't be opened.");
+  }
+};
+
+// A document the desktop app was asked to open, by double-clicking it or dropping it on the app icon.
+export const openLaunchFile = async (store: EditorStore): Promise<boolean> => {
+  try {
+    const r = await desktop()?.launchFile?.();
+    if (!r) return false;
+    await openBytes(store, r.data, r.name, r.path);
+    return true;
+  } catch (e) {
+    store.notify(e instanceof Error ? e.message : "This file couldn't be opened.");
+    return false;
   }
 };
 

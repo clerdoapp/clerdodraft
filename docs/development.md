@@ -11,16 +11,14 @@ You need Node.js 22 or newer.
 | `npm run build` | Build the web app into `dist` |
 | `npm run e2e` | Browser tests, after a build |
 | `npm run dist` | Desktop installers for this system, into `release` |
+| `npm run cli` | Command-line tool and agent server, into `dist-cli/clerdodraft.mjs` |
+| `npm run examples` | Rebuild the sample documents in `examples/` |
+| `node scripts/contributors.mjs` | Refresh the contributor counts for the About window |
 
 `npm run e2e` needs Playwright. To include the optional steps, set `SAMPLE_DOCX`, `SAMPLE_PDF` and `SAMPLE_LOCKED` to file paths. `SAMPLE_LOCKED` must use the password `pw`.
 
 Some file-format tests also check files with `soffice` or `msoffcrypto-tool` when those are installed, and skip that part otherwise.
 
 ## Releasing
-1. Set `version` in `package.json` and `package-lock.json`, and add to `CHANGELOG.md`.
-2. Commit to `main` and push. The web app publishes from `main`.
-3. Tag and push: `git tag v0.5.1 && git push origin v0.5.1`.
 
-The tag starts `release.yml`, which builds Windows, macOS and Linux and publishes the release.
-
-GitHub retires old build machines. If a platform's job fails right away, check its `runs-on` label first.
+See [releasing.md](releasing.md).

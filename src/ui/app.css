@@ -324,3 +324,29 @@ html[dir='rtl'] body { font-family: 'Noto Sans Arabic', 'Hanken Grotesk', sans-s
 .card.sig.ok { border-inline-start: 3px solid #2f9e44; }
 .card.sig.bad { border-inline-start: 3px solid #e03131; }
 .filebtn { display: inline-flex; cursor: pointer; }
+
+.aboutbox { width: min(560px, calc(100vw - 64px)); max-width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; }
+.abouthead { display: flex; gap: 14px; align-items: center; }
+.abouthead img { border-radius: 14px; }
+.abouthead h2 { margin: 0; }
+.abouthead p { margin: 2px 0 0; }
+.aboutbody { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow: auto; }
+.aboutbody p { margin: 0; line-height: 1.5; }
+.aboutbody .links { display: flex; flex-wrap: wrap; gap: 14px; }
+.aboutbody .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.aboutbody a { color: #2347ff; text-decoration: none; }
+.aboutbody a:hover { text-decoration: underline; }
+.grabbag { font-size: 15px; }
+.credittable { overflow: auto; }
+.credittable table { border-collapse: collapse; font-size: 12.5px; white-space: nowrap; }
+.credittable th, .credittable td { padding: 4px 8px; border-bottom: 1px solid var(--line, #d9dbe3); text-align: right; }
+.credittable th:first-child, .credittable td:first-child { text-align: left; }
+.modellist { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.field.inline { flex-direction: row; align-items: center; gap: 6px; white-space: nowrap; }
+.field.inline select { width: auto; }
+
+.langbox { width: min(520px, calc(100vw - 64px)); max-width: 100%; box-sizing: border-box; }
+.langgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; margin: 10px 0; }
+.langgrid button { padding: 9px 10px; border: 1px solid var(--line, #d9dbe3); border-radius: 8px; background: transparent; color: inherit; cursor: pointer; font-size: 14px; text-align: start; }
+.langgrid button:hover { border-color: #2347ff; }
+.langgrid button.on { border-color: #2347ff; background: var(--hover, #eef0ff); font-weight: 600; }

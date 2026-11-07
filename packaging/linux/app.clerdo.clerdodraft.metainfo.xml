@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>app.clerdo.clerdodraft</id>
+  <name>ClerdoDraft</name>
+  <summary>Free, open-source word processor</summary>
+  <developer id="app.clerdo">
+    <name>Clerdo</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <description>
+    <p>Write, review and lay out real documents, with your files staying on your own device.</p>
+    <ul>
+      <li>True page layout with sections, columns, headers, footers and footnotes</li>
+      <li>Tables, charts, diagrams, shapes, icons, equations and pictures</li>
+      <li>Tracked changes, comments, version history and digital signatures</li>
+      <li>Spelling in seven languages, a word book and hyphenation in 21 languages</li>
+      <li>Opens and saves .docx; opens .doc, .odt, .rtf, .pdf, Markdown and HTML</li>
+      <li>Works offline, with no account and no tracking</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">app.clerdo.clerdodraft.desktop</launchable>
+  <url type="homepage">https://clerdo.app</url>
+  <url type="bugtracker">https://github.com/clerdoapp/clerdodraft/issues</url>
+  <url type="vcs-browser">https://github.com/clerdoapp/clerdodraft</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Editing a report</caption>
+      <image>https://raw.githubusercontent.com/clerdoapp/clerdodraft/main/docs/images/editor.png</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1"/>
+  <categories>
+    <category>Office</category>
+    <category>WordProcessor</category>
+  </categories>
+  <provides>
+    <binary>clerdodraft</binary>
+    <mediatype>application/vnd.openxmlformats-officedocument.wordprocessingml.document</mediatype>
+    <mediatype>application/vnd.oasis.opendocument.text</mediatype>
+  </provides>
+  <releases>
+    <release version="0.6.0" date="2026-11-07">
+      <description><p>Command-line tool, agent server and 19 interface languages.</p></description>
+    </release>
+    <release version="0.5.0" date="2026-11-07">
+      <description><p>First release.</p></description>
+    </release>
+  </releases>
+</component>

@@ -16,7 +16,7 @@ Write, review and lay out real documents, with your files staying on your own de
 
 ## What it does
 
-- **Write:** more than 400 fonts plus every font on your computer, styles, lists, tabs, indents, large first letters, text art with glow, reflection and gradients, right-to-left paragraphs, autocorrect and smart typing. The interface is in English and Arabic.
+- **Write:** more than 400 fonts plus every font on your computer, styles, lists, tabs, indents, large first letters, text art with glow, reflection and gradients, right-to-left paragraphs, autocorrect and smart typing.
 - **Lay out:** true page layout with sections, columns, headers, footers, footnotes, facing pages, watermarks, page borders, line numbers, automatic hyphens and document themes.
 - **Add:** tables with formulas, pictures with crop and adjustments, 20 chart kinds, 52 diagram layouts, about 150 shapes, 2,300 icons, embedded files of any kind, text boxes, drawn equations, pen drawings, online video and audio links, screenshots, fill-in fields, symbols and emoji.
 - **Cite:** contents, captions, cross-references, an index, a table of authorities, sources and bibliographies in APA, MLA, Chicago, Harvard and IEEE.
@@ -26,6 +26,8 @@ Write, review and lay out real documents, with your files staying on your own de
 - **Read:** page, web, draft and reading views, a focus reader, split view, dark mode and an outline.
 - **Files:** opens and saves `.docx`, including password-protected files, and keeps content it doesn't understand instead of dropping it. Also opens `.doc`, `.odt`, `.rtf`, `.pdf`, `.md`, `.html` and `.txt`, and exports `.odt`, `.rtf`, `.pdf`, `.html`, `.md` and `.txt`.
 - **Start fast:** 41 templates for letters, résumés, business, school and more.
+- **Automation:** a command-line tool converts, merges, compares and signs documents, and an agent server (MCP) lets AI assistants open, edit and save them the way a person does.
+- **Languages:** the interface is translated into 19 languages, including Arabic, Persian and Urdu right to left.
 - **Private:** no account, no server, no tracking. Spelling and the word book work offline.
 
 The full list, with what is finished and what is basic, is in [docs/FEATURES.md](docs/FEATURES.md).
@@ -53,14 +55,25 @@ The builds aren't code-signed yet:
 - **macOS:** right-click the app, choose **Open**, then **Open** again.
 - **Linux AppImage:** make it executable first (`chmod +x`).
 
+## Command line and agents
+
+Every release includes `clerdodraft-cli-<version>.mjs`, which runs on Node.js 20 or newer:
+
+```sh
+node clerdodraft-cli.mjs convert report.doc report.docx
+node clerdodraft-cli.mjs merge examples/invitation.docx examples/guests.csv invitations.docx
+node clerdodraft-cli.mjs mcp     # agent server for AI assistants
+```
+
+[docs/cli.md](docs/cli.md) lists every command, and [docs/mcp.md](docs/mcp.md) the 20 agent tools. Sample documents to try are in [examples](examples).
+
 ## Status
 
-ClerdoDraft is in **alpha**. Everyday writing, review and layout work, and some advanced features are still missing or basic:
+ClerdoDraft is in **alpha**. Everyday writing, review and layout work well; it hasn't yet been tested widely on real Windows, macOS and iPad hardware. A few things are limited by the world outside the app:
 
-- live co-editing and share links;
-- digital signatures;
-- embedded objects;
-- an Arabic spelling dictionary.
+- font files from other companies can't be included, so their names are drawn with matching open fonts;
+- translation of text needs language models built into the device;
+- working together connects devices directly, which some office networks block.
 
 [ROADMAP.md](ROADMAP.md) and [docs/gaps.md](docs/gaps.md) track what's next.
 
@@ -74,11 +87,13 @@ npm run dev        # web app during development
 npm test           # unit and file-format tests
 npm run e2e        # browser tests (needs Playwright)
 npm run dist       # desktop installers for this system
+npm run cli        # command-line tool and agent server, into dist-cli/
+npm run examples   # rebuild the sample documents in examples/
 ```
 
 Installers are built by GitHub Actions: push a tag such as `v0.5.0` that matches `package.json`, and [release.yml](.github/workflows/release.yml) builds every platform and publishes a release. Every push to `main` publishes the web app. **Check for updates** in the app follows the releases of the repository a build was made from.
 
-More: [docs/development.md](docs/development.md) · [docs/architecture.md](docs/architecture.md) · [docs/file-formats.md](docs/file-formats.md)
+More: [docs/development.md](docs/development.md) · [docs/architecture.md](docs/architecture.md) · [docs/file-formats.md](docs/file-formats.md) · [docs/releasing.md](docs/releasing.md)
 
 ## Contributing
 

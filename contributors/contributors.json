@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "repo": "clerdoapp/clerdodraft",
+  "head_date": "2026-11-07T07:40:08+03:00",
+  "commits": 9,
+  "unattributed_commits": 0,
+  "contributors": [
+    {
+      "login": "clerdoapp",
+      "people_entry": false,
+      "github_name": null,
+      "prs": 0,
+      "commits": 9,
+      "lines_added": 516739,
+      "lines_deleted": 880,
+      "binary_added": 13,
+      "binary_deleted": 0,
+      "first_commit": "2026-11-06T16:35:44+03:00",
+      "last_commit": "2026-11-07T07:40:08+03:00"
+    }
+  ],
+  "models": [
+    {
+      "id": "anthropic/claude-opus/5.5",
+      "company": "Anthropic",
+      "model": "Claude Opus",
+      "version": "5.5",
+      "commits": 9,
+      "first_commit": "2026-11-06T16:35:44+03:00",
+      "last_commit": "2026-11-07T07:40:08+03:00"
+    }
+  ]
+}

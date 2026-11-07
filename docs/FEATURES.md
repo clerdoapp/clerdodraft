@@ -71,3 +71,13 @@ Status: `done`, `basic` (works, needs depth), `next` (not built).
 ## Left out on purpose
 - Macro and scripting languages tied to one vendor, and their form controls
 - Vendor cloud assistant and vendor account services
+
+## Automation
+- done: command-line tool: convert, info, text, outline, new from a template, mail merge, compare, replace, accept or reject changes, sign, verify
+- done: agent server (Model Context Protocol) with 20 tools to open, read, edit, comment on and save documents
+- done: sample documents in `examples/`
+
+## App
+- done: interface in 19 languages, following the system language at first start
+- done: About window with contributors and credited AI models
+- done: desktop app opens documents double-clicked or dropped on its icon, in one copy of the app, and registers itself for .docx, .dotx, .doc, .odt, .rtf and .md

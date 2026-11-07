@@ -17,7 +17,12 @@ export interface SignatureInfo { signer: string; issuer: string; time: string; p
 const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\r/g, '&#xD;');
 const escA = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/\t/g, '&#x9;').replace(/\n/g, '&#xA;').replace(/\r/g, '&#xD;');
 const b64 = (bytes: string): string => forge.util.encode64(bytes);
-const sha256 = (data: Uint8Array): string => { const md = forge.md.sha256.create(); md.update(forge.util.binary.raw.encode(data)); return b64(md.digest().bytes()); };
+// Large parts are fed in pieces, since turning a whole picture into one string overflows the stack.
+const sha256 = (data: Uint8Array): string => {
+  const md = forge.md.sha256.create();
+  for (let i = 0; i < data.length; i += 0x8000) md.update(String.fromCharCode(...data.subarray(i, i + 0x8000)));
+  return b64(md.digest().bytes());
+};
 const sha256s = (s: string): string => { const md = forge.md.sha256.create(); md.update(s, 'utf8'); return b64(md.digest().bytes()); };
 
 // Canonical XML (inclusive, without comments) for an element tree read by the app's own parser.

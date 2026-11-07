@@ -1,15 +1,23 @@
 import { app, BrowserWindow, desktopCapturer, dialog, ipcMain, session, shell } from 'electron';
 import { readFile, stat, writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { existsSync, statSync } from 'node:fs';
+import { basename, extname, join, resolve } from 'node:path';
 import { installedFonts } from './fonts';
 
 const MAX_FILE = 512 * 1024 * 1024;
 const FILTERS = [{ name: 'Documents', extensions: ['docx'] }];
 const OPEN_FILTERS = [{ name: 'Documents', extensions: ['docx', 'docm', 'dotx', 'doc', 'odt', 'rtf', 'pdf', 'txt', 'md', 'html', 'htm'] }];
-// Only paths the person picked in a dialog this session can be written.
+// Only paths the person picked in a dialog, or opened from the system, can be written.
 const allowed = new Set<string>();
+const OPENABLE = new Set(OPEN_FILTERS[0]!.extensions.map((e) => `.${e}`));
+// Files opened by double-clicking or dropping on the app icon, waiting for their window.
+const launch = new Map<number, string>();
+const queued: string[] = [];
 
-const createWindow = (blank = false): void => {
+const documentsIn = (argv: string[], cwd = process.cwd()): string[] =>
+  argv.filter((a) => !a.startsWith('-')).map((a) => resolve(cwd, a)).filter((p) => OPENABLE.has(extname(p).toLowerCase()) && existsSync(p) && statSync(p).isFile());
+
+const createWindow = (blank = false, file?: string): void => {
   const win = new BrowserWindow({
     width: 1360,
     height: 900,
@@ -33,8 +41,36 @@ const createWindow = (blank = false): void => {
     });
     if (choice === 1) e.preventDefault();
   });
-  void win.loadFile(join(__dirname, '..', 'dist', 'index.html'), blank ? { search: 'new=1' } : undefined);
+  if (file) launch.set(win.webContents.id, file);
+  void win.loadFile(join(__dirname, '..', 'dist', 'index.html'), blank || file ? { search: 'new=1' } : undefined);
 };
+
+const openDocuments = (paths: string[]): void => {
+  for (const p of paths) createWindow(false, p);
+  BrowserWindow.getAllWindows().at(-1)?.focus();
+};
+
+ipcMain.handle('file:launch', async (e) => {
+  const path = launch.get(e.sender.id);
+  launch.delete(e.sender.id);
+  if (!path) return null;
+  if ((await stat(path)).size > MAX_FILE) throw new Error('This document is too large to open.');
+  allowed.add(path);
+  return { path, name: basename(path), data: new Uint8Array(await readFile(path)) };
+});
+
+// One copy of the app runs at a time; opening more files adds windows to it.
+if (!app.requestSingleInstanceLock()) app.quit();
+app.on('second-instance', (_e, argv, cwd) => {
+  const files = documentsIn(argv.slice(1), cwd);
+  if (files.length) openDocuments(files);
+  else BrowserWindow.getAllWindows()[0]?.focus();
+});
+// macOS hands files over through this event, also before the app is ready.
+app.on('open-file', (e, path) => {
+  e.preventDefault();
+  if (app.isReady()) openDocuments([path]); else queued.push(path);
+});
 
 ipcMain.on('window:new', () => createWindow(true));
 
@@ -78,7 +114,8 @@ void app.whenReady().then(() => {
   session.defaultSession.setDisplayMediaRequestHandler((_req, reply) => {
     void desktopCapturer.getSources({ types: ['screen'] }).then((list) => reply(list[0] ? { video: list[0] } : {})).catch(() => reply({}));
   });
-  createWindow();
+  const files = [...queued, ...documentsIn(process.argv.slice(app.isPackaged ? 1 : 2))];
+  if (files.length) openDocuments(files); else createWindow();
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 });
 

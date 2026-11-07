@@ -764,7 +764,7 @@ const parseBlocks = (nodes: XNode[], ds: DocState): Block[] => {
       case 'w:tbl': out.push(parseTable(n, ds)); break;
       case 'w:sdt': out.push(...parseBlocks(kids(kid(n, 'w:sdtContent')), ds)); break;
       case 'w:ins': case 'w:del': case 'w:customXml': case 'w:smartTag': out.push(...parseBlocks(kids(n), ds)); break;
-      case 'w:sectPr': case 'w:tcPr': case 'w:bookmarkStart': case 'w:bookmarkEnd': case 'w:proofErr': case 'w:commentRangeStart': case 'w:commentRangeEnd': case 'w:permStart': case 'w:permEnd': break;
+      case 'w:sectPr': case 'w:tcPr': case 'w:bookmarkStart': case 'w:bookmarkEnd': case 'w:proofErr': case 'w:commentRangeStart': case 'w:commentRangeEnd': break;
       default: {
         const raw: RawBlock = { type: 'raw', id: newId(), xml: serialize(n), label: 'Object' };
         out.push(raw);
