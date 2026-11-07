@@ -1,5 +1,20 @@
 // Persian interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'املا',
+  'Grammar': 'دستور زبان',
+  'Meaning of': 'معنی',
+  'Interface language': 'زبان رابط',
+  'Not saved yet': 'هنوز ذخیره نشده',
+  'Saved': 'ذخیره شد',
+  'Saved by hand': 'ذخیره‌شده به‌دست شما',
+  'Before restoring': 'پیش از بازیابی',
+  'words': 'واژه',
+  'Sentence': 'جمله',
+  'العربية': 'العربية',
+  'Intense Quote': 'نقل‌قول برجسته',
+  'Quote': 'نقل‌قول',
+  'No Spacing': 'بدون فاصله',
+  'Heading': 'سرعنوان',
   '1.5 line spacing': 'فاصله‌ی خط ۱٫۵',
   'A free, open-source word processor by Clerdo.': 'واژه‌پرداز رایگان و متن‌باز از Clerdo.',
   'A signed copy was saved. Any change to it will show that it was edited.': 'یک نسخه‌ی امضاشده ذخیره شد. هر تغییری در آن نشان می‌دهد که ویرایش شده است.',
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   'lowercase': 'حروف کوچک',
   'none': 'هیچ',
   'of': 'از',
-  't offer them.': 'ترجمه از مدل‌های زبانی داخلی سیستم استفاده می‌کند و این دستگاه آن‌ها را ارائه نمی‌دهد.',
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': 'ترجمه از مدل‌های زبانی داخلی سیستم استفاده می‌کند و این دستگاه آن‌ها را ارائه نمی‌دهد.',
 };
 export default T;

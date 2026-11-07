@@ -1,5 +1,20 @@
 // Dutch interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'Spelling',
+  'Grammar': 'Grammatica',
+  'Meaning of': 'Betekenis van',
+  'Interface language': 'Taal van de interface',
+  'Not saved yet': 'Nog niet opgeslagen',
+  'Saved': 'Opgeslagen',
+  'Saved by hand': 'Zelf opgeslagen',
+  'Before restoring': 'Voor het herstellen',
+  'words': 'woorden',
+  'Sentence': 'Zin',
+  'العربية': 'العربية',
+  'Intense Quote': 'Duidelijk citaat',
+  'Quote': 'Citaat',
+  'No Spacing': 'Geen afstand',
+  'Heading': 'Kop',
   '1.5 line spacing': 'Regelafstand 1,5',
   'A free, open-source word processor by Clerdo.': 'Een gratis opensource-tekstverwerker van Clerdo.',
   'A signed copy was saved. Any change to it will show that it was edited.': 'Er is een ondertekende kopie opgeslagen. Elke wijziging laat zien dat deze is bewerkt.',
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   'lowercase': 'kleine letters',
   'none': 'geen',
   'of': 'van',
-  't offer them.': 'Vertalen gebruikt taalmodellen die in het systeem zijn ingebouwd, en dit apparaat biedt die niet.',
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': 'Vertalen gebruikt taalmodellen die in het systeem zijn ingebouwd, en dit apparaat biedt die niet.',
 };
 export default T;

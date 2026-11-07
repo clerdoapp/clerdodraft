@@ -27,6 +27,9 @@ export type UiLang = string;
 const KEY = 'clerdodraft.ui';
 let TABLE: Table = {};
 
+// The current interface wording of an English label, for searching in the person's own language.
+export const tr = (s: string): string => TABLE[s] ?? s;
+
 export const uiLang = (): UiLang => {
   try {
     const saved = localStorage.getItem(KEY);

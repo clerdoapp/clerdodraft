@@ -1,5 +1,20 @@
 // Indonesian interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'Ejaan',
+  'Grammar': 'Tata bahasa',
+  'Meaning of': 'Arti dari',
+  'Interface language': 'Bahasa antarmuka',
+  'Not saved yet': 'Belum disimpan',
+  'Saved': 'Tersimpan',
+  'Saved by hand': 'Disimpan manual',
+  'Before restoring': 'Sebelum memulihkan',
+  'words': 'kata',
+  'Sentence': 'Kalimat',
+  'العربية': 'العربية',
+  'Intense Quote': 'Kutipan Tegas',
+  'Quote': 'Kutipan',
+  'No Spacing': 'Tanpa Spasi',
+  'Heading': 'Judul',
   "1.5 line spacing": "Spasi baris 1,5",
   "A free, open-source word processor by Clerdo.": "Pengolah kata gratis dan sumber terbuka dari Clerdo.",
   "A signed copy was saved. Any change to it will show that it was edited.": "Salinan bertanda tangan telah disimpan. Setiap perubahan padanya akan menunjukkan bahwa salinan itu telah diedit.",
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   "lowercase": "huruf kecil",
   "none": "tidak ada",
   "of": "dari",
-  "t offer them.": "Terjemahan menggunakan model bahasa bawaan sistem, dan perangkat ini tidak menyediakannya.",
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': "Terjemahan menggunakan model bahasa bawaan sistem, dan perangkat ini tidak menyediakannya.",
 };
 export default T;

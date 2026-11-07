@@ -1,5 +1,20 @@
 // Italian interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'Ortografia',
+  'Grammar': 'Grammatica',
+  'Meaning of': 'Significato di',
+  'Interface language': 'Lingua dell’interfaccia',
+  'Not saved yet': 'Non ancora salvato',
+  'Saved': 'Salvato',
+  'Saved by hand': 'Salvato a mano',
+  'Before restoring': 'Prima del ripristino',
+  'words': 'parole',
+  'Sentence': 'Frase',
+  'العربية': 'العربية',
+  'Intense Quote': 'Citazione intensa',
+  'Quote': 'Citazione',
+  'No Spacing': 'Nessuna spaziatura',
+  'Heading': 'Titolo',
   '1.5 line spacing': 'Interlinea 1,5',
   'A free, open-source word processor by Clerdo.': 'Un elaboratore di testi gratuito e open source, di Clerdo.',
   'A signed copy was saved. Any change to it will show that it was edited.': 'È stata salvata una copia firmata. Qualsiasi modifica mostrerà che è stata alterata.',
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   'lowercase': 'minuscole',
   'none': 'nessuno',
   'of': 'di',
-  't offer them.': 'La traduzione usa modelli linguistici integrati nel sistema e questo dispositivo non li offre.',
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': 'La traduzione usa modelli linguistici integrati nel sistema e questo dispositivo non li offre.',
 };
 export default T;

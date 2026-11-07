@@ -1,5 +1,20 @@
 // Turkish interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'Yazım',
+  'Grammar': 'Dil bilgisi',
+  'Meaning of': 'Anlamı:',
+  'Interface language': 'Arayüz dili',
+  'Not saved yet': 'Henüz kaydedilmedi',
+  'Saved': 'Kaydedildi',
+  'Saved by hand': 'Elle kaydedildi',
+  'Before restoring': 'Geri yüklemeden önce',
+  'words': 'sözcük',
+  'Sentence': 'Cümle',
+  'العربية': 'العربية',
+  'Intense Quote': 'Belirgin alıntı',
+  'Quote': 'Alıntı',
+  'No Spacing': 'Aralık yok',
+  'Heading': 'Başlık',
   "1.5 line spacing": "1,5 satır aralığı",
   "A free, open-source word processor by Clerdo.": "Clerdo'dan ücretsiz ve açık kaynaklı bir kelime işlemci.",
   "A signed copy was saved. Any change to it will show that it was edited.": "İmzalı bir kopya kaydedildi. Üzerinde yapılan her değişiklik, düzenlendiğini gösterecek.",
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   "lowercase": "küçük harf",
   "none": "yok",
   "of": "/",
-  "t offer them.": "Çeviri, sisteme yerleşik dil modellerini kullanır ve bu cihaz bunları sunmuyor.",
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': "Çeviri, sisteme yerleşik dil modellerini kullanır ve bu cihaz bunları sunmuyor.",
 };
 export default T;

@@ -1,5 +1,20 @@
 // Urdu interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'ہجے',
+  'Grammar': 'قواعد',
+  'Meaning of': 'معنی:',
+  'Interface language': 'انٹرفیس کی زبان',
+  'Not saved yet': 'ابھی محفوظ نہیں ہوا',
+  'Saved': 'محفوظ ہو گیا',
+  'Saved by hand': 'ہاتھ سے محفوظ کیا',
+  'Before restoring': 'بحالی سے پہلے',
+  'words': 'الفاظ',
+  'Sentence': 'جملہ',
+  'العربية': 'العربية',
+  'Intense Quote': 'نمایاں اقتباس',
+  'Quote': 'اقتباس',
+  'No Spacing': 'بغیر وقفہ',
+  'Heading': 'سرخی',
   '1.5 line spacing': '1.5 سطری فاصلہ',
   'A free, open-source word processor by Clerdo.': 'Clerdo کا ایک مفت، اوپن سورس ورڈ پروسیسر۔',
   'A signed copy was saved. Any change to it will show that it was edited.': 'دستخط شدہ کاپی محفوظ ہو گئی۔ اس میں کوئی بھی تبدیلی ظاہر کرے گی کہ اس میں ترمیم کی گئی ہے۔',
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   'lowercase': 'چھوٹے حروف',
   'none': 'کوئی نہیں',
   'of': 'از',
-  't offer them.': 'ترجمہ سسٹم میں موجود لسانی ماڈلز استعمال کرتا ہے، اور یہ آلہ انہیں فراہم نہیں کرتا۔',
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': 'ترجمہ سسٹم میں موجود لسانی ماڈلز استعمال کرتا ہے، اور یہ آلہ انہیں فراہم نہیں کرتا۔',
 };
 export default T;

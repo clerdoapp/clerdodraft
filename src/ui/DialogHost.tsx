@@ -20,6 +20,7 @@ import { openProtected, setFilePassword } from '../features/files';
 import { pictureFromWeb } from '../features/objects';
 import { AboutDialog } from './AboutDialog';
 import { LanguageDialog } from './LanguageDialog';
+import { tr } from './i18n';
 import { DiagramDialog, DrawDialog, EquationDialog, IconsDialog, KeysDialog, TemplatesDialog } from './ExtraViews';
 import { insertFormula, insertTextArt, insertVideo, restartList, setBullet, TEXT_ART } from '../features/objects';
 import { markAuthority, setCitationStyle } from '../features/references';
@@ -174,7 +175,7 @@ const Palette = ({ store }: { store: EditorStore }) => {
   const [i, setI] = useState(0);
   const list = useMemo(() => {
     const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-    return allCommands().filter((c) => words.every((w) => `${c.label} ${c.group}`.toLowerCase().includes(w))).slice(0, 12);
+    return allCommands().filter((c) => words.every((w) => `${c.label} ${c.group ?? ""} ${tr(c.label)} ${tr(c.group ?? "")}`.toLowerCase().includes(w))).slice(0, 12);
   }, [q]);
   const go = (id: string) => { store.closeDialog(); run(store, id); };
   return (

@@ -1,5 +1,20 @@
 // Simplified Chinese interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': '拼写',
+  'Grammar': '语法',
+  'Meaning of': '含义：',
+  'Interface language': '界面语言',
+  'Not saved yet': '尚未保存',
+  'Saved': '已保存',
+  'Saved by hand': '手动保存',
+  'Before restoring': '恢复之前',
+  'words': '字',
+  'Sentence': '句首大写',
+  'العربية': 'العربية',
+  'Intense Quote': '明显引用',
+  'Quote': '引用',
+  'No Spacing': '无间隔',
+  'Heading': '标题',
   "1.5 line spacing": "1.5 倍行距",
   "A free, open-source word processor by Clerdo.": "Clerdo 出品的免费开源文字处理软件。",
   "A signed copy was saved. Any change to it will show that it was edited.": "已保存签名副本。对其进行的任何更改都会显示为已编辑。",
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   "lowercase": "小写",
   "none": "无",
   "of": "/",
-  "t offer them.": "翻译使用系统内置的语言模型，而此设备未提供这些模型。",
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': "翻译使用系统内置的语言模型，而此设备未提供这些模型。",
 };
 export default T;

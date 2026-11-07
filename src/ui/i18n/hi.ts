@@ -1,5 +1,20 @@
 // Hindi interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'वर्तनी',
+  'Grammar': 'व्याकरण',
+  'Meaning of': 'का अर्थ',
+  'Interface language': 'इंटरफ़ेस की भाषा',
+  'Not saved yet': 'अभी सहेजा नहीं गया',
+  'Saved': 'सहेजा गया',
+  'Saved by hand': 'हाथ से सहेजा गया',
+  'Before restoring': 'पुनर्स्थापित करने से पहले',
+  'words': 'शब्द',
+  'Sentence': 'वाक्य',
+  'العربية': 'العربية',
+  'Intense Quote': 'प्रमुख उद्धरण',
+  'Quote': 'उद्धरण',
+  'No Spacing': 'कोई रिक्ति नहीं',
+  'Heading': 'शीर्षक',
   '1.5 line spacing': '1.5 पंक्ति रिक्ति',
   'A free, open-source word processor by Clerdo.': 'Clerdo का एक मुफ़्त, ओपन-सोर्स वर्ड प्रोसेसर।',
   'A signed copy was saved. Any change to it will show that it was edited.': 'हस्ताक्षरित कॉपी सहेजी गई। इसमें कोई भी बदलाव दिखाएगा कि इसे संपादित किया गया है।',
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   'lowercase': 'छोटे अक्षर',
   'none': 'कोई नहीं',
   'of': '/',
-  't offer them.': 'अनुवाद सिस्टम में मौजूद भाषा मॉडल का उपयोग करता है, और यह डिवाइस उन्हें उपलब्ध नहीं कराता।',
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': 'अनुवाद सिस्टम में मौजूद भाषा मॉडल का उपयोग करता है, और यह डिवाइस उन्हें उपलब्ध नहीं कराता।',
 };
 export default T;

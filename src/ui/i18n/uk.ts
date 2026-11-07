@@ -1,5 +1,20 @@
 // Ukrainian interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'Правопис',
+  'Grammar': 'Граматика',
+  'Meaning of': 'Значення слова',
+  'Interface language': 'Мова інтерфейсу',
+  'Not saved yet': 'Ще не збережено',
+  'Saved': 'Збережено',
+  'Saved by hand': 'Збережено вручну',
+  'Before restoring': 'Перед відновленням',
+  'words': 'сл.',
+  'Sentence': 'Як у реченнях',
+  'العربية': 'العربية',
+  'Intense Quote': 'Виділена цитата',
+  'Quote': 'Цитата',
+  'No Spacing': 'Без інтервалу',
+  'Heading': 'Заголовок',
   '1.5 line spacing': 'Півтора інтервали',
   'A free, open-source word processor by Clerdo.': 'Безкоштовний текстовий редактор із відкритим кодом від Clerdo.',
   'A signed copy was saved. Any change to it will show that it was edited.': 'Підписану копію збережено. Будь-яку її зміну буде помітно.',
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   'lowercase': 'малі літери',
   'none': 'немає',
   'of': 'з',
-  't offer them.': 'Переклад використовує вбудовані в систему мовні моделі, а цей пристрій їх не надає.',
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': 'Переклад використовує вбудовані в систему мовні моделі, а цей пристрій їх не надає.',
 };
 export default T;

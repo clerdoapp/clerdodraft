@@ -9,7 +9,7 @@ export const TopBar = ({ store }: { store: EditorStore }) => {
   const state = f.dirty ? 'Not saved yet' : f.lastSaved ? 'Saved' : '';
   return (
     <header className="topbar">
-      <span className="wordmark">Clerdo<b>Draft</b></span>
+      <span className="wordmark" data-no-translate>Clerdo<b>Draft</b></span>
       <input
         className="docname" aria-label="Document name" value={f.name}
         onChange={(e) => { store.file = { ...f, name: e.target.value }; store.emit(); }}

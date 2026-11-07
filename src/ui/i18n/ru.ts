@@ -1,5 +1,20 @@
 // Russian interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'Орфография',
+  'Grammar': 'Грамматика',
+  'Meaning of': 'Значение слова',
+  'Interface language': 'Язык интерфейса',
+  'Not saved yet': 'Ещё не сохранено',
+  'Saved': 'Сохранено',
+  'Saved by hand': 'Сохранено вручную',
+  'Before restoring': 'Перед восстановлением',
+  'words': 'сл.',
+  'Sentence': 'Как в предложениях',
+  'العربية': 'العربية',
+  'Intense Quote': 'Выделенная цитата',
+  'Quote': 'Цитата',
+  'No Spacing': 'Без интервала',
+  'Heading': 'Заголовок',
   '1.5 line spacing': 'Полуторный интервал',
   'A free, open-source word processor by Clerdo.': 'Бесплатный текстовый редактор с открытым исходным кодом от Clerdo.',
   'A signed copy was saved. Any change to it will show that it was edited.': 'Подписанная копия сохранена. Любое её изменение будет заметно.',
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   'lowercase': 'строчные',
   'none': 'нет',
   'of': 'из',
-  't offer them.': 'Перевод использует встроенные в систему языковые модели, а это устройство их не предоставляет.',
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': 'Перевод использует встроенные в систему языковые модели, а это устройство их не предоставляет.',
 };
 export default T;

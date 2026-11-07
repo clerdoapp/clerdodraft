@@ -36,6 +36,10 @@ The full list, with what is finished and what is basic, is in [docs/FEATURES.md]
 |---|---|---|
 | ![Dark mode with the word book open](docs/images/dark.png) | ![Page panel with document themes](docs/images/page-panel.png) | ![Focus reader on warm paper](docs/images/reader.png) |
 
+| Charts and diagrams | 19 interface languages | Arabic, right to left |
+|---|---|---|
+| ![Charts and diagrams from the feature tour](docs/images/tour.png) | ![Choosing the interface language](docs/images/languages.png) | ![An Arabic letter with the Arabic interface](docs/images/arabic.png) |
+
 ![ClerdoDraft on iPad](docs/images/ipad.png)
 
 ## Download

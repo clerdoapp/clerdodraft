@@ -1,5 +1,20 @@
 // Japanese interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': 'スペル',
+  'Grammar': '文法',
+  'Meaning of': '意味:',
+  'Interface language': '表示言語',
+  'Not saved yet': '未保存',
+  'Saved': '保存済み',
+  'Saved by hand': '手動で保存',
+  'Before restoring': '復元前',
+  'words': '語',
+  'Sentence': '文頭',
+  'العربية': 'العربية',
+  'Intense Quote': '強調の引用',
+  'Quote': '引用文',
+  'No Spacing': '行間詰め',
+  'Heading': '見出し',
   "1.5 line spacing": "1.5 行",
   "A free, open-source word processor by Clerdo.": "Clerdo による無料のオープンソース ワープロ ソフト。",
   "A signed copy was saved. Any change to it will show that it was edited.": "署名済みのコピーを保存しました。変更すると、編集されたことが表示されます。",
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   "lowercase": "小文字",
   "none": "なし",
   "of": "/",
-  "t offer them.": "翻訳にはシステム内蔵の言語モデルを使用しますが、このデバイスでは利用できません。",
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': "翻訳にはシステム内蔵の言語モデルを使用しますが、このデバイスでは利用できません。",
 };
 export default T;

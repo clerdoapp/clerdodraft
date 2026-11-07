@@ -1,5 +1,20 @@
 // Korean interface text, keyed by the English text shown in the app.
 const T: Record<string, string> = {
+  'Spelling': '맞춤법',
+  'Grammar': '문법',
+  'Meaning of': '뜻:',
+  'Interface language': '인터페이스 언어',
+  'Not saved yet': '아직 저장 안 됨',
+  'Saved': '저장됨',
+  'Saved by hand': '직접 저장함',
+  'Before restoring': '복원하기 전',
+  'words': '단어',
+  'Sentence': '문장',
+  'العربية': 'العربية',
+  'Intense Quote': '강한 인용',
+  'Quote': '인용',
+  'No Spacing': '간격 없음',
+  'Heading': '제목',
   "1.5 line spacing": "1.5줄 간격",
   "A free, open-source word processor by Clerdo.": "Clerdo에서 만든 무료 오픈 소스 워드 프로세서입니다.",
   "A signed copy was saved. Any change to it will show that it was edited.": "서명된 사본을 저장했습니다. 사본을 변경하면 편집되었다는 사실이 표시됩니다.",
@@ -966,6 +981,6 @@ const T: Record<string, string> = {
   "lowercase": "소문자",
   "none": "없음",
   "of": "/",
-  "t offer them.": "번역에는 시스템에 내장된 언어 모델을 사용하는데, 이 기기에서는 제공되지 않습니다.",
+  'Translation uses language models built into the system, and this device doesn\'t offer them.': "번역에는 시스템에 내장된 언어 모델을 사용하는데, 이 기기에서는 제공되지 않습니다.",
 };
 export default T;
