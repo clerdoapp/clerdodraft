@@ -248,6 +248,7 @@ kbd { font: 11px 'Hanken Grotesk', sans-serif; color: var(--muted); }
 .reader .seg button { color: inherit; background: transparent; }
 .reader .seg button.on { background: color-mix(in srgb, currentColor 16%, transparent); box-shadow: none; }
 .reader header button { color: inherit; }
+.reader header .tool:hover:not(:disabled), .reader header .ico:hover:not(:disabled), .reader .seg button:hover:not(.on) { background: color-mix(in srgb, currentColor 10%, transparent); }
 .reader header input[type=range] { accent-color: #2347ff; }
 .readbody { flex: 1; overflow: auto; padding: 32px max(24px, calc(50% - 380px)) 40vh; }
 .readbody p, .readbody h2 { margin: 0 0 1em; cursor: default; transition: opacity .15s; font-weight: 400; }
