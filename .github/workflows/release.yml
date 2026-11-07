@@ -1,7 +1,7 @@
 # Builds ClerdoDraft for every platform and publishes a GitHub Release.
 #
 #   Publish:  push a tag that matches the version in package.json, e.g.
-#               git tag v0.1.0 && git push origin v0.1.0
+#               git tag v0.5.1 && git push origin v0.5.1
 #   Test run: Actions > Release > Run workflow (builds everything and keeps the files as workflow
 #             artifacts, but publishes nothing).
 #

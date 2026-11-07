@@ -19,7 +19,7 @@ Some file-format tests also check files with `soffice` or `msoffcrypto-tool` whe
 ## Releasing
 1. Set `version` in `package.json` and `package-lock.json`, and add to `CHANGELOG.md`.
 2. Commit to `main` and push. The web app publishes from `main`.
-3. Tag and push: `git tag v0.4.0 && git push origin v0.4.0`.
+3. Tag and push: `git tag v0.5.1 && git push origin v0.5.1`.
 
 The tag starts `release.yml`, which builds Windows, macOS and Linux and publishes the release.
 
