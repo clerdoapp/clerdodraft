@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.6.1
+- Fixed: hovered and selected items showed white in dark mode (themes, languages, fonts, shapes, icons)
+
 ## 0.6.0
 - Command-line tool: convert, inspect, merge, compare, replace, accept changes, sign and verify documents
 - Agent server (Model Context Protocol) with 20 tools, so AI assistants can open, edit and save documents

@@ -40,6 +40,9 @@
     <mediatype>application/vnd.oasis.opendocument.text</mediatype>
   </provides>
   <releases>
+    <release version="0.6.1" date="2026-11-07">
+      <description><p>Dark mode fixes.</p></description>
+    </release>
     <release version="0.6.0" date="2026-11-07">
       <description><p>Command-line tool, agent server and 19 interface languages.</p></description>
     </release>

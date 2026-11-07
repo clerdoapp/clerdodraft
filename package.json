@@ -1,7 +1,7 @@
 {
   "name": "clerdodraft",
   "productName": "ClerdoDraft",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Free, open-source word processor by Clerdo",
   "private": true,
   "type": "module",
