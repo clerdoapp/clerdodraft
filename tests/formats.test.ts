@@ -1,3 +1,4 @@
+import { office, officeWorks } from './office';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -18,7 +19,6 @@ import { readDoc } from '../src/formats/doc';
 const fake: Measurer = { width: (t, f: FontSpec) => t.replaceAll('­', '').length * f.size * 0.5, metrics: (f) => ({ ascent: f.size * 0.9, descent: f.size * 0.3 }) };
 const opts = { showDeleted: true, showHidden: false };
 const textOf = (d: Doc): string[] => d.blocks.flatMap((b) => (b.type === 'p' ? [b.runs.map((r) => r.text).join('')] : []));
-const has = (cmd: string): boolean => { try { execFileSync('which', [cmd]); return true; } catch { return false; } };
 
 const sample = (): Doc => {
   const t = createTable(2, 2, 400);
@@ -90,18 +90,18 @@ describe('open document', () => {
     expect(t?.type === 'tbl' && t.rows.length).toBe(2);
   });
 
-  it.runIf(has('soffice'))('opens in another word processor', () => {
+  it.runIf(officeWorks)('opens in another word processor', () => {
     const dir = mkdtempSync(join(tmpdir(), 'odt-'));
     writeFileSync(join(dir, 'a.odt'), writeOdt(sample()));
-    execFileSync('soffice', ['--headless', '--convert-to', 'txt:Text', '--outdir', dir, join(dir, 'a.odt')], { stdio: 'ignore', timeout: 60000 });
-    expect(readFileSync(join(dir, 'a.txt'), 'utf8')).toContain('after the table');
+    office(['--headless', '--convert-to', 'html', '--outdir', dir, join(dir, 'a.odt')]);
+    expect(readFileSync(join(dir, 'a.html'), 'utf8')).toContain('after the table');
   }, 70000);
 
-  it.runIf(has('soffice'))('reads files saved elsewhere, including the older binary format', () => {
+  it.runIf(officeWorks)('reads files saved elsewhere, including the older binary format', () => {
     const dir = mkdtempSync(join(tmpdir(), 'conv-'));
     writeFileSync(join(dir, 'a.rtf'), writeRtf(sample()));
-    execFileSync('soffice', ['--headless', '--convert-to', 'doc', '--outdir', dir, join(dir, 'a.rtf')], { stdio: 'ignore', timeout: 60000 });
-    execFileSync('soffice', ['--headless', '--convert-to', 'odt', '--outdir', dir, join(dir, 'a.rtf')], { stdio: 'ignore', timeout: 60000 });
+    office(['--headless', '--convert-to', 'doc', '--outdir', dir, join(dir, 'a.rtf')]);
+    office(['--headless', '--convert-to', 'odt', '--outdir', dir, join(dir, 'a.rtf')]);
     const fromOdt = readOdt(new Uint8Array(readFileSync(join(dir, 'a.odt'))));
     expect(textOf(fromOdt)).toContain('after the table');
     expect(fromOdt.blocks.some((b) => b.type === 'tbl')).toBe(true);
@@ -264,10 +264,10 @@ describe('drawings, fields and pictures', () => {
     const a = (readDocx(bytes).blocks[0] as Paragraph).runs[0]!.atom;
     expect(a?.kind === 'raw' && a.shapes?.filter((x) => x.text).map((x) => x.text)).toEqual(['One', 'Two', 'Three']);
     expect(a?.kind === 'raw' && Math.round(a.shapes![0]!.w)).toBeGreaterThan(50);
-    if (has('soffice')) {
+    if (officeWorks) {
       const dir = mkdtempSync(join(tmpdir(), 'dia-'));
       writeFileSync(join(dir, 'a.docx'), bytes);
-      execFileSync('soffice', ['--headless', '--convert-to', 'pdf', '--outdir', dir, join(dir, 'a.docx')], { stdio: 'ignore', timeout: 60000 });
+      office(['--headless', '--convert-to', 'pdf', '--outdir', dir, join(dir, 'a.docx')]);
       expect(readFileSync(join(dir, 'a.pdf')).length).toBeGreaterThan(1000);
     }
   }, 70000);

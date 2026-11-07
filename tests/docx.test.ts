@@ -1,3 +1,4 @@
+import { office, officeWorks } from './office';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -173,7 +174,8 @@ describe('.docx round trip', () => {
     writeFileSync(blank, writeDocx(blankDoc()));
     const py = execFileSync('python3', ['-c', `import docx,sys\nd=docx.Document(sys.argv[1]);print(len(d.paragraphs),len(d.tables))\ndocx.Document(sys.argv[2])`, f, blank]).toString();
     expect(py.trim()).toMatch(/^\d+ 1$/);
-    execFileSync('soffice', ['--headless', '--convert-to', 'pdf', '--outdir', dir, f], { stdio: 'ignore', timeout: 120000 });
+    if (!officeWorks) return;
+    office(['--headless', '--convert-to', 'pdf', '--outdir', dir, f]);
     expect(readFileSync(join(dir, 'sink.pdf')).length).toBeGreaterThan(1000);
   }, 180000);
 

@@ -293,13 +293,13 @@ kbd { font: 11px 'Hanken Grotesk', sans-serif; color: var(--muted); }
 .shapegrid button { display: grid; place-items: center; height: 30px; border: 0; border-radius: 5px; background: transparent; color: inherit; cursor: pointer; }
 .shapegrid button:hover { background: var(--hover, #eef0ff); color: #2347ff; }
 
-.iconbox { width: min(620px, 90vw); }
+.iconbox { width: min(620px, calc(100vw - 64px)); max-width: 100%; box-sizing: border-box; }
 .iconbox .row input:first-child { flex: 1; padding: 6px 8px; }
-.icongrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 4px; max-height: 52vh; overflow: auto; margin-top: 8px; }
+.icongrid { min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 4px; max-height: 52vh; overflow: auto; margin-top: 8px; }
 .icongrid button { height: 40px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 6px; background: transparent; cursor: pointer; }
 .icongrid button:hover { border-color: var(--line, #d9dbe3); background: var(--hover, #eef0ff); }
 
-.tplbox { width: min(640px, 90vw); }
+.tplbox { width: min(640px, calc(100vw - 64px)); max-width: 100%; box-sizing: border-box; }
 .tplgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; max-height: 56vh; overflow: auto; }
 .tplgrid > button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; border: 1px solid var(--line, #d9dbe3); border-radius: 8px; background: transparent; color: inherit; cursor: pointer; font-size: 12.5px; }
 .tplgrid > button:hover { border-color: #2347ff; }
