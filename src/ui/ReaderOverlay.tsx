@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { AlignJustify, Coffee, Focus, Moon, Square, Sun, Volume2, X } from 'lucide-react';
 import { paraText, walkParagraphs } from '../core/tree';
 import { headingLevel } from '../core/styles';
 import type { EditorStore } from '../editor/store';
@@ -51,10 +51,10 @@ export const ReaderOverlay = ({ store }: { store: EditorStore }) => {
         <label>Size<input type="range" min={14} max={44} value={size} onChange={(e) => setSize(+e.target.value)} /></label>
         <label>Lines<input type="range" min={1.3} max={3} step={0.1} value={leading} onChange={(e) => setLeading(+e.target.value)} /></label>
         <label>Letters<input type="range" min={0} max={4} step={0.5} value={spacing} onChange={(e) => setSpacing(+e.target.value)} /></label>
-        <div className="seg">{(['light', 'sepia', 'dark'] as Paper[]).map((p) => <button key={p} className={paper === p ? 'on' : ''} onClick={() => setPaper(p)}>{p[0]!.toUpperCase() + p.slice(1)}</button>)}</div>
-        <div className="seg">{[['All', 0], ['Focus', 1]].map(([l, n]) => <button key={l} className={focusLines === n ? 'on' : ''} onClick={() => setFocusLines(n as number)}>{l}</button>)}</div>
-        <button className="tool" onClick={speak}>{speaking ? 'Stop' : 'Read aloud'}</button>
-        <button className="ico" aria-label="Close" onClick={close}><X size={18} strokeWidth={1.9} /></button>
+        <div className="seg">{([['light', 'Light', Sun], ['sepia', 'Sepia', Coffee], ['dark', 'Dark', Moon]] as const).map(([p, l, I]) => <button key={p} className={`pick${paper === p ? ' on' : ''}`} aria-pressed={paper === p} onClick={() => setPaper(p)}><I size={16} strokeWidth={1.9} aria-hidden="true" />{l}</button>)}</div>
+        <div className="seg">{([['All', 0, AlignJustify], ['Focus', 1, Focus]] as const).map(([l, n, I]) => <button key={l} className={`pick${focusLines === n ? ' on' : ''}`} aria-pressed={focusLines === n} onClick={() => setFocusLines(n)}><I size={16} strokeWidth={1.9} aria-hidden="true" />{l}</button>)}</div>
+        <button className="tile" onClick={speak}>{speaking ? <Square size={18} strokeWidth={1.9} aria-hidden="true" /> : <Volume2 size={18} strokeWidth={1.9} aria-hidden="true" />}<span>{speaking ? 'Stop' : 'Read aloud'}</span></button>
+        <button className="tile" onClick={close}><X size={18} strokeWidth={1.9} aria-hidden="true" /><span>Close</span></button>
       </header>
       <div className="readbody" ref={body} style={{ fontSize: size, lineHeight: leading, letterSpacing: spacing }}>
         {paras.map((p, i) => {

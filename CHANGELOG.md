@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.2
+- Every panel button shows an icon with a short label; choices like page size, direction, margins, columns and markup have icons too
+- The focus reader has icon buttons for paper, focus, Read aloud and Close
+- Fixed: Read aloud stopped right after it started
+- Fixed: reader buttons hovered in the wrong colours
+
 ## 0.6.1
 - Fixed: hovered and selected items showed white in dark mode (themes, languages, fonts, shapes, icons)
 

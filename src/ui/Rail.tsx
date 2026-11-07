@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import {
-  AlignCenter, ChartColumn, SquarePen, AlignJustify, AlignLeft, AlignRight, Bold, BookOpen, Bookmark, CaseSensitive, CheckSquare, Columns2, Eraser, Eye, FilePlus2, FileText, FolderOpen, Highlighter, Image, IndentDecrease, IndentIncrease, Italic, Link2, List, ListOrdered, ListTree, Mail, MessageSquare, Minus, PanelLeftClose, PenLine, Pilcrow, Plus, Printer, Quote, Save, ScanText, Sigma, Strikethrough, Subscript, Superscript, Table2, Type, Underline, type LucideIcon,
+  Square, RectangleVertical, RectangleHorizontal, Maximize2, Minimize2, Columns3, Rows2, Rows3, Rows4, EyeOff, FileClock, MessagesSquare, File, AlignCenter, ChartColumn, SquarePen, AlignJustify, AlignLeft, AlignRight, Bold, BookOpen, Bookmark, CaseSensitive, CheckSquare, Columns2, Eraser, Eye, FilePlus2, FileText, FolderOpen, Highlighter, Image, IndentDecrease, IndentIncrease, Italic, Link2, List, ListOrdered, ListTree, Mail, MessageSquare, Minus, PanelLeftClose, PenLine, Pilcrow, Plus, Printer, Quote, Save, ScanText, Sigma, Strikethrough, Subscript, Superscript, Table2, Type, Underline, type LucideIcon,
 } from 'lucide-react';
-import { command, run } from '../editor/commands';
+import { command, prettyKeys, run } from '../editor/commands';
 import type { EditorStore } from '../editor/store';
 import { applyStyle } from '../core/ops';
 import { currentPara, currentRun, setSection, inTable } from '../features/coreCommands';
@@ -12,6 +12,7 @@ import { FontPicker } from './FontPicker';
 import { TEMPLATES } from '../features/templateLibrary';
 import { isOutlineOnly, SHAPE_COUNT, SHAPE_GROUPS, shapePath } from '../core/shapes';
 import { insertShape } from '../features/insert';
+import { COMMAND_ICONS } from './commandIcons';
 
 const ShapeGallery = ({ store }: { store: EditorStore }) => (
   <div className="shapegal">
@@ -44,11 +45,13 @@ const Btn = ({ store, t, iconOnly }: { store: EditorStore; t: Tool; iconOnly?: b
   if (!c) return null;
   const on = c.active?.(store);
   const enabled = c.enabled?.(store) ?? true;
-  const Icon = t.icon;
+  const Icon = t.icon ?? COMMAND_ICONS[t.id] ?? Square;
+  const label = t.label ?? c.label;
+  // Every button is a picture with a short label under it; the full name is in the tooltip.
   return (
-    <button className={`tool${on ? ' on' : ''}${iconOnly ? ' icon' : ''}`} disabled={!enabled} aria-pressed={on} aria-label={t.label ?? c.label} title={t.label ?? c.label}
+    <button className={`tile${on ? ' on' : ''}${iconOnly ? ' small' : ''}`} disabled={!enabled} aria-pressed={on} title={c.keys ? `${label} (${prettyKeys(c.keys)})` : label}
       onMouseDown={(e) => e.preventDefault()} onClick={() => run(store, t.id)}>
-      {Icon && <Icon size={16} strokeWidth={S} />}{!iconOnly && <span>{t.label ?? c.label}</span>}
+      <Icon size={iconOnly ? 17 : 19} strokeWidth={S} aria-hidden="true" /><span>{label}</span>
     </button>
   );
 };
@@ -57,8 +60,8 @@ const Group = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="group"><h3>{title}</h3>{children}</section>
 );
 
-const Icons = ({ store, tools }: { store: EditorStore; tools: Tool[] }) => <div className="iconrow">{tools.map((t) => <Btn key={t.id} store={store} t={t} iconOnly />)}</div>;
-const List_ = ({ store, tools }: { store: EditorStore; tools: Tool[] }) => <div className="toollist">{tools.map((t) => <Btn key={t.id} store={store} t={t} />)}</div>;
+const Icons = ({ store, tools }: { store: EditorStore; tools: Tool[] }) => <div className="tiles small">{tools.map((t) => <Btn key={t.id} store={store} t={t} iconOnly />)}</div>;
+const List_ = ({ store, tools }: { store: EditorStore; tools: Tool[] }) => <div className="tiles">{tools.map((t) => <Btn key={t.id} store={store} t={t} />)}</div>;
 const ids = (...x: string[]): Tool[] => x.map((id) => ({ id }));
 
 const SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72];
@@ -106,17 +109,17 @@ const PageControls = ({ store }: { store: EditorStore }) => {
   const margin = (m: number) => setSection(store, { marginTop: m, marginBottom: m, marginLeft: m, marginRight: m });
   const orient = (land: boolean) => { if (land !== !!sec.landscape) setSection(store, { landscape: land || undefined, pageWidth: sec.pageHeight, pageHeight: sec.pageWidth }); };
   const col = (n: number) => setSection(store, { columns: { ...sec.columns, count: n } });
-  const seg = (items: [string, boolean, () => void][]) => <div className="seg">{items.map(([l, on, f]) => <button key={l} className={on ? 'on' : ''} onClick={f}>{l}</button>)}</div>;
+  const seg = (items: [string, boolean, () => void, LucideIcon][]) => <div className="seg">{items.map(([l, on, f, I]) => <button key={l} className={`pick${on ? ' on' : ''}`} aria-pressed={on} onClick={f}><I size={16} strokeWidth={S} aria-hidden="true" />{l}</button>)}</div>;
   return (
     <>
-      <Group title="Size">{seg([['Letter', !isA4, () => size(LETTER)], ['A4', isA4, () => size(A4)]])}</Group>
-      <Group title="Direction">{seg([['Tall', !sec.landscape, () => orient(false)], ['Wide', !!sec.landscape, () => orient(true)]])}</Group>
-      <Group title="Margins">{seg([['Narrow', sec.marginLeft === 36, () => margin(36)], ['Medium', sec.marginLeft === 54, () => margin(54)], ['Wide', sec.marginLeft === 72, () => margin(72)]])}<List_ store={store} tools={[{ id: 'page.setup', label: 'Custom page setup' }]} /></Group>
-      <Group title="Columns">{seg([1, 2, 3].map((n) => [String(n), sec.columns.count === n, () => col(n)] as [string, boolean, () => void]))}</Group>
+      <Group title="Size">{seg([['Letter', !isA4, () => size(LETTER), FileText], ['A4', isA4, () => size(A4), File]])}</Group>
+      <Group title="Direction">{seg([['Tall', !sec.landscape, () => orient(false), RectangleVertical], ['Wide', !!sec.landscape, () => orient(true), RectangleHorizontal]])}</Group>
+      <Group title="Margins">{seg([['Narrow', sec.marginLeft === 36, () => margin(36), Maximize2], ['Medium', sec.marginLeft === 54, () => margin(54), Square], ['Wide', sec.marginLeft === 72, () => margin(72), Minimize2]])}<List_ store={store} tools={[{ id: 'page.setup', label: 'Custom page setup' }]} /></Group>
+      <Group title="Columns">{seg([1, 2, 3].map((n) => [String(n), sec.columns.count === n, () => col(n), [RectangleVertical, Columns2, Columns3][n - 1]!] as [string, boolean, () => void, LucideIcon]))}</Group>
       <Group title="Breaks"><List_ store={store} tools={ids('ins.pageBreak', 'ins.columnBreak', 'ins.nextPage', 'ins.continuous')} /></Group>
       <Group title="Theme">
         <div className="themes">{THEMES.map((t) => <button key={t.id} title={`${t.heading} and ${t.body}`} onClick={() => applyTheme(store, t)}><i style={{ background: t.color }} /><span style={{ fontFamily: cssFamily(t.heading) }}>{t.name}</span></button>)}</div>
-        <div className="seg">{SPACINGS.map((p) => <button key={p.id} onClick={() => applySpacing(store, p.id)}>{p.name}</button>)}</div>
+        <div className="seg">{SPACINGS.map((p, i) => { const I = [Rows4, Rows3, Rows2][i] ?? Rows3; return <button key={p.id} className="pick" onClick={() => applySpacing(store, p.id)}><I size={16} strokeWidth={S} aria-hidden="true" />{p.name}</button>; })}</div>
       </Group>
       <Group title="Page look">
         <Swatches label="Page color" clear="White page" colors={['#fff8e1', '#e8f5e9', '#e3f2fd', '#f3e5f5', '#eeeeee']} onPick={(c) => store.commit({ ...store.doc, settings: { ...store.doc.settings, pageColor: c } })} />
@@ -212,7 +215,7 @@ const SECTIONS: Section_[] = [
     body: (s) => (
       <>
         <Group title="Show"><List_ store={s} tools={[{ id: 'view.print', icon: ScanText }, { id: 'view.read', icon: BookOpen }, { id: 'view.reader' }, { id: 'view.web' }, { id: 'view.draft' }, { id: 'pane.nav', icon: ListTree }, { id: 'par.marks' }, { id: 'view.ruler' }, { id: 'view.grid' }, { id: 'view.twoUp' }, { id: 'view.split' }, { id: 'view.newWindow' }]} /></Group>
-        <Group title="Markup"><div className="seg wrap">{([['All', 'all'], ['Simple', 'simple'], ['None', 'none'], ['Original', 'original']] as const).map(([l, m]) => <button key={m} className={s.view.markup === m ? 'on' : ''} onClick={() => s.setView({ markup: m })}>{l}</button>)}</div></Group>
+        <Group title="Markup"><div className="seg wrap">{([['All', 'all', MessagesSquare], ['Simple', 'simple', MessageSquare], ['None', 'none', EyeOff], ['Original', 'original', FileClock]] as const).map(([l, m, I]) => <button key={m} className={`pick${s.view.markup === m ? ' on' : ''}`} aria-pressed={s.view.markup === m} onClick={() => s.setView({ markup: m })}><I size={16} strokeWidth={S} aria-hidden="true" />{l}</button>)}</div></Group>
         <Group title="Screen"><List_ store={s} tools={ids('view.zoomIn', 'view.zoomOut', 'view.zoom100', 'view.dark', 'view.uiLang')} /></Group>
       </>
     ),
