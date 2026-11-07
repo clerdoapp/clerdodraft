@@ -227,9 +227,12 @@ export const registerCoreCommands = (): void => {
     {
       id: 'rev.read', label: 'Read aloud', group: 'Review',
       run: (s) => {
-        if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
-        const text = isCollapsed(s.sel) ? s.doc.blocks.map((b) => (b.type === 'p' ? b.runs.map((r) => r.text).join('') : '')).join('\n') : selectedText(s.doc, s.sel);
-        speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+        void import('./speech').then((sp) => {
+          if (sp.isSpeaking()) { sp.stopSpeaking(); return; }
+          if (!sp.canSpeak()) { s.notify('Reading aloud is not available here.'); return; }
+          const text = isCollapsed(s.sel) ? s.doc.blocks.map((b) => (b.type === 'p' ? b.runs.filter((r) => !r.del && !r.atom).map((r) => r.text).join('') : '')).join('\n') : selectedText(s.doc, s.sel);
+          sp.speakBlocks(text.split('\n'), { onDone: (ok) => { if (!ok) s.notify("This text couldn't be read aloud. Check that the system has a voice for its language."); } });
+        });
       },
     },
 

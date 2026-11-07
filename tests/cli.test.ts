@@ -96,3 +96,17 @@ describe('contributor names', () => {
     expect(p).toEqual({ 'sara-a': { real_name: 'Sara "S" Ali', display_name: 'Sara' }, omar: { sync_github_name: true } });
   });
 });
+
+describe('reading aloud', () => {
+  it('splits long text into short pieces and picks the language from the script', async () => {
+    const { speechPieces, speechLang } = await import('../src/features/speech');
+    const long = Array.from({ length: 30 }, (_, i) => `Sentence number ${i} is here.`).join(' ');
+    const pieces = speechPieces(long);
+    expect(pieces.length).toBeGreaterThan(3);
+    expect(pieces.every((p) => p.length <= 180)).toBe(true);
+    expect(pieces.join(' ').replace(/\s+/g, ' ')).toBe(long);
+    expect(speechPieces('word '.repeat(100)).every((p) => p.length <= 180)).toBe(true);
+    expect(speechLang('مرحبا بكم', 'en')).toBe('ar');
+    expect(speechLang('Hello', 'en-GB')).toBe('en-GB');
+  });
+});

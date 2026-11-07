@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { paraText, walkParagraphs } from '../core/tree';
 import { headingLevel } from '../core/styles';
 import type { EditorStore } from '../editor/store';
+import { canSpeak, speakBlocks, stopSpeaking } from '../features/speech';
 
 type Paper = 'light' | 'sepia' | 'dark';
 
@@ -16,7 +17,7 @@ export const ReaderOverlay = ({ store }: { store: EditorStore }) => {
   const [lit, setLit] = useState(0);
   const [speaking, setSpeaking] = useState(false);
   const body = useRef<HTMLDivElement>(null);
-  const close = () => { speechSynthesis.cancel(); store.setView({ reader: false }); };
+  const close = () => { stopSpeaking(); store.setView({ reader: false }); };
 
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -25,24 +26,23 @@ export const ReaderOverlay = ({ store }: { store: EditorStore }) => {
       if (e.key === 'ArrowUp') { e.preventDefault(); setLit((l) => Math.max(l - 1, 0)); }
     };
     window.addEventListener('keydown', key);
-    return () => { window.removeEventListener('keydown', key); speechSynthesis.cancel(); };
+    return () => window.removeEventListener('keydown', key);
   });
+
+  // Reading stops only when the reader closes, not each time the screen updates.
+  useEffect(() => () => stopSpeaking(), []);
 
   useEffect(() => { body.current?.children[lit]?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, [lit]);
 
   const speak = () => {
-    if (speaking) { speechSynthesis.cancel(); setSpeaking(false); return; }
+    if (speaking) { stopSpeaking(); setSpeaking(false); return; }
+    if (!canSpeak()) { store.notify('Reading aloud is not available here.'); return; }
     setSpeaking(true);
-    const next = (i: number) => {
-      const p = paras[i];
-      if (!p) { setSpeaking(false); return; }
-      setLit(i);
-      const u = new SpeechSynthesisUtterance(p.text);
-      u.onend = () => next(i + 1);
-      u.onerror = () => setSpeaking(false);
-      speechSynthesis.speak(u);
-    };
-    next(lit);
+    speakBlocks(paras.map((p) => p.text), {
+      from: lit,
+      onBlock: (i) => setLit(i),
+      onDone: (ok) => { setSpeaking(false); if (!ok) store.notify("This text couldn't be read aloud. Check that the system has a voice for its language."); },
+    });
   };
 
   return (
