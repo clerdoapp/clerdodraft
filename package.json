@@ -282,13 +282,16 @@
     ],
     "fileAssociations": [
       {
-        "ext": [
-          "docx",
-          "docm"
-        ],
+        "ext": "docx",
         "name": "Document",
         "role": "Editor",
         "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      },
+      {
+        "ext": "docm",
+        "name": "Document",
+        "role": "Editor",
+        "mimeType": "application/vnd.ms-word.document.macroEnabled.12"
       },
       {
         "ext": "dotx",
@@ -391,7 +394,7 @@
       ],
       "category": "Office",
       "maintainer": "Clerdo",
-      "icon": "assets/app-icon/hicolor",
+      "icon": "assets/app-icon/clerdodraft-1024.png",
       "synopsis": "Free, open-source word processor",
       "description": "Write, review and lay out documents. Opens and saves .docx, and opens .doc, .odt, .rtf, .pdf, Markdown and HTML.",
       "desktop": {

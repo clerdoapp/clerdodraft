@@ -243,6 +243,12 @@ kbd { font: 11px 'Hanken Grotesk', sans-serif; color: var(--muted); }
 .reader header label { display: flex; align-items: center; gap: 6px; }
 .reader header input[type=range] { width: 90px; }
 .reader header .ico { margin-inline-start: auto; color: inherit; }
+/* The reader has its own paper colours, so its controls follow the page text instead of the app theme. */
+.reader .seg { background: color-mix(in srgb, currentColor 8%, transparent); }
+.reader .seg button { color: inherit; background: transparent; }
+.reader .seg button.on { background: color-mix(in srgb, currentColor 16%, transparent); box-shadow: none; }
+.reader header button { color: inherit; }
+.reader header input[type=range] { accent-color: #2347ff; }
 .readbody { flex: 1; overflow: auto; padding: 32px max(24px, calc(50% - 380px)) 40vh; }
 .readbody p, .readbody h2 { margin: 0 0 1em; cursor: default; transition: opacity .15s; font-weight: 400; }
 .readbody h2 { font-weight: 700; font-size: 1.25em; }
